@@ -1,0 +1,75 @@
+name: Build MX Location IPA
+
+on:
+  push:
+    branches:
+      - agent/mx-location-ipa
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Checkout builder
+        uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Checkout upstream Locus
+        run: |
+          git clone https://github.com/ChrisMack32/Locus.git Locus-src
+          cd Locus-src
+          git checkout 83c8fb324983728e8f44759cfd834dc637ee38b5
+
+      - name: Apply MX Location customization
+        run: python3 mx-location/patch_mxlocation.py Locus-src
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: Locus-src
+        run: xcodegen generate
+
+      - name: Build unsigned device app
+        working-directory: Locus-src
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project Locus.xcodeproj \
+            -scheme Locus \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            DEVELOPMENT_TEAM='' \
+            build | tee xcodebuild.log
+
+      - name: Package IPA
+        working-directory: Locus-src
+        run: |
+          APP=$(find build/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' -print -quit)
+          test -n "$APP"
+          rm -rf Payload
+          mkdir Payload
+          cp -R "$APP" Payload/
+          /usr/bin/zip -qry MX-Location.ipa Payload
+          shasum -a 256 MX-Location.ipa > MX-Location.ipa.sha256
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MX-Location-IPA
+          path: |
+            Locus-src/MX-Location.ipa
+            Locus-src/MX-Location.ipa.sha256
+            Locus-src/xcodebuild.log
+          if-no-files-found: error
