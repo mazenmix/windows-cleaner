@@ -65,6 +65,8 @@ func addTray() {
 	n.HIcon = appIcon
 	copyUTF16(n.SzTip[:], "MX Dollar")
 	procShellNotifyIconW.Call(NIM_ADD, uintptr(unsafe.Pointer(&n)))
+	n.UVersion = NOTIFYICON_VERSION_4
+	procShellNotifyIconW.Call(NIM_SETVERSION, uintptr(unsafe.Pointer(&n)))
 	updateTrayTip()
 }
 func removeTray() {
@@ -123,6 +125,7 @@ func showMenu() {
 	procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
 	procSetForegroundWindow.Call(hwnd)
 	cmd, _, _ := procTrackPopupMenu.Call(menu, TPM_RIGHTBUTTON|TPM_RETURNCMD, uintptr(pt.X), uintptr(pt.Y), 0, hwnd, 0)
+	procPostMessageW.Call(hwnd, WM_NULL, 0, 0)
 	switch cmd {
 	case ID_TRAY_OPEN:
 		showMain()
