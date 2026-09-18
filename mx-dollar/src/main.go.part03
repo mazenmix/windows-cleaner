@@ -81,7 +81,7 @@ func updateTrayTip() {
 	d := data
 	mu.RUnlock()
 	hi := maxInt(d.Kifah.Sell, d.Harithiya.Sell)
-	tip := "MX Dollar"
+	tip := "—"
 	if hi > 0 {
 		tip = fmtIQD(hi)
 	}
