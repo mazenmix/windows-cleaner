@@ -26,7 +26,7 @@ type UpdateManifest struct {
 }
 
 const (
-	appVersion        = "3.2.0"
+	appVersion        = "3.2.1"
 	updateManifestURL = "https://raw.githubusercontent.com/mazenmix/windows-cleaner/main/mx-dollar/update.json"
 )
 
@@ -48,6 +48,7 @@ var (
 	checkingUpdate  bool
 	updatingApp     bool
 	pendingUpdater  string
+	taskbarCreated uint32
 )
 
 func rgb(r, g, b byte) uintptr { return uintptr(r) | uintptr(g)<<8 | uintptr(b)<<16 }
@@ -63,6 +64,9 @@ func copyUTF16(dst []uint16, s string) {
 }
 
 func main() {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
 	// Robust single instance: a second launch restores the existing window and exits.
 	className := wstr("MXDollarLuxeNative")
 	name := wstr("Local\\MazenmiX_MX_Dollar_Instance")
@@ -86,6 +90,9 @@ func main() {
 	enableStartup()
 
 	hInstance, _, _ := procGetModuleHandleW.Call(0)
+	if m, _, _ := procRegisterWindowMessageW.Call(uintptr(unsafe.Pointer(wstr("TaskbarCreated")))); m != 0 {
+		taskbarCreated = uint32(m)
+	}
 	// Prefer the EXE-embedded icon resource (ID 1); fall back to generated icon.
 	appIcon, _, _ = procLoadIconW.Call(hInstance, 1)
 	if appIcon == 0 {
@@ -140,6 +147,11 @@ func main() {
 }
 
 func wndProc(h uintptr, msg uint32, wParam, lParam uintptr) uintptr {
+	if taskbarCreated != 0 && msg == taskbarCreated {
+		removeTray()
+		addTray()
+		return 0
+	}
 	switch msg {
 	case WM_NCHITTEST:
 		x, y := loword(lParam), hiword(lParam)
@@ -214,13 +226,12 @@ func wndProc(h uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 		}
 		return 0
 	case WM_TRAY:
-		switch uint32(lParam) {
-		case WM_LBUTTONDBLCLK:
+		event := uint32(lParam & 0xFFFF)
+		switch event {
+		case WM_LBUTTONUP, WM_LBUTTONDBLCLK, NIN_SELECT, NIN_KEYSELECT:
 			showMain()
-		case WM_RBUTTONUP:
+		case WM_RBUTTONUP, WM_CONTEXTMENU:
 			showMenu()
-		case WM_LBUTTONUP:
-			showMain()
 		}
 		return 0
 	case WM_PAINT:
