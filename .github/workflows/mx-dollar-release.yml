@@ -15,6 +15,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: mx-dollar-release
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
