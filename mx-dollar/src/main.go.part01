@@ -1,0 +1,230 @@
+
+type Quote struct {
+	Sell    int    `json:"sell"`
+	Buy     int    `json:"buy"`
+	Source  string `json:"source"`
+	Updated string `json:"updated"`
+}
+type Gold struct {
+	K18 int `json:"k18"`
+	K21 int `json:"k21"`
+	K24 int `json:"k24"`
+}
+type MarketData struct {
+	Kifah     Quote     `json:"kifah"`
+	Harithiya Quote     `json:"harithiya"`
+	Gold      Gold      `json:"gold"`
+	Updated   time.Time `json:"updated"`
+	Error     string    `json:"error,omitempty"`
+}
+
+type UpdateManifest struct {
+	Version string `json:"version"`
+	URL     string `json:"url"`
+	SHA256  string `json:"sha256"`
+	Notes   string `json:"notes,omitempty"`
+}
+
+const (
+	appVersion        = "3.2.0"
+	updateManifestURL = "https://raw.githubusercontent.com/mazenmix/windows-cleaner/main/mx-dollar/update.json"
+)
+
+var (
+	hwnd            uintptr
+	appIcon         uintptr
+	mu              sync.RWMutex
+	data            MarketData
+	lastData        MarketData
+	refreshing      bool
+	exiting         bool
+	hoverRefresh    bool
+	hoverClose      bool
+	hoverMin        bool
+	cachedAppDir    string
+	updateInfo      UpdateManifest
+	updateStatus    = "جاري فحص التحديث..."
+	updateAvailable bool
+	checkingUpdate  bool
+	updatingApp     bool
+	pendingUpdater  string
+)
+
+func rgb(r, g, b byte) uintptr { return uintptr(r) | uintptr(g)<<8 | uintptr(b)<<16 }
+func loword(v uintptr) int32   { return int32(int16(v & 0xffff)) }
+func hiword(v uintptr) int32   { return int32(int16((v >> 16) & 0xffff)) }
+func wstr(s string) *uint16    { p, _ := syscall.UTF16PtrFromString(s); return p }
+func copyUTF16(dst []uint16, s string) {
+	a := syscall.StringToUTF16(s)
+	if len(a) > len(dst) {
+		a = a[:len(dst)]
+	}
+	copy(dst, a)
+}
+
+func main() {
+	// Robust single instance: a second launch restores the existing window and exits.
+	className := wstr("MXDollarLuxeNative")
+	name := wstr("Local\\MazenmiX_MX_Dollar_Instance")
+	hMutex, _, createErr := procCreateMutexW.Call(0, 1, uintptr(unsafe.Pointer(name)))
+	if hMutex != 0 {
+		defer procCloseHandle.Call(hMutex)
+	}
+	if createErr == syscall.Errno(183) { // ERROR_ALREADY_EXISTS
+		if existing, _, _ := procFindWindowW.Call(uintptr(unsafe.Pointer(className)), 0); existing != 0 {
+			procShowWindow.Call(existing, SW_RESTORE)
+			procShowWindow.Call(existing, SW_SHOWNORMAL)
+			procSetForegroundWindow.Call(existing)
+		}
+		return
+	}
+
+	appDir, _ := os.UserConfigDir()
+	cachedAppDir = filepath.Join(appDir, "MX Dollar")
+	_ = os.MkdirAll(cachedAppDir, 0755)
+	loadCache()
+	enableStartup()
+
+	hInstance, _, _ := procGetModuleHandleW.Call(0)
+	// Prefer the EXE-embedded icon resource (ID 1); fall back to generated icon.
+	appIcon, _, _ = procLoadIconW.Call(hInstance, 1)
+	if appIcon == 0 {
+		appIcon = makeIcon()
+	}
+	cursor, _, _ := procLoadCursorW.Call(0, 32512) // IDC_ARROW
+	wc := WNDCLASSEX{CbSize: uint32(unsafe.Sizeof(WNDCLASSEX{})), Style: CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS,
+		LpfnWndProc: syscall.NewCallback(wndProc), HInstance: hInstance, HIcon: appIcon, HCursor: cursor,
+		LpszClassName: className, HIconSm: appIcon}
+	procRegisterClassExW.Call(uintptr(unsafe.Pointer(&wc)))
+
+	width, height := int32(760), int32(760)
+	hwnd, _, _ = procCreateWindowExW.Call(0, uintptr(unsafe.Pointer(className)), uintptr(unsafe.Pointer(wstr("MX Dollar"))),
+		WS_POPUP|WS_SYSMENU|WS_MINIMIZEBOX, 0x80000000, 0x80000000, uintptr(width), uintptr(height), 0, 0, hInstance, 0)
+	if hwnd == 0 {
+		return
+	}
+
+	// Rounded Windows 11 corners where supported.
+	corner := uint32(2)
+	procDwmSetWindowAttribute.Call(hwnd, 33, uintptr(unsafe.Pointer(&corner)), unsafe.Sizeof(corner))
+	procSendMessageW.Call(hwnd, 0x0080, 1, appIcon) // WM_SETICON big
+	procSendMessageW.Call(hwnd, 0x0080, 0, appIcon)
+
+	addTray()
+	procSetTimer.Call(hwnd, 1, 60_000, 0)
+	procSetTimer.Call(hwnd, 2, 3_600_000, 0) // app update check every hour
+	startHidden := false
+	for _, a := range os.Args[1:] {
+		if a == "--startup" {
+			startHidden = true
+		}
+	}
+	if startHidden {
+		procShowWindow.Call(hwnd, SW_HIDE)
+	} else {
+		procShowWindow.Call(hwnd, SW_SHOWNORMAL)
+		procUpdateWindow.Call(hwnd)
+	}
+	requestRefresh(false)
+	requestUpdateCheck()
+
+	var msg MSG
+	for {
+		r, _, _ := procGetMessageW.Call(uintptr(unsafe.Pointer(&msg)), 0, 0, 0)
+		if int32(r) <= 0 {
+			break
+		}
+		procTranslateMessage.Call(uintptr(unsafe.Pointer(&msg)))
+		procDispatchMessageW.Call(uintptr(unsafe.Pointer(&msg)))
+	}
+}
+
+func wndProc(h uintptr, msg uint32, wParam, lParam uintptr) uintptr {
+	switch msg {
+	case WM_NCHITTEST:
+		x, y := loword(lParam), hiword(lParam)
+		var rc RECT
+		procGetClientRect.Call(h, uintptr(unsafe.Pointer(&rc)))
+		// Convert screen to relative approximately by asking default first; easier: top draggable area except buttons.
+		// WM_NCHITTEST lParam uses screen coords; default gives client if inside; then drag based on Y against window rect is omitted.
+		// Let client clicks handle title actions and return caption for broad top strip after default client test.
+		_ = x
+		_ = y
+		// Borderless drag is handled on LBUTTONDOWN, so keep client.
+		return HTCLIENT
+	case WM_LBUTTONDOWN:
+		x, y := loword(lParam), hiword(lParam)
+		if y < 74 && x < 650 {
+			procReleaseCapture.Call()
+			procSendMessageW.Call(h, 0x00A1, HTCAPTION, 0) // WM_NCLBUTTONDOWN
+			return 0
+		}
+	case WM_LBUTTONUP:
+		x, y := loword(lParam), hiword(lParam)
+		if inRect(x, y, 660, 18, 700, 54) { // min
+			procShowWindow.Call(h, SW_HIDE)
+			return 0
+		}
+		if inRect(x, y, 706, 18, 742, 54) { // close -> tray
+			procShowWindow.Call(h, SW_HIDE)
+			return 0
+		}
+		if inRect(x, y, 545, 624, 722, 670) {
+			requestRefresh(true)
+			return 0
+		}
+		if inRect(x, y, 570, 707, 720, 745) {
+			mu.RLock()
+			avail := updateAvailable
+			busy := updatingApp
+			mu.RUnlock()
+			if avail && !busy {
+				beginSelfUpdate()
+			}
+			return 0
+		}
+	case WM_SETCURSOR:
+		// Keep normal arrow.
+		c, _, _ := procLoadCursorW.Call(0, 32512)
+		procSetCursor.Call(c)
+	case WM_TIMER:
+		if wParam == 1 {
+			requestRefresh(false)
+		} else if wParam == 2 {
+			requestUpdateCheck()
+		}
+	case WM_DATA_READY:
+		procInvalidateRect.Call(h, 0, 1)
+		updateTrayTip()
+		return 0
+	case WM_UPDATE_READY:
+		procInvalidateRect.Call(h, 0, 1)
+		return 0
+	case WM_UPDATE_INSTALL:
+		mu.RLock()
+		script := pendingUpdater
+		mu.RUnlock()
+		if script != "" {
+			cmd := exec.Command("cmd.exe", "/C", script)
+			cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+			_ = cmd.Start()
+			exiting = true
+			removeTray()
+			procPostQuitMessage.Call(0)
+		}
+		return 0
+	case WM_TRAY:
+		switch uint32(lParam) {
+		case WM_LBUTTONDBLCLK:
+			showMain()
+		case WM_RBUTTONUP:
+			showMenu()
+		case WM_LBUTTONUP:
+			showMain()
+		}
+		return 0
+	case WM_PAINT:
+		paintWindow(h)
+		return 0
+	case WM_CLOSE:
+		if exiting {
