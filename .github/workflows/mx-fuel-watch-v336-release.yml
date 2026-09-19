@@ -1,0 +1,119 @@
+name: Release MX Fuel Watch PH v3.3.6 Clean
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/mx-fuel-watch-v336-release.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout updater branch
+        uses: actions/checkout@v4
+        with:
+          ref: mx-fuel-watch
+          fetch-depth: 0
+
+      - name: Install standard Windows compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mingw-w64 binutils-mingw-w64-x86-64
+
+      - name: Patch v3.3.6 clean source
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64,gzip,importlib.util
+
+          root=Path("mx-fuel-watch")
+          p=root/"source.b64"
+          s=gzip.decompress(base64.b64decode(p.read_text().strip())).decode()
+
+          assert 'static const wchar_t* APP_VERSION=L"3.3.5";' in s
+          s=s.replace('static const wchar_t* APP_VERSION=L"3.3.5";',
+                      'static const wchar_t* APP_VERSION=L"3.3.6";')
+          s=s.replace('MX Fuel Watch PH/3.3.5','MX Fuel Watch PH/3.3.6')
+
+          # Do not register persistence automatically.
+          old='tray_add(h);ensure_startup();start_refresh();start_update_check();return 0;'
+          assert old in s
+          s=s.replace(old,'tray_add(h);start_refresh();start_update_check();return 0;')
+
+          # Remove old temp-updater cleanup from startup.
+          old='wchar_t tmp[520];if(GetTempPathW(500,tmp)){append_w(tmp,520,L"MXFuelWatchPH.updater.exe");DeleteFileW(tmp);}'
+          assert old in s
+          s=s.replace(old,'')
+
+          # Use normal Windows CRT entrypoint instead of custom WinMainCRTStartup.
+          old='void WinMainCRTStartup(void){int r=AppMain(GetModuleHandleW(NULL));ExitProcess((UINT)r);}'
+          assert old in s
+          s=s.replace(old,'int WINAPI WinMain(HINSTANCE hi,HINSTANCE prev,char* cmd,int show){(void)prev;(void)cmd;(void)show;return AppMain(hi);}')
+
+          # Clear startup flag behavior because this clean build does not self-register.
+          old='LPWSTR launchcmd=GetCommandLineW();g_start_hidden=(wfind(launchcmd,L"--startup")!=0);'
+          assert old in s
+          s=s.replace(old,'g_start_hidden=0;')
+
+          p.write_text(base64.b64encode(gzip.compress(s.encode(),9)).decode()+"\n")
+          (root/"mx_fuel_watch_ph_v336.c").write_text(s)
+
+          spec=importlib.util.spec_from_file_location("mxbuild", root/"build.py")
+          mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+          (root/"app.ico").write_bytes(mod.make_ico())
+
+          rc = '#include <windows.h>\n101 ICON "app.ico"\n1 VERSIONINFO\nFILEVERSION 3,3,6,0\nPRODUCTVERSION 3,3,6,0\nFILEFLAGSMASK 0x3fL\nFILEFLAGS 0x0L\nFILEOS 0x40004L\nFILETYPE 0x1L\nFILESUBTYPE 0x0L\nBEGIN\n  BLOCK "StringFileInfo"\n  BEGIN\n    BLOCK "040904B0"\n    BEGIN\n      VALUE "CompanyName", "MazenmiX\\0"\n      VALUE "FileDescription", "MX Fuel Watch PH\\0"\n      VALUE "FileVersion", "3.3.6.0\\0"\n      VALUE "InternalName", "MX Fuel Watch PH\\0"\n      VALUE "OriginalFilename", "MX_Fuel_Watch_PH.exe\\0"\n      VALUE "ProductName", "MX Fuel Watch PH\\0"\n      VALUE "ProductVersion", "3.3.6.0\\0"\n    END\n  END\n  BLOCK "VarFileInfo"\n  BEGIN\n    VALUE "Translation", 0x0409, 1200\n  END\nEND\n'
+          (root/"app.rc").write_text(rc)
+          PY
+
+      - name: Build normal CRT-linked Windows app
+        working-directory: mx-fuel-watch
+        run: |
+          set -euxo pipefail
+          x86_64-w64-mingw32-windres app.rc -O coff -o app_res.o
+          x86_64-w64-mingw32-gcc -O2 -ffunction-sections -fdata-sections -fno-builtin -c mx_fuel_watch_ph_v336.c -o app.o
+          x86_64-w64-mingw32-gcc -mwindows \
+            -Wl,--gc-sections -Wl,--dynamicbase -Wl,--nxcompat -Wl,--high-entropy-va \
+            -o MX_Fuel_Watch_PH.exe app.o app_res.o \
+            -lwinhttp -ldwmapi -lshell32 -ladvapi32
+
+      - name: Verify clean PE imports
+        run: |
+          set -eux
+          file mx-fuel-watch/MX_Fuel_Watch_PH.exe
+          x86_64-w64-mingw32-objdump -p mx-fuel-watch/MX_Fuel_Watch_PH.exe | tee /tmp/pe.txt
+          grep -q "KERNEL32.dll" /tmp/pe.txt
+          grep -q "USER32.dll" /tmp/pe.txt
+          grep -q "msvcrt.dll" /tmp/pe.txt
+          if grep -q "RegCreateKeyExW" /tmp/pe.txt; then echo "Registry persistence import still present"; exit 1; fi
+          if grep -q "RegSetValueExW" /tmp/pe.txt; then echo "Registry persistence import still present"; exit 1; fi
+          if grep -q "CopyFileW" /tmp/pe.txt; then echo "Self-copy import still present"; exit 1; fi
+          if grep -q "CreateProcessW" /tmp/pe.txt; then echo "Self-launch import still present"; exit 1; fi
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64,gzip
+          b=Path("mx-fuel-watch/MX_Fuel_Watch_PH.exe").read_bytes()
+          assert b[:2]==b"MZ"
+          assert len(b)>90000
+          s=gzip.decompress(base64.b64decode(Path("mx-fuel-watch/source.b64").read_text().strip())).decode()
+          assert 'APP_VERSION=L"3.3.6"' in s
+          assert 'int WINAPI WinMain(' in s
+          assert 'ensure_startup();' not in s
+          assert 'MXFuelWatchPH.updater.exe");DeleteFileW' not in s
+          assert 'L"Update Available"' in s
+          print("Verified clean v3.3.6:",len(b),"bytes")
+          PY
+
+      - name: Publish v3.3.6
+        run: |
+          rm -f mx-fuel-watch/app.ico mx-fuel-watch/app.rc mx-fuel-watch/app_res.o mx-fuel-watch/app.o mx-fuel-watch/mx_fuel_watch_ph_v336.c
+          printf '3.3.6\n' > mx-fuel-watch/update.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mx-fuel-watch/source.b64 mx-fuel-watch/MX_Fuel_Watch_PH.exe mx-fuel-watch/update.txt
+          git commit -m "Release MX Fuel Watch PH v3.3.6 clean Windows build"
+          git push origin HEAD:mx-fuel-watch
