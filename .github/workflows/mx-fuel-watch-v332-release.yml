@@ -1,0 +1,82 @@
+name: Release MX Fuel Watch PH v3.3.2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/mx-fuel-watch-v332-release.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout legacy updater branch
+        uses: actions/checkout@v4
+        with:
+          ref: mx-fuel-watch
+          fetch-depth: 0
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang lld llvm
+
+      - name: Patch v3.3.1 source to v3.3.2
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, gzip
+
+          p = Path("mx-fuel-watch/source.b64")
+          s = gzip.decompress(base64.b64decode(p.read_text().strip())).decode()
+
+          s = s.replace("3.3.1", "3.3.2")
+
+          old = "struct BrandRow{char brand[64];char diesel[16];char r91[16];char r95[16];char r97[16];int prevD,prev91,prev95,prev97;};"
+          new = "struct BrandRow{char brand[64];char diesel[16];char r91[16];char r95[16];char r97[16];int prevD,prev91,prev95,prev97;int upD,up91,up95,up97;};"
+          assert old in s
+          s = s.replace(old, new)
+
+          old = "nr.prevD=nr.prev91=nr.prev95=nr.prev97=-1;for(int j=0;j<g_row_count;j++){if(starts_i(g_rows[j].brand,nr.brand)&&starts_i(nr.brand,g_rows[j].brand)){nr.prevD=parse_cents(g_rows[j].diesel);nr.prev91=parse_cents(g_rows[j].r91);nr.prev95=parse_cents(g_rows[j].r95);nr.prev97=parse_cents(g_rows[j].r97);break;}}g_rows[count++]=nr;"
+          new = "nr.prevD=nr.prev91=nr.prev95=nr.prev97=-1;nr.upD=nr.up91=nr.up95=nr.up97=0;for(int j=0;j<g_row_count;j++){if(starts_i(g_rows[j].brand,nr.brand)&&starts_i(nr.brand,g_rows[j].brand)){nr.prevD=parse_cents(g_rows[j].diesel);nr.prev91=parse_cents(g_rows[j].r91);nr.prev95=parse_cents(g_rows[j].r95);nr.prev97=parse_cents(g_rows[j].r97);int cD=parse_cents(nr.diesel),c91=parse_cents(nr.r91),c95=parse_cents(nr.r95),c97=parse_cents(nr.r97);nr.upD=(cD>=0&&nr.prevD>=0)?(cD>nr.prevD?1:(cD<nr.prevD?0:g_rows[j].upD)):g_rows[j].upD;nr.up91=(c91>=0&&nr.prev91>=0)?(c91>nr.prev91?1:(c91<nr.prev91?0:g_rows[j].up91)):g_rows[j].up91;nr.up95=(c95>=0&&nr.prev95>=0)?(c95>nr.prev95?1:(c95<nr.prev95?0:g_rows[j].up95)):g_rows[j].up95;nr.up97=(c97>=0&&nr.prev97>=0)?(c97>nr.prev97?1:(c97<nr.prev97?0:g_rows[j].up97)):g_rows[j].up97;break;}}g_rows[count++]=nr;"
+          assert old in s
+          s = s.replace(old, new)
+
+          old = "COLORREF white=RGBX(238,244,247),muted=RGBX(139,160,173),blue=RGBX(65,174,235),gold=RGBX(237,184,76),green=RGBX(61,215,147),red=RGBX(244,86,92);"
+          new = "COLORREF white=RGBX(238,244,247),muted=RGBX(139,160,173),blue=RGBX(65,174,235),gold=RGBX(237,184,76),green=RGBX(61,215,147),red=RGBX(244,86,92),orange=RGBX(255,156,66);"
+          assert old in s
+          s = s.replace(old, new)
+
+          old = "const char*vals[]={g_rows[i].diesel,g_rows[i].r91,g_rows[i].r95,g_rows[i].r97};int prevs[]={g_rows[i].prevD,g_rows[i].prev91,g_rows[i].prev95,g_rows[i].prev97};for(int j=0;j<4;j++){int cur=parse_cents(vals[j]);wchar_t pv[48];money_w(pv,48,cur);int xx=cx[j+1]+12;txt(m,f11,cur<0?muted:white,xx,y+1,82,rh-2,pv,DT_LEFT|DT_VCENTER|DT_SINGLELINE);"
+          new = "const char*vals[]={g_rows[i].diesel,g_rows[i].r91,g_rows[i].r95,g_rows[i].r97};int prevs[]={g_rows[i].prevD,g_rows[i].prev91,g_rows[i].prev95,g_rows[i].prev97};int ups[]={g_rows[i].upD,g_rows[i].up91,g_rows[i].up95,g_rows[i].up97};for(int j=0;j<4;j++){int cur=parse_cents(vals[j]);wchar_t pv[48];money_w(pv,48,cur);int xx=cx[j+1]+12;txt(m,f11,cur<0?muted:(ups[j]?orange:white),xx,y+1,82,rh-2,pv,DT_LEFT|DT_VCENTER|DT_SINGLELINE);"
+          assert old in s
+          s = s.replace(old, new)
+
+          p.write_text(base64.b64encode(gzip.compress(s.encode(), 9)).decode() + "\n")
+          PY
+
+      - name: Build Windows EXE
+        run: python3 mx-fuel-watch/build.py
+
+      - name: Verify v3.3.2 binary
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          b = Path("mx-fuel-watch/MX_Fuel_Watch_PH.exe").read_bytes()
+          assert b[:2] == b"MZ"
+          assert "3.3.2".encode("utf-16le") in b
+          assert b"Shell_NotifyIconW" in b
+          print("Verified", len(b), "bytes")
+          PY
+
+      - name: Publish to updater branch
+        run: |
+          printf '3.3.2\n' > mx-fuel-watch/update.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mx-fuel-watch/source.b64 mx-fuel-watch/MX_Fuel_Watch_PH.exe mx-fuel-watch/update.txt
+          git commit -m "Release MX Fuel Watch PH v3.3.2 orange price indicator"
+          git push origin HEAD:mx-fuel-watch
