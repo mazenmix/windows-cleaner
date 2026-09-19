@@ -65,11 +65,11 @@ jobs:
           import base64,gzip
           b=Path("mx-fuel-watch/MX_Fuel_Watch_PH.exe").read_bytes()
           assert b[:2]==b"MZ"
-          assert "3.3.3".encode("utf-16le") in b
-          assert "Update Available".encode("utf-16le") in b
           assert b"Shell_NotifyIconW" in b
           assert len(b)>100000
           s=gzip.decompress(base64.b64decode(Path("mx-fuel-watch/source.b64").read_text().strip())).decode()
+          assert 'static const wchar_t* APP_VERSION=L"3.3.3";' in s
+          assert 'L"Update Available"' in s
           assert "RGBX(230,112,28)" in s
           print("Verified v3.3.3:",len(b),"bytes")
           PY
