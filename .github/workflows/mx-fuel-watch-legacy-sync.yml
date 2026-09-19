@@ -1,0 +1,40 @@
+name: Sync MX Fuel Watch legacy updater channel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/mx-fuel-watch-legacy-sync.yml"
+      - "mx-fuel-watch/legacy-sync-trigger.txt"
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Copy published EXE to legacy updater branch
+        run: |
+          set -e
+          cp mx-fuel-watch/MX_Fuel_Watch_PH.exe /tmp/MX_Fuel_Watch_PH.exe
+          git fetch origin mx-fuel-watch
+          git checkout -B mx-fuel-watch origin/mx-fuel-watch
+          mkdir -p mx-fuel-watch
+          cp /tmp/MX_Fuel_Watch_PH.exe mx-fuel-watch/MX_Fuel_Watch_PH.exe
+          printf '3.3.1\n' > mx-fuel-watch/update.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mx-fuel-watch/MX_Fuel_Watch_PH.exe mx-fuel-watch/update.txt
+          if git diff --cached --quiet; then
+            echo "Legacy channel already current."
+          else
+            git commit -m "Publish MX Fuel Watch PH v3.3.1 to legacy updater channel"
+            git push origin HEAD:mx-fuel-watch
+          fi
