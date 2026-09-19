@@ -1,0 +1,84 @@
+name: Release MX Fuel Watch PH v3.3.3
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/mx-fuel-watch-v333-release.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout updater branch
+        uses: actions/checkout@v4
+        with:
+          ref: mx-fuel-watch
+          fetch-depth: 0
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang lld llvm
+
+      - name: Patch updater button UI
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64,gzip
+
+          p=Path("mx-fuel-watch/source.b64")
+          s=gzip.decompress(base64.b64decode(p.read_text().strip())).decode()
+
+          assert 'static const wchar_t* APP_VERSION=L"3.3.2";' in s
+          s=s.replace('static const wchar_t* APP_VERSION=L"3.3.2";',
+                      'static const wchar_t* APP_VERSION=L"3.3.3";')
+
+          old='COLORREF ubg=g_update_available==1?RGBX(63,48,12):RGBX(20,43,52);COLORREF ubd=g_update_available==1?gold:RGBX(48,82,95);'
+          new='COLORREF ubg=g_update_available==1?RGBX(230,112,28):RGBX(20,43,52);COLORREF ubd=g_update_available==1?RGBX(255,170,72):RGBX(48,82,95);'
+          assert old in s
+          s=s.replace(old,new)
+
+          old='const wchar_t*ut=g_updating?L"Updating...":(g_update_checking?L"Checking...":(g_update_available==1?L"Update Now":L"Auto Update"));'
+          new='const wchar_t*ut=g_updating?L"Updating...":(g_update_checking?L"Checking...":(g_update_available==1?L"Update Available":L"Auto Update"));'
+          assert old in s
+          s=s.replace(old,new)
+
+          old='txt(m,f12b,g_update_available==1?gold:white,g_update_rc.left+8,43,120,28,ut,DT_CENTER|DT_VCENTER|DT_SINGLELINE);'
+          new='txt(m,f12b,white,g_update_rc.left+8,43,120,28,ut,DT_CENTER|DT_VCENTER|DT_SINGLELINE);'
+          assert old in s
+          s=s.replace(old,new)
+
+          p.write_text(base64.b64encode(gzip.compress(s.encode(),9)).decode()+"\n")
+          PY
+
+      - name: Build Windows EXE
+        run: python3 mx-fuel-watch/build.py
+
+      - name: Verify v3.3.3
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64,gzip
+          b=Path("mx-fuel-watch/MX_Fuel_Watch_PH.exe").read_bytes()
+          assert b[:2]==b"MZ"
+          assert "3.3.3".encode("utf-16le") in b
+          assert "Update Available".encode("utf-16le") in b
+          assert b"Shell_NotifyIconW" in b
+          assert len(b)>100000
+          s=gzip.decompress(base64.b64decode(Path("mx-fuel-watch/source.b64").read_text().strip())).decode()
+          assert "RGBX(230,112,28)" in s
+          print("Verified v3.3.3:",len(b),"bytes")
+          PY
+
+      - name: Publish updater release
+        run: |
+          printf '3.3.3\n' > mx-fuel-watch/update.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mx-fuel-watch/source.b64 mx-fuel-watch/MX_Fuel_Watch_PH.exe mx-fuel-watch/update.txt
+          git commit -m "Release MX Fuel Watch PH v3.3.3 update button indicator"
+          git push origin HEAD:mx-fuel-watch
