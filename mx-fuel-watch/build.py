@@ -18,12 +18,15 @@ def make_import_libs():
                       "WriteFile","CopyFileW","DeleteFileW","MoveFileExW","CreateProcessW"],
       "user32.dll":["BeginPaint","CreateIcon","CreateWindowExW","DefWindowProcW","DispatchMessageW","DrawIconEx","DrawTextW",
                     "EndPaint","FillRect","GetClientRect","GetMessageW","InvalidateRect","KillTimer","LoadCursorW","LoadImageW",
-                    "MessageBoxW","PostMessageW","PostQuitMessage","RegisterClassExW","SetTimer","ShowWindow","TranslateMessage","UpdateWindow"],
+                    "MessageBoxW","PostMessageW","PostQuitMessage","RegisterClassExW","SetTimer","ShowWindow","TranslateMessage","UpdateWindow",
+                    "DestroyWindow","SetForegroundWindow","GetCursorPos","CreatePopupMenu","AppendMenuW","TrackPopupMenu","DestroyMenu"],
       "gdi32.dll":["BitBlt","CreateCompatibleBitmap","CreateCompatibleDC","CreateFontW","CreatePen","CreateSolidBrush","DeleteDC",
                    "DeleteObject","Ellipse","LineTo","MoveToEx","Polygon","Rectangle","RoundRect","SelectObject","SetBkMode","SetTextColor"],
       "winhttp.dll":["WinHttpCloseHandle","WinHttpConnect","WinHttpOpen","WinHttpOpenRequest","WinHttpReadData","WinHttpReceiveResponse",
                      "WinHttpSendRequest","WinHttpSetTimeouts"],
       "dwmapi.dll":["DwmSetWindowAttribute"],
+      "shell32.dll":["Shell_NotifyIconW"],
+      "advapi32.dll":["RegCreateKeyExW","RegSetValueExW","RegCloseKey"],
     }
     imp = TMP / "imports"; imp.mkdir(parents=True, exist_ok=True)
     for dll, funcs in libs.items():
@@ -124,7 +127,7 @@ def main():
     obj=TMP/"app.obj"
     run("clang","--target=x86_64-pc-windows-msvc","-O2","-ffreestanding","-fno-stack-protector","-fno-builtin","-c",SRC,"-o",obj)
     run("lld-link","/entry:WinMainCRTStartup","/subsystem:windows","/nodefaultlib","/machine:x64",
-        f"/out:{OUT}",obj,res,imp/"kernel32.lib",imp/"user32.lib",imp/"gdi32.lib",imp/"winhttp.lib",imp/"dwmapi.lib")
+        f"/out:{OUT}",obj,res,imp/"kernel32.lib",imp/"user32.lib",imp/"gdi32.lib",imp/"winhttp.lib",imp/"dwmapi.lib",imp/"shell32.lib",imp/"advapi32.lib")
     print("Built:", OUT, OUT.stat().st_size, "bytes")
 
 if __name__=="__main__":
