@@ -118,8 +118,13 @@ def make_res():
 def main():
     shutil.rmtree(TMP, ignore_errors=True); TMP.mkdir()
     packed = ROOT / "source.b64"
+    parts = sorted(ROOT.glob("source.b64.part*"))
     global SRC
-    if packed.exists():
+    if parts:
+        payload = "".join(p.read_text().strip() for p in parts)
+        SRC = TMP / "mx_fuel_watch_ph_v33.c"
+        SRC.write_bytes(gzip.decompress(base64.b64decode(payload)))
+    elif packed.exists():
         SRC = TMP / "mx_fuel_watch_ph_v33.c"
         SRC.write_bytes(gzip.decompress(base64.b64decode(packed.read_text().strip())))
     imp=make_import_libs()
