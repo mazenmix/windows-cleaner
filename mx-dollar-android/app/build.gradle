@@ -1,0 +1,22 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace "com.mazenmix.mxdollar"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.mazenmix.mxdollar"
+        minSdk 26
+        targetSdk 35
+        versionCode 10000
+        versionName "1.0.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+}
