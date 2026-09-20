@@ -1,0 +1,57 @@
+name: Build MX Dollar Android
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "mx-dollar-android/settings.gradle"
+      - "mx-dollar-android/build.gradle"
+      - "mx-dollar-android/gradle.properties"
+      - "mx-dollar-android/app/**"
+      - ".github/workflows/mx-dollar-android.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mx-dollar-android-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+
+      - name: Build release APK
+        working-directory: mx-dollar-android
+        run: gradle --no-daemon :app:assembleRelease
+
+      - name: Store unsigned build
+        run: |
+          mkdir -p mx-dollar-android/build-output
+          cp mx-dollar-android/app/build/outputs/apk/release/app-release-unsigned.apk \
+             mx-dollar-android/build-output/MX.Dollar.unsigned.apk
+
+      - name: Commit unsigned build
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f mx-dollar-android/build-output/MX.Dollar.unsigned.apk
+          if ! git diff --cached --quiet; then
+            git commit -m "Build MX Dollar Android APK"
+            git push
+          fi
