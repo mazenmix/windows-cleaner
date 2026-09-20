@@ -21,6 +21,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,22 +37,51 @@ jobs:
         with:
           gradle-version: "8.10.2"
 
+      - name: Restore signing file
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p .android-signing
+          if gh release view mx-dollar-android-key-v1 >/dev/null 2>&1; then
+            gh release download mx-dollar-android-key-v1 --pattern "mx-dollar.jks" --dir .android-signing --clobber
+          else
+            keytool -genkeypair -v               -keystore .android-signing/mx-dollar.jks               -storepass android               -keypass android               -alias mxdollar               -keyalg RSA -keysize 3072 -validity 10000               -dname "CN=MazenmiX, OU=MX Dollar, O=MazenmiX, L=Baghdad, C=IQ"
+            gh release create mx-dollar-android-key-v1 .android-signing/mx-dollar.jks               --draft               --title "MX Dollar Android Key"               --notes "Signing material for MX Dollar Android."
+          fi
+
       - name: Build release APK
         working-directory: mx-dollar-android
         run: gradle --no-daemon :app:assembleRelease
 
-      - name: Store unsigned build
+      - name: Sign APK
         run: |
-          mkdir -p mx-dollar-android/build-output
-          cp mx-dollar-android/app/build/outputs/apk/release/app-release-unsigned.apk \
-             mx-dollar-android/build-output/MX.Dollar.unsigned.apk
+          BUILD_TOOLS="$(find "$ANDROID_SDK_ROOT/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          "$BUILD_TOOLS/zipalign" -f -p 4             mx-dollar-android/app/build/outputs/apk/release/app-release-unsigned.apk             /tmp/MX.Dollar.aligned.apk
+          "$BUILD_TOOLS/apksigner" sign             --ks .android-signing/mx-dollar.jks             --ks-key-alias mxdollar             --ks-pass pass:android             --key-pass pass:android             --out /tmp/MX.Dollar.apk             /tmp/MX.Dollar.aligned.apk
+          "$BUILD_TOOLS/apksigner" verify --verbose /tmp/MX.Dollar.apk
 
-      - name: Commit unsigned build
+      - name: Publish APK and update manifest
+        run: |
+          mkdir -p mx-dollar-android/releases
+          cp /tmp/MX.Dollar.apk mx-dollar-android/releases/MX.Dollar.apk
+          SHA="$(sha256sum /tmp/MX.Dollar.apk | awk '{print $1}')"
+          VERSION="$(grep -oP 'versionName\s+"\K[^"]+' mx-dollar-android/app/build.gradle)"
+          cat > mx-dollar-android/update-android.json <<EOF
+          {
+            "version": "${VERSION}",
+            "url": "https://raw.githubusercontent.com/mazenmix/windows-cleaner/main/mx-dollar-android/releases/MX.Dollar.apk",
+            "sha256": "${SHA}",
+            "notes": "MX Dollar Android v${VERSION} · MazenmiX"
+          }
+          EOF
+
+      - name: Commit signed APK and update channel
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f mx-dollar-android/build-output/MX.Dollar.unsigned.apk
+          git add -f mx-dollar-android/releases/MX.Dollar.apk
+          git add mx-dollar-android/update-android.json
           if ! git diff --cached --quiet; then
-            git commit -m "Build MX Dollar Android APK"
+            git commit -m "Publish MX Dollar Android update"
             git push
           fi
