@@ -63,13 +63,15 @@ jobs:
       - name: Publish APK and update manifest
         run: |
           mkdir -p mx-dollar-android/releases
-          cp /tmp/MX.Dollar.apk mx-dollar-android/releases/MX.Dollar.apk
           SHA="$(sha256sum /tmp/MX.Dollar.apk | awk '{print $1}')"
           VERSION="$(grep -oP 'versionName\s+"\K[^"]+' mx-dollar-android/app/build.gradle)"
+          VERSIONED="MX.Dollar.v${VERSION}.apk"
+          cp /tmp/MX.Dollar.apk "mx-dollar-android/releases/${VERSIONED}"
+          cp /tmp/MX.Dollar.apk mx-dollar-android/releases/MX.Dollar.apk
           cat > mx-dollar-android/update-android.json <<EOF
           {
             "version": "${VERSION}",
-            "url": "https://raw.githubusercontent.com/mazenmix/windows-cleaner/main/mx-dollar-android/releases/MX.Dollar.apk",
+            "url": "https://raw.githubusercontent.com/mazenmix/windows-cleaner/main/mx-dollar-android/releases/${VERSIONED}",
             "sha256": "${SHA}",
             "notes": "MX Dollar Android v${VERSION} · MazenmiX"
           }
@@ -79,7 +81,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          VERSION="$(grep -oP 'versionName\s+"\K[^"]+' mx-dollar-android/app/build.gradle)"
           git add -f mx-dollar-android/releases/MX.Dollar.apk
+          git add -f "mx-dollar-android/releases/MX.Dollar.v${VERSION}.apk"
           git add mx-dollar-android/update-android.json
           if ! git diff --cached --quiet; then
             git commit -m "Publish MX Dollar Android update"
