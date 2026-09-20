@@ -1,679 +1,213 @@
 package com.mazenmix.mxdollar;
 
 import android.Manifest;
-import android.app.Activity;
-import android.app.DownloadManager;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
+import android.app.*;
+import android.content.*;
 import android.content.pm.PackageManager;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
+import android.os.*;
 import android.provider.Settings;
 import android.text.Html;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ScrollView;
-import android.widget.Toast;
-
+import android.view.*;
+import android.widget.*;
 import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.*;
+import java.net.*;
 import java.security.MessageDigest;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.regex.*;
 
 public class MainActivity extends Activity {
-    private static final String UPDATE_URL =
-            "https://raw.githubusercontent.com/mazenmix/windows-cleaner/main/mx-dollar-android/update-android.json";
+    static final String UPDATE_URL="https://raw.githubusercontent.com/mazenmix/windows-cleaner/main/mx-dollar-android/update-android.json";
+    final ExecutorService pool=Executors.newSingleThreadExecutor();
+    final Handler ui=new Handler(Looper.getMainLooper());
+    Market m=new Market(); UpdateInfo up=new UpdateInfo();
+    boolean refreshing=false, downloading=false; long downloadId=-1; Uri pendingInstall;
+    TextView heroPrice, heroBuy, heroSell, kifahBuy, kifahSell, harBuy, harSell, g18, g21, g24, updated, brand, updateText;
+    Button refreshBtn, updateBtn;
+    BroadcastReceiver receiver;
 
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private final Handler main = new Handler(Looper.getMainLooper());
-
-    private DollarView dollarView;
-    private MarketData data = new MarketData();
-    private UpdateInfo updateInfo = new UpdateInfo();
-    private boolean refreshing = false;
-    private boolean checkingUpdate = false;
-    private boolean downloadingUpdate = false;
-    private long downloadId = -1;
-    private Uri pendingInstallUri;
-    private BroadcastReceiver downloadReceiver;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        getWindow().setStatusBarColor(Color.rgb(10, 14, 20));
-        getWindow().setNavigationBarColor(Color.rgb(10, 14, 20));
-
-        if (Build.VERSION.SDK_INT >= 33 &&
-                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 41);
-        }
-
+    @Override public void onCreate(Bundle b){
+        super.onCreate(b);
+        getWindow().setStatusBarColor(Color.rgb(10,14,20));
+        getWindow().setNavigationBarColor(Color.rgb(10,14,20));
+        if(Build.VERSION.SDK_INT>=33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},41);
         loadCache();
-        createNotificationChannel();
-
-        dollarView = new DollarView(this);
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.setBackgroundColor(Color.rgb(10, 14, 20));
-        scroll.addView(dollarView, new ScrollView.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT));
-        setContentView(scroll);
-
+        setContentView(buildUi());
+        createChannel();
         registerDownloadReceiver();
-        refreshMarkets(false);
-        checkForUpdate();
-
-        main.postDelayed(autoRefresh, 60_000);
-        main.postDelayed(autoUpdateCheck, 3_600_000);
+        render();
+        refresh(false);
+        checkUpdate();
+        ui.postDelayed(new Runnable(){ public void run(){ refresh(false); ui.postDelayed(this,60000); }},60000);
+        ui.postDelayed(new Runnable(){ public void run(){ checkUpdate(); ui.postDelayed(this,3600000); }},3600000);
     }
 
-    private final Runnable autoRefresh = new Runnable() {
-        @Override public void run() {
-            refreshMarkets(false);
-            main.postDelayed(this, 60_000);
-        }
-    };
+    View buildUi(){
+        ScrollView sc=new ScrollView(this);
+        sc.setFillViewport(true); sc.setBackgroundColor(c(10,14,20));
+        LinearLayout root=vbox(); root.setPadding(dp(18),dp(18),dp(18),dp(24));
+        sc.addView(root,new ScrollView.LayoutParams(-1,-2));
 
-    private final Runnable autoUpdateCheck = new Runnable() {
-        @Override public void run() {
-            checkForUpdate();
-            main.postDelayed(this, 3_600_000);
-        }
-    };
+        LinearLayout head=hbox(); head.setGravity(Gravity.CENTER_VERTICAL);
+        TextView icon=tv("$",22,Color.rgb(229,197,118),true); icon.setGravity(Gravity.CENTER);
+        icon.setBackground(bg(c(25,33,45),20,c(229,197,118),1)); head.addView(icon,new LinearLayout.LayoutParams(dp(44),dp(44)));
+        LinearLayout titles=vbox(); LinearLayout.LayoutParams tp=new LinearLayout.LayoutParams(0,-2,1); tp.leftMargin=dp(12);
+        TextView t1=tv("MX DOLLAR",20,Color.WHITE,true); TextView t2=tv("IRAQ MARKET WATCH",10,c(125,137,153),true);
+        titles.addView(t1); titles.addView(t2); head.addView(titles,tp);
+        TextView live=tv("●  LIVE",10,c(103,224,168),true); live.setGravity(Gravity.CENTER); live.setBackground(bg(c(19,43,35),18,0,0));
+        head.addView(live,new LinearLayout.LayoutParams(dp(78),dp(34))); root.addView(head);
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (pendingInstallUri != null &&
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-                getPackageManager().canRequestPackageInstalls()) {
-            Uri uri = pendingInstallUri;
-            pendingInstallUri = null;
-            openInstaller(uri);
-        }
+        root.addView(space(16));
+        LinearLayout hero=vbox(); hero.setPadding(dp(18),dp(16),dp(18),dp(16)); hero.setBackground(bg(c(16,22,31),24,c(43,52,65),1));
+        hero.addView(tv("USD / IQD",12,c(131,192,247),true));
+        TextView sub=tv("السعر الأعلى الآن لكل 100$",12,c(172,181,193),true); sub.setGravity(Gravity.RIGHT); hero.addView(sub);
+        heroPrice=tv("—",36,Color.WHITE,true); heroPrice.setPadding(0,dp(4),0,0); hero.addView(heroPrice);
+        LinearLayout chips=hbox(); chips.setGravity(Gravity.CENTER);
+        LinearLayout buyChip=chip(c(18,37,31)); heroBuy=tv("شراء  —",13,c(103,224,168),true); buyChip.addView(heroBuy); chips.addView(buyChip,new LinearLayout.LayoutParams(0,dp(52),1));
+        chips.addView(spaceH(10));
+        LinearLayout sellChip=chip(c(42,31,25)); heroSell=tv("بيع  —",13,c(241,180,111),true); sellChip.addView(heroSell); chips.addView(sellChip,new LinearLayout.LayoutParams(0,dp(52),1));
+        hero.addView(chips); root.addView(hero);
+
+        root.addView(space(14));
+        LinearLayout markets=hbox();
+        View kc=marketCard("KIFAH","بورصة الكفاح",true); View hc=marketCard("HARITHIYA","بورصة الحارثية",false);
+        markets.addView(kc,new LinearLayout.LayoutParams(0,-2,1)); markets.addView(spaceH(10)); markets.addView(hc,new LinearLayout.LayoutParams(0,-2,1));
+        root.addView(markets);
+
+        root.addView(space(18));
+        LinearLayout goldHead=hbox(); goldHead.setGravity(Gravity.CENTER_VERTICAL);
+        goldHead.addView(tv("GOLD · الذهب",15,c(229,197,118),true),new LinearLayout.LayoutParams(0,-2,1));
+        TextView gh=tv("سعر المثقال · 5 غرام",10,c(125,137,153),true); gh.setGravity(Gravity.RIGHT); goldHead.addView(gh);
+        root.addView(goldHead); root.addView(space(10));
+        LinearLayout gold=hbox();
+        g18=goldCard(gold,"18K","عيار 18"); gold.addView(spaceH(8));
+        g21=goldCard(gold,"21K","عيار 21"); gold.addView(spaceH(8));
+        g24=goldCard(gold,"24K","عيار 24");
+        root.addView(gold);
+
+        root.addView(space(16));
+        LinearLayout foot=vbox(); foot.setPadding(dp(14),dp(12),dp(14),dp(12)); foot.setBackground(bg(c(13,18,26),20,0,0));
+        updated=tv("بانتظار التحديث",10,c(118,130,146),true); updated.setGravity(Gravity.CENTER); foot.addView(updated);
+        brand=tv("MazenmiX",12,c(229,197,118),true); brand.setGravity(Gravity.CENTER); foot.addView(brand);
+        refreshBtn=button("تحديث الأسعار",c(36,112,168)); refreshBtn.setOnClickListener(v->refresh(true));
+        LinearLayout.LayoutParams bp=new LinearLayout.LayoutParams(-1,dp(48)); bp.topMargin=dp(10); foot.addView(refreshBtn,bp); root.addView(foot);
+
+        root.addView(space(14));
+        LinearLayout upd=vbox(); upd.setPadding(dp(14),dp(12),dp(14),dp(12)); upd.setBackground(bg(c(14,20,28),16,c(36,46,59),1));
+        updateText=tv("جاري فحص التحديث...",10,c(132,145,161),true); updateText.setGravity(Gravity.CENTER); upd.addView(updateText);
+        updateBtn=button("UPDATE NOW",c(29,118,82)); updateBtn.setVisibility(View.GONE); updateBtn.setOnClickListener(v->downloadUpdate());
+        LinearLayout.LayoutParams upb=new LinearLayout.LayoutParams(-1,dp(46)); upb.topMargin=dp(10); upd.addView(updateBtn,upb); root.addView(upd);
+
+        TextView bottom=tv("MX DOLLAR ANDROID · MAZENMIX",9,c(73,85,99),true); bottom.setGravity(Gravity.CENTER); bottom.setPadding(0,dp(16),0,0); root.addView(bottom);
+        return sc;
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        main.removeCallbacksAndMessages(null);
-        executor.shutdownNow();
-        if (downloadReceiver != null) {
-            try { unregisterReceiver(downloadReceiver); } catch (Exception ignored) {}
-        }
+    View marketCard(String code,String name,boolean kifah){
+        LinearLayout card=vbox(); card.setPadding(dp(12),dp(12),dp(12),dp(12)); card.setBackground(bg(c(15,21,30),18,c(37,46,58),1));
+        card.addView(tv(code,10,c(104,178,236),true));
+        TextView n=tv(name,11,c(185,194,205),true); n.setGravity(Gravity.RIGHT); card.addView(n);
+        TextView s=tv("بيع  —",14,c(220,160,98),true); TextView b=tv("شراء  —",14,c(91,204,148),true);
+        card.addView(s); card.addView(b);
+        if(kifah){kifahSell=s;kifahBuy=b;}else{harSell=s;harBuy=b;}
+        return card;
     }
 
-    private void registerDownloadReceiver() {
-        downloadReceiver = new BroadcastReceiver() {
-            @Override public void onReceive(Context context, Intent intent) {
-                if (!DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(intent.getAction())) return;
-                long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-                if (id != downloadId) return;
-                verifyAndInstallDownloadedApk();
-            }
-        };
-
-        IntentFilter f = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
-        if (Build.VERSION.SDK_INT >= 33) {
-            registerReceiver(downloadReceiver, f, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            registerReceiver(downloadReceiver, f);
-        }
+    TextView goldCard(LinearLayout parent,String code,String name){
+        LinearLayout card=vbox(); card.setPadding(dp(10),dp(10),dp(10),dp(10)); card.setGravity(Gravity.CENTER);
+        card.setBackground(bg(c(18,22,28),18,c(59,52,37),1));
+        TextView tag=tv(code,10,c(229,197,118),true); tag.setGravity(Gravity.CENTER); card.addView(tag);
+        TextView nm=tv(name,9,c(151,160,172),true); nm.setGravity(Gravity.CENTER); card.addView(nm);
+        TextView val=tv("—",17,c(246,242,230),true); val.setGravity(Gravity.CENTER); val.setPadding(0,dp(8),0,0); card.addView(val);
+        TextView iq=tv("د.ع",9,c(124,115,91),true); iq.setGravity(Gravity.CENTER); card.addView(iq);
+        parent.addView(card,new LinearLayout.LayoutParams(0,dp(132),1)); return val;
     }
 
-    private void refreshMarkets(boolean manual) {
-        if (refreshing) return;
-        refreshing = true;
-        dollarView.invalidate();
+    void render(){
+        heroPrice.setText(f(m.highSell()));
+        heroBuy.setText("شراء  "+f(m.highBuy()));
+        heroSell.setText("بيع  "+f(m.highSell()));
+        kifahBuy.setText("شراء  "+f(m.kBuy)); kifahSell.setText("بيع  "+f(m.kSell));
+        harBuy.setText("شراء  "+f(m.hBuy)); harSell.setText("بيع  "+f(m.hSell));
+        g18.setText(f(m.g18)); g21.setText(f(m.g21)); g24.setText(f(m.g24));
+        updated.setText(m.updated>0 ? "آخر تحديث  "+new SimpleDateFormat("hh:mm:ss a",Locale.US).format(new Date(m.updated)) : "بانتظار التحديث");
+        refreshBtn.setText(refreshing?"جارِ التحديث...":"تحديث الأسعار"); refreshBtn.setEnabled(!refreshing);
+        updateText.setText("MX Dollar v"+version()+" · "+up.status);
+        updateBtn.setVisibility(up.available||downloading?View.VISIBLE:View.GONE);
+        updateBtn.setText(downloading?"جاري التحديث...":"UPDATE NOW"); updateBtn.setEnabled(!downloading);
+    }
 
-        final int oldHigh = data.highSell();
-
-        executor.execute(() -> {
-            MarketData fresh = new MarketData();
-            String error = null;
-            try {
-                String dollarHtml = fetchText("https://t.me/s/dollariraqi");
-                parseDollar(dollarHtml, fresh);
-
-                String goldHtml = fetchText("https://mithqaly.com/%D8%A7%D8%B3%D8%B9%D8%A7%D8%B1-%D8%A7%D9%84%D8%B0%D9%87%D8%A8/");
-                parseGold(goldHtml, fresh);
-
-                fresh.updatedAt = System.currentTimeMillis();
-                if (fresh.highSell() <= 0 && fresh.gold21 <= 0) {
-                    throw new IllegalStateException("No market data");
-                }
-            } catch (Exception e) {
-                error = e.getMessage();
-            }
-
-            final String finalError = error;
-            main.post(() -> {
-                if (finalError == null) {
-                    data = fresh;
-                    saveCache();
-                    int newHigh = data.highSell();
-                    if (oldHigh > 0 && newHigh > 0 && oldHigh != newHigh) {
-                        showPriceNotification(oldHigh, newHigh);
-                    } else if (manual) {
-                        Toast.makeText(this, "تم تحديث الأسعار", Toast.LENGTH_SHORT).show();
-                    }
-                } else if (manual) {
-                    Toast.makeText(this, "تعذر تحديث الأسعار حالياً", Toast.LENGTH_SHORT).show();
-                }
-                refreshing = false;
-                dollarView.invalidate();
-            });
+    void refresh(boolean manual){
+        if(refreshing)return; refreshing=true; render(); final int old=m.highSell();
+        pool.execute(()->{
+            Market n=new Market(); String err=null;
+            try{ parseDollar(fetch("https://t.me/s/dollariraqi"),n); parseGold(fetch("https://mithqaly.com/%D8%A7%D8%B3%D8%B9%D8%A7%D8%B1-%D8%A7%D9%84%D8%B0%D9%87%D8%A8/"),n); n.updated=System.currentTimeMillis(); if(n.highSell()==0&&n.g21==0)throw new Exception(); }
+            catch(Exception e){err="x";}
+            String er=err; ui.post(()->{ if(er==null){m=n;saveCache();if(old>0&&m.highSell()>0&&old!=m.highSell())notifyPrice(old,m.highSell());else if(manual)Toast.makeText(this,"تم تحديث الأسعار",Toast.LENGTH_SHORT).show();}else if(manual)Toast.makeText(this,"تعذر تحديث الأسعار حالياً",Toast.LENGTH_SHORT).show();refreshing=false;render();});
         });
     }
 
-    private void checkForUpdate() {
-        if (checkingUpdate || downloadingUpdate) return;
-        checkingUpdate = true;
-        updateInfo.status = "جاري فحص التحديث...";
-        dollarView.invalidate();
-
-        executor.execute(() -> {
-            try {
-                String json = fetchText(UPDATE_URL + "?t=" + System.currentTimeMillis());
-                JSONObject o = new JSONObject(json);
-                UpdateInfo u = new UpdateInfo();
-                u.version = o.optString("version", "");
-                u.url = o.optString("url", "");
-                u.sha256 = o.optString("sha256", "");
-                u.notes = o.optString("notes", "");
-
-                String current = currentVersion();
-                u.available = compareVersions(u.version, current) > 0;
-                u.status = u.available ? "Update Available · v" + u.version : "التطبيق محدّث";
-
-                main.post(() -> {
-                    updateInfo = u;
-                    checkingUpdate = false;
-                    dollarView.invalidate();
-                });
-            } catch (Exception e) {
-                main.post(() -> {
-                    checkingUpdate = false;
-                    updateInfo.available = false;
-                    updateInfo.status = "تعذر فحص التحديث";
-                    dollarView.invalidate();
-                });
-            }
+    void checkUpdate(){
+        up.status="جاري فحص التحديث..."; render();
+        pool.execute(()->{
+            try{JSONObject o=new JSONObject(fetch(UPDATE_URL+"?t="+System.currentTimeMillis()));UpdateInfo n=new UpdateInfo();n.version=o.optString("version");n.url=o.optString("url");n.sha=o.optString("sha256");n.available=cmp(n.version,version())>0;n.status=n.available?"Update Available · v"+n.version:"التطبيق محدّث";ui.post(()->{up=n;render();});}
+            catch(Exception e){ui.post(()->{up.status="تعذر فحص التحديث";up.available=false;render();});}
         });
     }
 
-    private void downloadUpdate() {
-        if (!updateInfo.available || downloadingUpdate || updateInfo.url.isEmpty()) return;
-
-        try {
-            DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-            DownloadManager.Request req = new DownloadManager.Request(Uri.parse(updateInfo.url));
-            req.setTitle("MX Dollar v" + updateInfo.version);
-            req.setDescription("Downloading update...");
-            req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            req.setMimeType("application/vnd.android.package-archive");
-            req.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "MX.Dollar.update.apk");
-            downloadId = dm.enqueue(req);
-            downloadingUpdate = true;
-            updateInfo.status = "جاري تنزيل التحديث...";
-            dollarView.invalidate();
-        } catch (Exception e) {
-            Toast.makeText(this, "فشل بدء تنزيل التحديث", Toast.LENGTH_LONG).show();
-        }
+    void downloadUpdate(){
+        if(!up.available||downloading)return;
+        try{DownloadManager dm=(DownloadManager)getSystemService(DOWNLOAD_SERVICE);DownloadManager.Request r=new DownloadManager.Request(Uri.parse(up.url));r.setTitle("MX Dollar v"+up.version);r.setMimeType("application/vnd.android.package-archive");r.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);r.setDestinationInExternalFilesDir(this,Environment.DIRECTORY_DOWNLOADS,"MX.Dollar.update.apk");downloadId=dm.enqueue(r);downloading=true;up.status="جاري تنزيل التحديث...";render();}
+        catch(Exception e){Toast.makeText(this,"فشل بدء التحديث",Toast.LENGTH_LONG).show();}
     }
 
-    private void verifyAndInstallDownloadedApk() {
-        executor.execute(() -> {
-            try {
-                DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-                Uri uri = dm.getUriForDownloadedFile(downloadId);
-                if (uri == null) throw new IllegalStateException("Download missing");
-
-                String actual = sha256(uri);
-                if (!actual.equalsIgnoreCase(updateInfo.sha256)) {
-                    throw new SecurityException("SHA-256 mismatch");
-                }
-
-                main.post(() -> {
-                    downloadingUpdate = false;
-                    updateInfo.status = "اكتمل التنزيل · جاهز للتثبيت";
-                    dollarView.invalidate();
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-                            !getPackageManager().canRequestPackageInstalls()) {
-                        pendingInstallUri = uri;
-                        Intent settings = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                                Uri.parse("package:" + getPackageName()));
-                        startActivity(settings);
-                        Toast.makeText(this,
-                                "فعّل السماح بتثبيت التطبيقات من MX Dollar ثم ارجع",
-                                Toast.LENGTH_LONG).show();
-                    } else {
-                        openInstaller(uri);
-                    }
-                });
-            } catch (Exception e) {
-                main.post(() -> {
-                    downloadingUpdate = false;
-                    updateInfo.status = "فشل التحقق من التحديث";
-                    dollarView.invalidate();
-                    Toast.makeText(this, "فشل التحديث: الملف غير صالح", Toast.LENGTH_LONG).show();
-                });
-            }
-        });
+    void registerDownloadReceiver(){
+        receiver=new BroadcastReceiver(){public void onReceive(Context c,Intent i){if(DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(i.getAction())&&i.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID,-1)==downloadId)verifyInstall();}};
+        IntentFilter f=new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE); if(Build.VERSION.SDK_INT>=33)registerReceiver(receiver,f,Context.RECEIVER_NOT_EXPORTED);else registerReceiver(receiver,f);
     }
 
-    private void openInstaller(Uri uri) {
-        Intent i = new Intent(Intent.ACTION_VIEW);
-        i.setDataAndType(uri, "application/vnd.android.package-archive");
-        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(i);
+    void verifyInstall(){
+        pool.execute(()->{try{DownloadManager dm=(DownloadManager)getSystemService(DOWNLOAD_SERVICE);Uri u=dm.getUriForDownloadedFile(downloadId);if(u==null||!sha256(u).equalsIgnoreCase(up.sha))throw new Exception();ui.post(()->{downloading=false;up.status="اكتمل التنزيل · جاهز للتثبيت";render();if(Build.VERSION.SDK_INT>=26&&!getPackageManager().canRequestPackageInstalls()){pendingInstall=u;startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,Uri.parse("package:"+getPackageName())));}else install(u);});}catch(Exception e){ui.post(()->{downloading=false;up.status="فشل التحقق من التحديث";render();Toast.makeText(this,"فشل التحديث",Toast.LENGTH_LONG).show();});}});
     }
 
-    private String sha256(Uri uri) throws Exception {
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        try (InputStream in = getContentResolver().openInputStream(uri)) {
-            if (in == null) throw new IllegalStateException("Cannot read APK");
-            byte[] buf = new byte[8192];
-            int n;
-            while ((n = in.read(buf)) > 0) md.update(buf, 0, n);
-        }
-        StringBuilder sb = new StringBuilder();
-        for (byte b : md.digest()) sb.append(String.format(Locale.US, "%02x", b));
-        return sb.toString();
-    }
+    @Override protected void onResume(){super.onResume();if(pendingInstall!=null&&Build.VERSION.SDK_INT>=26&&getPackageManager().canRequestPackageInstalls()){Uri u=pendingInstall;pendingInstall=null;install(u);}}
+    void install(Uri u){Intent i=new Intent(Intent.ACTION_VIEW);i.setDataAndType(u,"application/vnd.android.package-archive");i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_ACTIVITY_NEW_TASK);startActivity(i);}
+    String sha256(Uri u)throws Exception{MessageDigest md=MessageDigest.getInstance("SHA-256");try(InputStream in=getContentResolver().openInputStream(u)){byte[]b=new byte[8192];int n;while((n=in.read(b))>0)md.update(b,0,n);}StringBuilder s=new StringBuilder();for(byte b:md.digest())s.append(String.format(Locale.US,"%02x",b));return s.toString();}
 
-    private String currentVersion() {
-        try {
-            return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
-        } catch (Exception e) {
-            return "1.0.0";
-        }
-    }
+    String fetch(String u)throws Exception{HttpURLConnection c=(HttpURLConnection)new URL(u).openConnection();c.setConnectTimeout(12000);c.setReadTimeout(15000);c.setRequestProperty("User-Agent","MX-Dollar-Android/"+version());c.setRequestProperty("Accept-Language","ar-IQ,ar;q=0.9,en;q=0.8");int code=c.getResponseCode();if(code<200||code>=300)throw new IOException();StringBuilder s=new StringBuilder();try(BufferedReader r=new BufferedReader(new InputStreamReader(c.getInputStream()))){String l;while((l=r.readLine())!=null)s.append(l).append('\n');}finally{c.disconnect();}return s.toString();}
+    static String plain(String h){String s=h.replaceAll("(?is)<script.*?</script>|<style.*?</style>"," ").replaceAll("(?s)<[^>]*>","\n");return Html.fromHtml(s,Html.FROM_HTML_MODE_LEGACY).toString().replace('\u200f',' ').replace('\u200e',' ').replaceAll("\\s+"," ");}
+    static void parseDollar(String h,Market o){String t=plain(h); parseM(t,"كفاح",true,o);parseM(t,"حارثية",false,o);}
+    static void parseM(String t,String n,boolean k,Market o){Matcher m=Pattern.compile(n+"\\s*([0-9]{4}\\.[0-9]{2})\\s*\\|\\s*([0-9]{4}\\.[0-9]{2})").matcher(t);double b=0,s=0;while(m.find()){b=Double.parseDouble(m.group(1));s=Double.parseDouble(m.group(2));}if(k){o.kBuy=(int)Math.round(b*100);o.kSell=(int)Math.round(s*100);}else{o.hBuy=(int)Math.round(b*100);o.hSell=(int)Math.round(s*100);}}
+    static void parseGold(String h,Market o){String t=plain(h);o.g21=gold(t,"21");o.g24=gold(t,"24");if(o.g24>0)o.g18=(int)Math.round(o.g24*.75);else if(o.g21>0){o.g18=(int)Math.round(o.g21*(18d/21d));o.g24=(int)Math.round(o.g21*(24d/21d));}}
+    static int gold(String t,String k){Matcher m=Pattern.compile("مثقال ذهب عيار\\s*"+k+"[^0-9]{0,80}([0-9]{2,3}(?:,[0-9]{3}){1,2})\\s*د\\.ع").matcher(t);return m.find()?Integer.parseInt(m.group(1).replace(",","")):0;}
 
-    private static int compareVersions(String a, String b) {
-        String[] aa = a.replace("v", "").split("\\.");
-        String[] bb = b.replace("v", "").split("\\.");
-        int n = Math.max(aa.length, bb.length);
-        for (int i = 0; i < n; i++) {
-            int x = i < aa.length ? safeInt(aa[i]) : 0;
-            int y = i < bb.length ? safeInt(bb[i]) : 0;
-            if (x != y) return Integer.compare(x, y);
-        }
-        return 0;
-    }
+    void loadCache(){SharedPreferences p=getSharedPreferences("mx",0);m.kBuy=p.getInt("kb",0);m.kSell=p.getInt("ks",0);m.hBuy=p.getInt("hb",0);m.hSell=p.getInt("hs",0);m.g18=p.getInt("g18",0);m.g21=p.getInt("g21",0);m.g24=p.getInt("g24",0);m.updated=p.getLong("u",0);}
+    void saveCache(){getSharedPreferences("mx",0).edit().putInt("kb",m.kBuy).putInt("ks",m.kSell).putInt("hb",m.hBuy).putInt("hs",m.hSell).putInt("g18",m.g18).putInt("g21",m.g21).putInt("g24",m.g24).putLong("u",m.updated).apply();}
+    void createChannel(){if(Build.VERSION.SDK_INT>=26)((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(new NotificationChannel("mx","MX Dollar",NotificationManager.IMPORTANCE_DEFAULT));}
+    void notifyPrice(int old,int now){if(Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)return;Notification.Builder b=Build.VERSION.SDK_INT>=26?new Notification.Builder(this,"mx"):new Notification.Builder(this);b.setSmallIcon(android.R.drawable.stat_notify_sync).setContentTitle("MX Dollar "+(now>old?"▲":"▼")).setContentText("أعلى سعر الآن "+f(now)+" د.ع لكل 100$").setAutoCancel(true);((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).notify(102,b.build());}
 
-    private static int safeInt(String s) {
-        try {
-            Matcher m = Pattern.compile("^\\d+").matcher(s);
-            return m.find() ? Integer.parseInt(m.group()) : 0;
-        } catch (Exception e) {
-            return 0;
-        }
-    }
+    String version(){try{return getPackageManager().getPackageInfo(getPackageName(),0).versionName;}catch(Exception e){return "1.0.1";}}
+    static int cmp(String a,String b){String[]x=a.replace("v","").split("\\."),y=b.replace("v","").split("\\.");for(int i=0;i<Math.max(x.length,y.length);i++){int A=i<x.length?num(x[i]):0,B=i<y.length?num(y[i]):0;if(A!=B)return Integer.compare(A,B);}return 0;}
+    static int num(String s){try{Matcher m=Pattern.compile("^\\d+").matcher(s);return m.find()?Integer.parseInt(m.group()):0;}catch(Exception e){return 0;}}
+    static String f(int n){return n>0?new DecimalFormat("#,###").format(n):"—";}
 
-    private String fetchText(String address) throws Exception {
-        HttpURLConnection c = (HttpURLConnection) new URL(address).openConnection();
-        c.setConnectTimeout(12_000);
-        c.setReadTimeout(15_000);
-        c.setRequestProperty("User-Agent", "MX-Dollar-Android/" + currentVersion());
-        c.setRequestProperty("Accept-Language", "ar-IQ,ar;q=0.9,en;q=0.8");
-        c.setUseCaches(false);
+    LinearLayout vbox(){LinearLayout l=new LinearLayout(this);l.setOrientation(LinearLayout.VERTICAL);return l;}
+    LinearLayout hbox(){LinearLayout l=new LinearLayout(this);l.setOrientation(LinearLayout.HORIZONTAL);return l;}
+    LinearLayout chip(int color){LinearLayout l=hbox();l.setGravity(Gravity.CENTER);l.setPadding(dp(10),0,dp(10),0);l.setBackground(bg(color,15,0,0));return l;}
+    TextView tv(String s,int sp,int color,boolean bold){TextView t=new TextView(this);t.setText(s);t.setTextSize(sp);t.setTextColor(color);t.setTypeface(Typeface.create("sans",bold?Typeface.BOLD:Typeface.NORMAL));return t;}
+    Button button(String s,int color){Button b=new Button(this);b.setText(s);b.setTextColor(Color.WHITE);b.setTextSize(11);b.setTypeface(Typeface.DEFAULT_BOLD);b.setAllCaps(false);b.setBackground(bg(color,14,0,0));return b;}
+    View space(int h){Space s=new Space(this);s.setLayoutParams(new LinearLayout.LayoutParams(1,dp(h)));return s;}
+    View spaceH(int w){Space s=new Space(this);s.setLayoutParams(new LinearLayout.LayoutParams(dp(w),1));return s;}
+    GradientDrawable bg(int fill,int radius,int stroke,int sw){GradientDrawable g=new GradientDrawable();g.setColor(fill);g.setCornerRadius(dp(radius));if(sw>0)g.setStroke(dp(sw),stroke);return g;}
+    int dp(int n){return (int)(n*getResources().getDisplayMetrics().density+.5f);} static int c(int r,int g,int b){return Color.rgb(r,g,b);}
 
-        int code = c.getResponseCode();
-        if (code < 200 || code >= 300) throw new IllegalStateException("HTTP " + code);
-
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream()))) {
-            String line;
-            while ((line = br.readLine()) != null) sb.append(line).append('\n');
-        } finally {
-            c.disconnect();
-        }
-        return sb.toString();
-    }
-
-    private static String plainText(String html) {
-        String s = html.replaceAll("(?is)<script.*?</script>|<style.*?</style>", " ");
-        s = s.replaceAll("(?s)<[^>]*>", "\n");
-        s = Html.fromHtml(s, Html.FROM_HTML_MODE_LEGACY).toString();
-        return s.replace('\u200f', ' ').replace('\u200e', ' ').replaceAll("\\s+", " ");
-    }
-
-    private static void parseDollar(String html, MarketData out) {
-        String txt = plainText(html);
-        parseMarket(txt, "كفاح", true, out);
-        parseMarket(txt, "حارثية", false, out);
-    }
-
-    private static void parseMarket(String txt, String name, boolean kifah, MarketData out) {
-        Pattern p = Pattern.compile(name + "\\s*([0-9]{4}\\.[0-9]{2})\\s*\\|\\s*([0-9]{4}\\.[0-9]{2})");
-        Matcher m = p.matcher(txt);
-        double buy = 0, sell = 0;
-        while (m.find()) {
-            buy = Double.parseDouble(m.group(1));
-            sell = Double.parseDouble(m.group(2));
-        }
-        int b = (int) Math.round(buy * 100.0);
-        int s = (int) Math.round(sell * 100.0);
-        if (kifah) {
-            out.kifahBuy = b;
-            out.kifahSell = s;
-        } else {
-            out.harithiyaBuy = b;
-            out.harithiyaSell = s;
-        }
-    }
-
-    private static void parseGold(String html, MarketData out) {
-        String txt = plainText(html);
-        out.gold21 = parseGoldK(txt, "21");
-        out.gold24 = parseGoldK(txt, "24");
-        if (out.gold24 > 0) {
-            out.gold18 = (int) Math.round(out.gold24 * 0.75);
-        } else if (out.gold21 > 0) {
-            out.gold18 = (int) Math.round(out.gold21 * (18.0 / 21.0));
-            out.gold24 = (int) Math.round(out.gold21 * (24.0 / 21.0));
-        }
-    }
-
-    private static int parseGoldK(String txt, String k) {
-        Pattern p = Pattern.compile("مثقال ذهب عيار\\s*" + k +
-                "[^0-9]{0,80}([0-9]{2,3}(?:,[0-9]{3}){1,2})\\s*د\\.ع");
-        Matcher m = p.matcher(txt);
-        if (!m.find()) return 0;
-        return Integer.parseInt(m.group(1).replace(",", ""));
-    }
-
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= 26) {
-            NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            NotificationChannel c = new NotificationChannel(
-                    "mx_price_changes", "MX Dollar Price Changes", NotificationManager.IMPORTANCE_DEFAULT);
-            c.setDescription("USD/IQD price change alerts");
-            nm.createNotificationChannel(c);
-        }
-    }
-
-    private void showPriceNotification(int oldPrice, int newPrice) {
-        if (Build.VERSION.SDK_INT >= 33 &&
-                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-
-        String arrow = newPrice > oldPrice ? "▲" : "▼";
-        android.app.Notification.Builder b = Build.VERSION.SDK_INT >= 26
-                ? new android.app.Notification.Builder(this, "mx_price_changes")
-                : new android.app.Notification.Builder(this);
-
-        b.setSmallIcon(android.R.drawable.stat_notify_sync)
-                .setContentTitle("MX Dollar " + arrow)
-                .setContentText("أعلى سعر الآن " + formatIQD(newPrice) + " د.ع لكل 100$")
-                .setAutoCancel(true);
-
-        NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        nm.notify(102, b.build());
-    }
-
-    private void loadCache() {
-        SharedPreferences p = getSharedPreferences("mx_cache", MODE_PRIVATE);
-        data.kifahBuy = p.getInt("kb", 0);
-        data.kifahSell = p.getInt("ks", 0);
-        data.harithiyaBuy = p.getInt("hb", 0);
-        data.harithiyaSell = p.getInt("hs", 0);
-        data.gold18 = p.getInt("g18", 0);
-        data.gold21 = p.getInt("g21", 0);
-        data.gold24 = p.getInt("g24", 0);
-        data.updatedAt = p.getLong("updated", 0);
-    }
-
-    private void saveCache() {
-        getSharedPreferences("mx_cache", MODE_PRIVATE).edit()
-                .putInt("kb", data.kifahBuy)
-                .putInt("ks", data.kifahSell)
-                .putInt("hb", data.harithiyaBuy)
-                .putInt("hs", data.harithiyaSell)
-                .putInt("g18", data.gold18)
-                .putInt("g21", data.gold21)
-                .putInt("g24", data.gold24)
-                .putLong("updated", data.updatedAt)
-                .apply();
-    }
-
-    private static String formatIQD(int n) {
-        if (n <= 0) return "—";
-        return new DecimalFormat("#,###").format(n);
-    }
-
-    private static class MarketData {
-        int kifahBuy, kifahSell, harithiyaBuy, harithiyaSell;
-        int gold18, gold21, gold24;
-        long updatedAt;
-
-        int highSell() { return Math.max(kifahSell, harithiyaSell); }
-        int highBuy() { return Math.max(kifahBuy, harithiyaBuy); }
-    }
-
-    private static class UpdateInfo {
-        String version = "";
-        String url = "";
-        String sha256 = "";
-        String notes = "";
-        String status = "جاري فحص التحديث...";
-        boolean available = false;
-    }
-
-    private final class DollarView extends View {
-        private final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final RectF refreshRect = new RectF(276, 608, 400, 654);
-        private final RectF updateRect = new RectF(275, 704, 400, 748);
-
-        DollarView(Context context) {
-            super(context);
-            p.setTypeface(Typeface.create("sans", Typeface.NORMAL));
-            setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-        }
-
-        @Override
-        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            int w = MeasureSpec.getSize(widthMeasureSpec);
-            if (w <= 0) w = getResources().getDisplayMetrics().widthPixels;
-            float s = w / 420f;
-            int h = Math.round(780 * s);
-            setMeasuredDimension(w, h);
-        }
-
-        private float s() { return getWidth() / 420f; }
-        private float X(float v) { return v * s(); }
-
-        @Override
-        protected void onDraw(Canvas c) {
-            super.onDraw(c);
-            float sc = s();
-            c.drawColor(rgb(10, 14, 20));
-
-            // Header
-            rect(c, 0, 0, 420, 72, rgb(13, 18, 26), 0);
-            rect(c, 0, 71, 420, 72, rgb(35, 42, 52), 0);
-            round(c, 18, 16, 58, 56, 18, rgb(25, 33, 45));
-            stroke(c, 18, 16, 58, 56, 18, rgb(229, 197, 118), 1);
-            txt(c, "$", 38, 44, 20, rgb(229, 197, 118), Paint.Align.CENTER, true);
-            txt(c, "MX DOLLAR", 70, 35, 18, Color.WHITE, Paint.Align.LEFT, true);
-            txt(c, "IRAQ MARKET WATCH", 70, 54, 9, rgb(125, 137, 153), Paint.Align.LEFT, true);
-            round(c, 322, 22, 376, 50, 14, rgb(19, 43, 35));
-            dot(c, 334, 36, 4, rgb(75, 209, 151));
-            txt(c, "LIVE", 346, 40, 9, rgb(103, 224, 168), Paint.Align.LEFT, true);
-
-            // USD hero
-            round(c, 18, 92, 402, 258, 24, rgb(16, 22, 31));
-            stroke(c, 18, 92, 402, 258, 24, rgb(43, 52, 65), 1);
-            round(c, 18, 92, 24, 258, 5, rgb(89, 181, 255));
-            txt(c, "USD / IQD", 36, 122, 12, rgb(131, 192, 247), Paint.Align.LEFT, true);
-            txt(c, "السعر الأعلى الآن لكل 100$", 36, 151, 11, rgb(172, 181, 193), Paint.Align.LEFT, true);
-            txt(c, formatIQD(data.highSell()), 36, 207, 31, rgb(248, 250, 252), Paint.Align.LEFT, true);
-            txt(c, "د.ع", 226, 207, 11, rgb(136, 148, 163), Paint.Align.LEFT, true);
-
-            round(c, 282, 120, 382, 168, 15, rgb(18, 37, 31));
-            txt(c, "شراء", 294, 141, 10, rgb(103, 224, 168), Paint.Align.LEFT, true);
-            txt(c, formatIQD(data.highBuy()), 370, 147, 14, rgb(230, 238, 234), Paint.Align.RIGHT, true);
-
-            round(c, 282, 182, 382, 230, 15, rgb(42, 31, 25));
-            txt(c, "بيع", 294, 203, 10, rgb(241, 180, 111), Paint.Align.LEFT, true);
-            txt(c, formatIQD(data.highSell()), 370, 209, 14, rgb(246, 236, 224), Paint.Align.RIGHT, true);
-
-            sourceCard(c, 18, 278, 201, 382, "بورصة الكفاح", "KIFAH", data.kifahBuy, data.kifahSell);
-            sourceCard(c, 219, 278, 402, 382, "بورصة الحارثية", "HARITHIYA", data.harithiyaBuy, data.harithiyaSell);
-
-            txt(c, "GOLD · الذهب", 18, 420, 14, rgb(229, 197, 118), Paint.Align.LEFT, true);
-            txt(c, "سعر المثقال · 5 غرام", 402, 420, 10, rgb(125, 137, 153), Paint.Align.RIGHT, true);
-
-            goldCard(c, 18, 442, 140, 566, "18K", "عيار 18", data.gold18);
-            goldCard(c, 149, 442, 271, 566, "21K", "عيار 21", data.gold21);
-            goldCard(c, 280, 442, 402, 566, "24K", "عيار 24", data.gold24);
-
-            // Footer
-            round(c, 18, 586, 402, 670, 20, rgb(13, 18, 26));
-            String updated = data.updatedAt > 0
-                    ? "آخر تحديث  " + new SimpleDateFormat("hh:mm:ss a", Locale.US).format(new Date(data.updatedAt))
-                    : "بانتظار التحديث";
-            txt(c, updated, 145, 618, 9, rgb(118, 130, 146), Paint.Align.CENTER, true);
-            txt(c, "MazenmiX", 145, 646, 11, rgb(229, 197, 118), Paint.Align.CENTER, true);
-
-            round(c, 276, 608, 392, 654, 14, refreshing ? rgb(31, 73, 104) : rgb(36, 112, 168));
-            txt(c, refreshing ? "جارِ التحديث..." : "تحديث الأسعار", 334, 636, 10,
-                    Color.WHITE, Paint.Align.CENTER, true);
-
-            // Update card
-            round(c, 18, 690, 402, 756, 16, rgb(14, 20, 28));
-            stroke(c, 18, 690, 402, 756, 16, rgb(36, 46, 59), 1);
-            String version = currentVersion();
-            if (updateInfo.available || downloadingUpdate) {
-                txt(c, updateInfo.status, 140, 726, 9,
-                        downloadingUpdate ? rgb(131, 192, 247) : rgb(103, 224, 168),
-                        Paint.Align.CENTER, true);
-                round(c, 275, 704, 392, 748, 13,
-                        downloadingUpdate ? rgb(31, 73, 61) : rgb(29, 118, 82));
-                txt(c, downloadingUpdate ? "جاري التحديث..." : "UPDATE NOW", 333, 731, 9,
-                        Color.WHITE, Paint.Align.CENTER, true);
-            } else {
-                txt(c, "MX Dollar v" + version + " · " + updateInfo.status, 210, 726, 9,
-                        rgb(132, 145, 161), Paint.Align.CENTER, true);
-            }
-
-            // Bottom branding accent
-            txt(c, "MX DOLLAR ANDROID · MAZENMIX", 210, 774, 8,
-                    rgb(73, 85, 99), Paint.Align.CENTER, true);
-        }
-
-        private void sourceCard(Canvas c, float l, float t, float r, float b,
-                                String ar, String code, int buy, int sell) {
-            round(c, l, t, r, b, 18, rgb(15, 21, 30));
-            stroke(c, l, t, r, b, 18, rgb(37, 46, 58), 1);
-            txt(c, code, l + 14, t + 27, 9, rgb(104, 178, 236), Paint.Align.LEFT, true);
-            txt(c, ar, r - 14, t + 27, 10, rgb(185, 194, 205), Paint.Align.RIGHT, true);
-            txt(c, "بيع", l + 14, t + 58, 9, rgb(220, 160, 98), Paint.Align.LEFT, true);
-            txt(c, formatIQD(sell), r - 14, t + 60, 14, Color.WHITE, Paint.Align.RIGHT, true);
-            txt(c, "شراء", l + 14, t + 88, 9, rgb(91, 204, 148), Paint.Align.LEFT, true);
-            txt(c, formatIQD(buy), r - 14, t + 90, 14, Color.WHITE, Paint.Align.RIGHT, true);
-        }
-
-        private void goldCard(Canvas c, float l, float t, float r, float b,
-                              String code, String ar, int value) {
-            round(c, l, t, r, b, 18, rgb(18, 22, 28));
-            stroke(c, l, t, r, b, 18, rgb(59, 52, 37), 1);
-            round(c, l + 12, t + 14, l + 58, t + 41, 13, rgb(48, 40, 24));
-            txt(c, code, l + 35, t + 33, 9, rgb(229, 197, 118), Paint.Align.CENTER, true);
-            txt(c, ar, r - 12, t + 33, 9, rgb(151, 160, 172), Paint.Align.RIGHT, true);
-            txt(c, formatIQD(value), (l + r) / 2, t + 82, 17, rgb(246, 242, 230), Paint.Align.CENTER, true);
-            txt(c, "د.ع", (l + r) / 2, t + 108, 8, rgb(124, 115, 91), Paint.Align.CENTER, true);
-        }
-
-        @Override
-        public boolean onTouchEvent(MotionEvent e) {
-            if (e.getAction() != MotionEvent.ACTION_UP) return true;
-            float bx = e.getX() / s();
-            float by = e.getY() / s();
-
-            if (refreshRect.contains(bx, by)) {
-                refreshMarkets(true);
-                return true;
-            }
-
-            if (updateRect.contains(bx, by) && updateInfo.available && !downloadingUpdate) {
-                downloadUpdate();
-                return true;
-            }
-
-            return true;
-        }
-
-        private void txt(Canvas c, String text, float x, float y, float size,
-                         int color, Paint.Align align, boolean bold) {
-            p.setStyle(Paint.Style.FILL);
-            p.setColor(color);
-            p.setTextSize(X(size));
-            p.setTextAlign(align);
-            p.setTypeface(Typeface.create("sans", bold ? Typeface.BOLD : Typeface.NORMAL));
-            c.drawText(text, X(x), X(y), p);
-        }
-
-        private void rect(Canvas c, float l, float t, float r, float b, int color, float radius) {
-            p.setStyle(Paint.Style.FILL);
-            p.setColor(color);
-            c.drawRect(X(l), X(t), X(r), X(b), p);
-        }
-
-        private void round(Canvas c, float l, float t, float r, float b, float radius, int color) {
-            p.setStyle(Paint.Style.FILL);
-            p.setColor(color);
-            c.drawRoundRect(X(l), X(t), X(r), X(b), X(radius), X(radius), p);
-        }
-
-        private void stroke(Canvas c, float l, float t, float r, float b, float radius, int color, float width) {
-            p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth(X(width));
-            p.setColor(color);
-            c.drawRoundRect(X(l), X(t), X(r), X(b), X(radius), X(radius), p);
-            p.setStyle(Paint.Style.FILL);
-        }
-
-        private void dot(Canvas c, float x, float y, float radius, int color) {
-            p.setStyle(Paint.Style.FILL);
-            p.setColor(color);
-            c.drawCircle(X(x), X(y), X(radius), p);
-        }
-    }
-
-    private static int rgb(int r, int g, int b) {
-        return Color.rgb(r, g, b);
-    }
+    static class Market{int kBuy,kSell,hBuy,hSell,g18,g21,g24;long updated;int highSell(){return Math.max(kSell,hSell);}int highBuy(){return Math.max(kBuy,hBuy);}}
+    static class UpdateInfo{String version="",url="",sha="",status="جاري فحص التحديث...";boolean available=false;}
 }
