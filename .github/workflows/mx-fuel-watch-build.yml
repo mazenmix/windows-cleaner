@@ -1,41 +1,14 @@
 name: Build MX Fuel Watch PH
 
+# Local builds only. GitHub is kept as the update/distribution channel.
 on:
-  push:
-    branches: [ "mx-fuel-watch" ]
-    paths:
-      - "mx-fuel-watch/**"
-      - ".github/workflows/mx-fuel-watch-build.yml"
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  build:
+  info:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: mx-fuel-watch
-          fetch-depth: 0
-
-      - name: Install LLVM toolchain
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang lld llvm
-
-      - name: Build Windows x64 EXE
-        run: python3 mx-fuel-watch/build.py
-
-      - name: Publish stable updater binary
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add mx-fuel-watch/MX_Fuel_Watch_PH.exe
-          if git diff --cached --quiet; then
-            echo "Binary unchanged."
-          else
-            git commit -m "Build MX Fuel Watch PH [skip ci]"
-            git push origin HEAD:mx-fuel-watch
-          fi
+      - run: echo "MX Fuel Watch PH is built locally. GitHub Actions auto-build is disabled."
