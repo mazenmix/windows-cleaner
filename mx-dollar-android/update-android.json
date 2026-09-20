@@ -1,6 +1,6 @@
 {
-  "version": "1.0.1",
-  "url": "https://raw.githubusercontent.com/mazenmix/windows-cleaner/main/mx-dollar-android/releases/MX.Dollar.apk",
-  "sha256": "c30d56e77494c413fcc6e4926403d99b040a675df0ab78d56e1b9b0e2396e92a",
-  "notes": "MX Dollar Android v1.0.1 · MazenmiX"
+  "version": "1.0.2",
+  "url": "https://raw.githubusercontent.com/mazenmix/windows-cleaner/main/mx-dollar-android/releases/MX.Dollar.v1.0.2.apk",
+  "sha256": "e116be98121de0fd3d8110eec121188246b611711580afdd385e58c2c2cc9c3c",
+  "notes": "MX Dollar Android v1.0.2 · XML startup UI fix"
 }
