@@ -1,0 +1,15 @@
+{
+  "name": "MX Fuel Watch PH",
+  "short_name": "MX Fuel",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "theme_color": "#07111d",
+  "background_color": "#07111d",
+  "display": "standalone"
+}
