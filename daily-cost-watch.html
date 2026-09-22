@@ -5,59 +5,129 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Daily Cost Watch PH — MazenmiX</title>
 <meta name="theme-color" content="#061526">
-<meta name="description" content="Daily Cost Watch PH — one place for everyday Philippine living costs.">
+<meta name="description" content="Daily Cost Watch PH — Philippine electricity, toll, transport, exchange, mobile, grocery, medicine and everyday cost monitoring.">
 <link rel="icon" href="./favicon.svg" type="image/svg+xml">
 <style>
-:root{--bg:#061526;--panel:#0a2036;--line:#173b5d;--text:#f5f8fc;--muted:#7fa4c5;--blue:#48a2ff;--green:#12e49b;--orange:#ff9f2e;--purple:#9d50ff}
-*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;color:var(--text);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:radial-gradient(circle at 76% -12%,rgba(22,93,151,.28),transparent 38%),linear-gradient(180deg,#051423 0,#071b2f 53%,#051522 100%);min-height:100vh}a{text-decoration:none;color:inherit}
+:root{--bg:#061526;--panel:#0a2036;--panel2:#071a2d;--line:#173b5d;--text:#f5f8fc;--muted:#7fa4c5;--muted2:#547894;--blue:#48a2ff;--green:#12e49b;--orange:#ff9f2e;--amber:#ffc44d;--red:#ff5267}
+*{box-sizing:border-box}html{background:var(--bg);scroll-behavior:smooth}body{margin:0;color:var(--text);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:radial-gradient(circle at 76% -12%,rgba(22,93,151,.28),transparent 38%),linear-gradient(180deg,#051423 0,#071b2f 53%,#051522 100%);min-height:100vh}a{text-decoration:none;color:inherit}button{font:inherit;color:inherit}
 .header{position:sticky;top:0;z-index:20;border-bottom:1px solid rgba(67,126,177,.22);background:rgba(4,18,32,.95);backdrop-filter:blur(18px)}
-.navbar{max-width:1460px;min-height:64px;margin:auto;padding:10px 34px;display:flex;align-items:center;justify-content:space-between;gap:18px}
-.brand strong{display:block;font-size:22px;line-height:1;color:var(--orange);font-weight:900;letter-spacing:-.4px}.brand span{display:block;font-size:10px;color:white;margin-top:4px;font-weight:600}
-.back{height:38px;display:inline-flex;align-items:center;gap:8px;padding:0 14px;border-radius:22px;border:1px solid #205783;background:#081f35;color:#ddecf8;font-size:10px;font-weight:800}.back b{color:#67baff;font-size:15px}
-.hero{border-bottom:1px solid #153957}.hero-inner{max-width:1460px;margin:auto;padding:35px 34px 30px}.eyebrow{font-size:10px;letter-spacing:1.7px;color:#63a9e8;font-weight:900}.hero h1{font-size:42px;margin:8px 0 10px;letter-spacing:-1.4px}.hero p{margin:0;max-width:720px;color:#8eb2d1;font-size:13px;line-height:1.6}
-.content{max-width:1460px;margin:auto;padding:22px 34px 34px}
-.section-title{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:14px}.section-title h2{margin:0;font-size:22px;letter-spacing:-.5px}.section-title span{color:#6f96b5;font-size:10px}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.card{min-height:152px;border:1px solid #173f61;border-radius:14px;background:linear-gradient(145deg,#0a2239,#071a2c);padding:16px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 12px 32px rgba(0,0,0,.13);transition:.18s}
-.card:hover{transform:translateY(-2px);border-color:#2d6fa4;background:linear-gradient(145deg,#0b2843,#081d31)}
-.icon{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:#0c3150;border:1px solid #205c8c;font-size:20px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
-.card h3{margin:13px 0 6px;font-size:14px}.card p{margin:0;color:#7fa3c0;font-size:10px;line-height:1.55;min-height:31px}
-.meta{display:flex;align-items:center;justify-content:space-between;margin-top:15px;padding-top:11px;border-top:1px solid rgba(31,78,115,.55)}.meta .tag{font-size:8px;font-weight:900;letter-spacing:.5px;color:#75b9e8}.meta .arrow{font-size:16px;color:var(--orange)}
-.note{margin-top:14px;border:1px solid #19456a;border-radius:12px;background:#081d31;padding:13px 15px;color:#7699b6;font-size:10px;line-height:1.55}
+.navbar{max-width:1460px;min-height:64px;margin:auto;padding:10px 34px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.brand strong{display:block;font-size:22px;line-height:1;color:var(--orange);font-weight:900;letter-spacing:-.4px}.brand span{display:block;font-size:10px;color:#fff;margin-top:4px;font-weight:600}
+.nav-actions{display:flex;align-items:center;gap:9px}.back,.refresh{height:38px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 14px;border-radius:22px;border:1px solid #205783;background:#081f35;color:#ddecf8;font-size:10px;font-weight:800;cursor:pointer}.back b{color:#67baff;font-size:15px}.refresh{border-color:#2b684e}.refresh .spin{display:inline-block;color:#43e6a2;font-size:15px}.refresh.loading .spin{animation:rot .8s linear infinite}@keyframes rot{to{transform:rotate(360deg)}}
+.hero{border-bottom:1px solid #153957}.hero-inner{max-width:1460px;margin:auto;padding:30px 34px 26px;display:flex;align-items:end;justify-content:space-between;gap:22px}.eyebrow{font-size:10px;letter-spacing:1.7px;color:#63a9e8;font-weight:900}.hero h1{font-size:40px;margin:8px 0 8px;letter-spacing:-1.3px}.hero p{margin:0;max-width:760px;color:#8eb2d1;font-size:12px;line-height:1.6}.global-status{flex:0 0 auto;border:1px solid #245d47;border-radius:18px;background:#08281d;color:#84e4b2;padding:8px 12px;font-size:8px;font-weight:900;letter-spacing:.5px;white-space:nowrap}
+.content{max-width:1460px;margin:auto;padding:18px 34px 34px}.section-title{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:12px}.section-title h2{margin:0;font-size:21px;letter-spacing:-.5px}.section-title span{color:#6f96b5;font-size:9px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.cost-card{border:1px solid #173f61;border-radius:14px;background:linear-gradient(145deg,#0a2239,#071a2c);overflow:hidden;box-shadow:0 12px 32px rgba(0,0,0,.12);min-width:0}.card-head{min-height:64px;padding:12px 14px;display:flex;align-items:center;gap:11px;border-bottom:1px solid rgba(32,79,117,.62);background:rgba(9,31,52,.72)}.icon{width:38px;height:38px;flex:0 0 auto;border-radius:11px;display:grid;place-items:center;background:#0c3150;border:1px solid #205c8c;font-size:19px}.titlebox{min-width:0;flex:1}.titlebox h3{font-size:13px;margin:0 0 4px}.source-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#7196b5;font-size:8px}.source-name:hover{color:#94c9f2}.status{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;border-radius:14px;padding:5px 8px;font-size:7px;font-weight:900;letter-spacing:.4px;text-transform:uppercase;border:1px solid #27654f;background:#082a1e;color:#73e1ac}.status:before{content:"";width:6px;height:6px;border-radius:50%;background:#18df98;box-shadow:0 0 8px #18df98}.status.cache{border-color:#6d5726;background:#2b2109;color:#ffd372}.status.cache:before{background:#ffbd35;box-shadow:0 0 8px #ffbd35}.rows{padding:4px 14px}.row{min-height:45px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;border-bottom:1px solid rgba(30,72,106,.48)}.row:last-child{border-bottom:0}.row-label{min-width:0;font-size:10px;font-weight:750;color:#d9e7f2}.row-detail{display:block;margin-top:3px;color:#648aa8;font-size:8px;font-weight:500}.row-value{font-size:12px;font-weight:900;color:#fff;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}.card-foot{min-height:38px;padding:8px 14px;border-top:1px solid rgba(30,72,106,.48);display:flex;align-items:center;justify-content:space-between;gap:12px;background:#07192b;color:#668ba7;font-size:7.5px}.asof{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.checked{white-space:nowrap;color:#557895}.card-note{padding:0 14px 10px;color:#6d91ad;font-size:7.5px;line-height:1.5}
 .footer{border-top:1px solid #153957;background:#051321}.footer-inner{max-width:1460px;margin:auto;padding:14px 34px;text-align:right;color:#6487a4;font-size:9px}.heart{color:#ff5164}
-@media(max-width:1000px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:700px){.navbar,.hero-inner,.content,.footer-inner{padding-left:16px;padding-right:16px}.hero h1{font-size:34px}.grid{grid-template-columns:1fr}.section-title{align-items:flex-start;flex-direction:column}.back{font-size:9px}}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.hero-inner{align-items:flex-start;flex-direction:column}.global-status{align-self:flex-start}}
+@media(max-width:700px){.navbar,.hero-inner,.content,.footer-inner{padding-left:16px;padding-right:16px}.navbar{flex-wrap:wrap}.brand{flex:1}.nav-actions{width:100%}.back,.refresh{flex:1}.hero h1{font-size:33px}.section-title{align-items:flex-start;flex-direction:column}.row{gap:8px}.row-value{font-size:11px}}
+@media(max-width:420px){.rows{padding-left:11px;padding-right:11px}.card-head{padding-left:11px;padding-right:11px}.row-label{font-size:9.5px}.row-detail{font-size:7.5px}.card-foot{padding-left:11px;padding-right:11px}}
 </style>
 </head>
 <body>
 <header class="header"><div class="navbar">
 <a class="brand" href="./index.html"><strong>Stay Tuned!</strong><span>By MazenmiX</span></a>
+<div class="nav-actions">
 <a class="back" href="./index.html"><b>←</b> Back to Fuel Watch</a>
+<button class="refresh" id="refreshAll"><span class="spin">↻</span> Refresh All</button>
+</div>
 </div></header>
 
 <section class="hero"><div class="hero-inner">
-<div class="eyebrow">PHILIPPINES EVERYDAY COST MONITOR</div>
-<h1>Daily Cost Watch</h1>
-<p>A dedicated place for the everyday expenses people check most — transport, utilities, exchange rates, connectivity, shopping and more.</p>
+<div><div class="eyebrow">PHILIPPINES EVERYDAY COST MONITOR</div><h1>Daily Cost Watch</h1>
+<p>Everyday Philippine costs from official or authoritative sources. The page checks sources automatically in the background and keeps the latest verified values available if a source is temporarily unreachable.</p></div>
+<div class="global-status" id="globalStatus">AUTO-CHECK • EVERY 15 MIN</div>
 </div></section>
 
 <main class="content">
-<div class="section-title"><div><h2>Everyday Costs</h2></div><span>All sections in one place</span></div>
-<div class="grid">
-  <article class="card"><div><div class="icon">⚡</div><h3>Electricity Rates</h3><p>Meralco and other electricity pricing, monthly rate movements and bill-cost references.</p></div><div class="meta"><span class="tag">UTILITIES</span><span class="arrow">→</span></div></article>
-  <article class="card"><div><div class="icon">🛣️</div><h3>Toll Fees</h3><p>NLEX, SLEX, Skyway, CALAX and other toll-road cost references.</p></div><div class="meta"><span class="tag">DRIVING</span><span class="arrow">→</span></div></article>
-  <article class="card"><div><div class="icon">🚆</div><h3>Public Transport Fares</h3><p>Jeepney, bus, MRT and LRT fare references for everyday commuting.</p></div><div class="meta"><span class="tag">TRANSPORT</span><span class="arrow">→</span></div></article>
-  <article class="card"><div><div class="icon">💱</div><h3>Peso Exchange Rates</h3><p>Key currencies against PHP for quick day-to-day exchange reference.</p></div><div class="meta"><span class="tag">MONEY</span><span class="arrow">→</span></div></article>
-  <article class="card"><div><div class="icon">📶</div><h3>Internet & Mobile Promos</h3><p>Globe, Smart and DITO plans, data packages and promo comparisons.</p></div><div class="meta"><span class="tag">CONNECTIVITY</span><span class="arrow">→</span></div></article>
-  <article class="card"><div><div class="icon">🛒</div><h3>Grocery Watch</h3><p>Common supermarket essentials and practical household price comparisons.</p></div><div class="meta"><span class="tag">SHOPPING</span><span class="arrow">→</span></div></article>
-  <article class="card"><div><div class="icon">💊</div><h3>Medicine Prices</h3><p>Common OTC medicine pricing and pharmacy reference points.</p></div><div class="meta"><span class="tag">HEALTH COSTS</span><span class="arrow">→</span></div></article>
-  <article class="card"><div><div class="icon">🏗️</div><h3>Construction Materials</h3><p>Cement, steel bars, plywood and other commonly checked building-material costs.</p></div><div class="meta"><span class="tag">MATERIALS</span><span class="arrow">→</span></div></article>
-  <article class="card"><div><div class="icon">🚗</div><h3>Vehicle Costs</h3><p>Maintenance, oil changes, tires, batteries and registration cost references.</p></div><div class="meta"><span class="tag">AUTO</span><span class="arrow">→</span></div></article>
-  <article class="card"><div><div class="icon">🏙️</div><h3>Cost of Living</h3><p>At-a-glance living-cost references for major Philippine cities.</p></div><div class="meta"><span class="tag">LIVING</span><span class="arrow">→</span></div></article>
-  <article class="card"><div><div class="icon">✈️</div><h3>Airport & Travel Fees</h3><p>Airport transfers, terminal-related costs and common travel expense references.</p></div><div class="meta"><span class="tag">TRAVEL</span><span class="arrow">→</span></div></article>
-</div>
-<div class="note">This page is now separated from Fuel Watch so the main page stays fast and clean. Each section can be connected to its own live source independently.</div>
+<div class="section-title"><h2>Everyday Costs</h2><span>11 monitored sections • source-by-source updates</span></div>
+<div class="grid" id="costGrid"></div>
 </main>
 
 <footer class="footer"><div class="footer-inner">A project by MazenmiX <span class="heart">♥</span></div></footer>
+
+<script>
+(function(){
+const sections=[
+ {id:"electricity",icon:"⚡",title:"Electricity Rates"},
+ {id:"tolls",icon:"🛣️",title:"Toll Fees"},
+ {id:"transport",icon:"🚆",title:"Public Transport Fares"},
+ {id:"exchange",icon:"💱",title:"Peso Exchange Rates"},
+ {id:"promos",icon:"📶",title:"Internet & Mobile Promos"},
+ {id:"grocery",icon:"🛒",title:"Grocery Watch"},
+ {id:"medicine",icon:"💊",title:"Medicine Prices"},
+ {id:"construction",icon:"🏗️",title:"Construction Materials"},
+ {id:"vehicle",icon:"🚗",title:"Vehicle Costs"},
+ {id:"living",icon:"🏙️",title:"Cost of Living"},
+ {id:"travel",icon:"✈️",title:"Airport / Travel Fees"}
+];
+
+const BOOT={
+ electricity:{source:"Meralco",source_url:"https://company.meralco.com.ph/news-and-advisories/lower-rates-september-2026",as_of:"September 2026",items:[["Meralco overall rate","₱14.7424/kWh","September billing rate"],["vs August 2026","−₱0.0409/kWh","Lower month-on-month"],["200 kWh bill effect","≈ ₱8.18 less","Rate-change estimate"]]},
+ tolls:{source:"TRB-based current toll matrices",source_url:"https://expresswayph.com/",as_of:"2026 rates",items:[["NLEX Open System","₱85","Class 1"],["Balintawak → Dau","₱348","NLEX • Class 1"],["Balintawak → Subic/Tipo","₱857","NLEX/SCTEX • Class 1"],["Balintawak → Alabang","₱428","Skyway • Class 1"],["Alabang → Sto. Tomas","₱170","SLEX • Class 1"],["Greenfield → Sta. Rosa-Tagaytay","₱44","CALAX • Class 1"]]},
+ transport:{source:"LRTA / DOTr",source_url:"https://www.lrta.gov.ph/tickets-and-fares/",as_of:"Effective March 23, 2026",items:[["LRT-2 / MRT-3 discount","50% off","Across-the-board fare discount"],["LRT-2 single journey","₱8–₱18","Discounted fare range"],["LRT-2 stored value","₱6.50–₱16.50","Discounted fare range"],["Beep card","₱30 + ₱14 load","Standard stored-value card"]]},
+ exchange:{source:"Bangko Sentral ng Pilipinas",source_url:"https://www.bsp.gov.ph/Statistics/sdds/sdds.aspx",as_of:"22 September 2026",items:[["USD","₱62.7990","PHP per US dollar"],["JPY","₱0.3993","PHP per Japanese yen"],["GBP","₱83.9497","PHP per British pound"]]},
+ promos:{source:"Globe / Smart / DITO official",source_url:"https://www.globe.com.ph/prepaid/go-promos/plus",as_of:"Current offers",items:[["Globe Go+99","₱99 / 7 days","20 GB total data"],["Globe Go+109","₱109 / 7 days","22 GB total data"],["Smart Power All 59","₱59 / 3 days","5 GB + 3 GB 5G + calls/texts"],["Smart New Power All 99","₱99","Current prepaid offer"],["DITO Level-Up 99","₱99 / 30 days","7 GB + calls/texts"],["DITO Level-Up 109","₱109 / 30 days","10 GB + calls/texts"]]},
+ grocery:{source:"DTI e-Presyo / SRP Bulletin",source_url:"https://epresyo.dti.gov.ph/",as_of:"DTI SRP Bulletin • May 11, 2026",items:[["Canned sardines 155g","₱18–₱24.75","SRP range by brand/SKU"],["Lucky Me instant noodles 55g","₱9.00","Selected DTI SRP"],["White vinegar 350mL","₱19.25","Selected DTI SRP"],["Fish sauce 350mL","₱27.50","Selected DTI SRP"],["Soy sauce 350mL","₱22.25","Selected DTI SRP"]]},
+ medicine:{source:"DOH • East Avenue Medical Center",source_url:"https://eamc.doh.gov.ph/drugs-and-medicines-price-list/",as_of:"September 15, 2026",items:[["Amoxicillin 500mg • Harbimox","₱2.06","Per capsule • EAMC selling price"],["Amoxicillin 500mg • Ambimox","₱2.28","Per capsule • EAMC selling price"],["0.9% Sodium Chloride 1L","₱46.26","EAMC selling price"],["Clopidogrel 75mg","₱0.95","Per tablet • EAMC selling price"]]},
+ construction:{source:"Philippine Statistics Authority • CMRPI",source_url:"https://psa.gov.ph/price-indices/cmrpi/index",as_of:"August 2026",items:[["NCR CMRPI growth","2.0%","Year-on-year"],["Electrical materials","2.2%","Annual growth"],["Painting materials","2.8%","Annual growth"],["Tinsmithry materials","3.6%","Annual growth"],["Masonry materials","2.3%","Annual growth"],["Carpentry materials","0.6%","Annual growth"]]},
+ vehicle:{source:"Land Transportation Office",source_url:"https://www.lto.gov.ph/wp-content/uploads/2023/10/FDM-vol.-2-2nd-Edition.pdf",as_of:"Current LTO MVUC schedule",items:[["Light passenger car ≤1,600kg","₱1,600","Year 2001 onward • MVUC"],["Medium car 1,600–2,300kg","₱3,600","Year 2001 onward • MVUC"],["Heavy car ≥2,301kg","₱8,000","Year 2001 onward • MVUC"],["Motorcycle without sidecar","₱240","MVUC"]]},
+ living:{source:"Philippine Statistics Authority • CPI",source_url:"https://psa.gov.ph/price-indices/cpi-ir",as_of:"August 2026",items:[["Philippines inflation","6.1%","Headline inflation"],["NCR inflation","4.1%","Headline inflation"],["Outside NCR","6.6%","Headline inflation"],["National year-to-date","5.2%","Jan–Aug 2026 average"]]},
+ travel:{source:"New NAIA Infra Corp.",source_url:"https://www.newnaia.com.ph/about-us/news/naia-operator-says-fee-hikes-mandated-by-govt-ofws-exempt",as_of:"Current NAIA PSC",items:[["NAIA domestic PSC","₱390","Departing passenger"],["NAIA international PSC","₱950","Departing passenger"],["OFW international PSC","Exempt","Exemption continues"]]}
+};
+
+const grid=document.getElementById("costGrid"),globalStatus=document.getElementById("globalStatus"),refreshBtn=document.getElementById("refreshAll");
+const cache={};
+try{Object.assign(cache,JSON.parse(localStorage.getItem("mxDailyCostCacheV2")||"{}"))}catch(e){}
+
+function normalize(sec,data){
+ const b=BOOT[sec];
+ if(!data)return {section:sec,source:b.source,source_url:b.source_url,as_of:b.as_of,items:b.items.map(x=>({label:x[0],value:x[1],detail:x[2]})),live:false,fallback:true};
+ const items=(data.items||[]).map(x=>Array.isArray(x)?{label:x[0],value:x[1],detail:x[2]}:x);
+ return {...data,section:sec,items};
+}
+function timeLabel(iso){
+ if(!iso)return "Checking source…";
+ try{return "Checked "+new Date(iso).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}catch(e){return "Checked"}
+}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
+function renderCard(sec,data){
+ const cfg=sections.find(x=>x.id===sec),d=normalize(sec,data),isLive=d.live===true&&!d.fallback;
+ const rows=d.items.map(x=>'<div class="row"><div><span class="row-label">'+esc(x.label)+'</span>'+(x.detail?'<span class="row-detail">'+esc(x.detail)+'</span>':'')+'</div><div class="row-value">'+esc(x.value)+'</div></div>').join("");
+ const note=d.note?'<div class="card-note">'+esc(d.note)+'</div>':'';
+ return '<article class="cost-card" id="card-'+sec+'"><div class="card-head"><div class="icon">'+cfg.icon+'</div><div class="titlebox"><h3>'+cfg.title+'</h3><a class="source-name" target="_blank" rel="noopener" href="'+esc(d.source_url||"#")+'">'+esc(d.source||"Source")+' ↗</a></div><span class="status '+(isLive?"":"cache")+'">'+(isLive?"Live Source":"Verified Cache")+'</span></div><div class="rows">'+rows+'</div>'+note+'<div class="card-foot"><span class="asof">'+esc(d.as_of||"Latest published data")+'</span><span class="checked">'+timeLabel(d.checked_at)+'</span></div></article>';
+}
+function renderAll(){
+ grid.innerHTML=sections.map(s=>renderCard(s.id,cache[s.id]||null)).join("");
+}
+function save(){try{localStorage.setItem("mxDailyCostCacheV2",JSON.stringify(cache))}catch(e){}}
+function rerenderOne(sec){
+ const old=document.getElementById("card-"+sec);if(!old)return;
+ const wrap=document.createElement("div");wrap.innerHTML=renderCard(sec,cache[sec]);old.replaceWith(wrap.firstElementChild);
+}
+async function refreshOne(sec,force){
+ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),12000);
+ try{
+   const r=await fetch("/api/daily-cost?section="+encodeURIComponent(sec)+(force?"&force=1":"")+"&ts="+Date.now(),{cache:"no-store",signal:ctrl.signal});
+   if(!r.ok)throw new Error("HTTP "+r.status);
+   const j=await r.json();
+   if(j&&j.ok&&Array.isArray(j.items)&&j.items.length){cache[sec]=j;save();rerenderOne(sec)}
+ }catch(e){}finally{clearTimeout(timer)}
+}
+async function refreshAll(force){
+ refreshBtn.classList.add("loading");globalStatus.textContent="CHECKING 11 SOURCES…";
+ await Promise.allSettled(sections.map(s=>refreshOne(s.id,force)));
+ refreshBtn.classList.remove("loading");globalStatus.textContent="AUTO-CHECK • EVERY 15 MIN";
+}
+refreshBtn.addEventListener("click",()=>refreshAll(true));
+
+sections.forEach(s=>{
+ if(!cache[s.id]){
+   const b=normalize(s.id,null);b.checked_at=null;cache[s.id]=b;
+ }
+});
+renderAll();
+refreshAll(false);
+setInterval(()=>refreshAll(false),900000);
+})();
+</script>
 </body></html>
