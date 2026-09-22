@@ -45,7 +45,7 @@ jobs:
 
       - name: Reassemble verified PHANTOM source
         run: |
-          cat tmp/v2-p00 tmp/v2-p01 tmp/v2-p02 tmp/v2-p03 tmp/v2-p04 tmp/v2-p05 tmp/v2-p06 > MXBlueRadar2-source.zip
+          cat             tmp/v2-p00a             tmp/v2-p00b0 tmp/v2-p00b1 tmp/v2-p00b2 tmp/v2-p00b3             tmp/v2-p00c             tmp/v2-p01 tmp/v2-p02 tmp/v2-p03 tmp/v2-p04 tmp/v2-p05 tmp/v2-p06             > MXBlueRadar2-source.zip
           echo "ed37e3d3abd24bd704a56b31469ce32bdb60e5852b7400b72456ab5e2d2fe31f  MXBlueRadar2-source.zip" | sha256sum -c -
           unzip -t MXBlueRadar2-source.zip
           rm -rf work
