@@ -51,8 +51,9 @@
 
 
 .news-ticker{height:40px;border-bottom:1px solid #183c59;background:linear-gradient(90deg,#061827,#081e32);display:flex;align-items:stretch;overflow:hidden}
-.news-label{flex:0 0 auto;min-width:112px;padding:0 14px;display:flex;align-items:center;justify-content:center;gap:7px;background:#071522;border-right:1px solid #254c67;color:#ffd54d;font-size:8px;font-weight:950;letter-spacing:1px;z-index:2;box-shadow:10px 0 20px rgba(2,12,20,.38)}
-.news-label:before{content:"";width:7px;height:7px;border-radius:50%;background:#19e398;box-shadow:0 0 10px #19e398}
+.news-label{flex:0 0 auto;min-width:128px;padding:0 15px;display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(180deg,#24100f,#160908);border-right:1px solid #6d2722;color:#ffd7cf;font-size:8px;font-weight:950;letter-spacing:1.1px;z-index:2;box-shadow:10px 0 22px rgba(2,12,20,.42),inset 0 1px 0 rgba(255,255,255,.03)}
+.news-label:before{content:"";width:7px;height:7px;border-radius:50%;background:#ff3d32;box-shadow:0 0 0 4px rgba(255,61,50,.09),0 0 12px rgba(255,61,50,.85);animation:breakingPulse 1.15s ease-in-out infinite alternate}
+@keyframes breakingPulse{from{opacity:.75;transform:scale(.92)}to{opacity:1;transform:scale(1.08)}}
 .news-window{min-width:0;flex:1;overflow:hidden;display:flex;align-items:center}
 .news-track{display:flex;align-items:center;width:max-content;white-space:nowrap;will-change:transform;animation:newsMarquee var(--news-duration,70s) linear infinite}
 .news-ticker:hover .news-track{animation-play-state:paused}
@@ -61,7 +62,7 @@
 .news-headline{font-weight:650;color:#eaf2f8}
 .news-sep{color:#ffd33f;font-size:12px;font-weight:900;text-shadow:0 0 8px rgba(255,211,63,.35)}
 @keyframes newsMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@media(max-width:700px){.news-label{min-width:85px;padding:0 9px;font-size:7px}.news-item{font-size:9px;padding:0 11px}.news-source{font-size:7px}.news-ticker{height:37px}}
+@media(max-width:700px){.news-label{min-width:105px;padding:0 10px;font-size:6.8px}.news-item{font-size:9px;padding:0 11px}.news-source{font-size:7px}.news-ticker{height:37px}}
 
 </style>
 </head>
@@ -75,7 +76,7 @@
 </div></header>
 
 <div class="news-ticker" id="newsTicker">
-  <div class="news-label">PH NEWS</div>
+  <div class="news-label">BREAKING NEWS</div>
   <div class="news-window"><div class="news-track" id="newsTrack"></div></div>
 </div>
 
@@ -119,7 +120,7 @@
    track.innerHTML=one+one;
    requestAnimationFrame(()=>{
      const half=track.scrollWidth/2;
-     const duration=Math.max(28,half/135);
+     const duration=Math.max(42,half/82);
      track.style.setProperty("--news-duration",duration+"s");
    });
  }
