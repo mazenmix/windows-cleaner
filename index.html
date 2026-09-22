@@ -422,7 +422,7 @@
       <h2>Food Prices Today</h2>
       <p>Official DA food and agricultural commodity prices, grouped so everything is visible at a glance.</p>
     </div>
-    <div class="food-source-pill" id="foodSourcePill">DA • QUICK CACHE</div>
+    <div class="food-source-pill" id="foodSourcePill">Live</div>
   </div>
   <div class="food-category-stack" id="foodCategoryStack"></div>
 </section>
@@ -431,7 +431,7 @@
 
 
 <section class="hero" id="prices"><div class="hero-inner">
-<div class="hero-copy"><div class="eyebrow">PHILIPPINES FUEL PRICE MONITOR</div><h1>Price Comparison</h1><p>Latest fuel prices from major brands nationwide. Prices are in PHP per liter. Compare all 11 major brands at a glance.</p></div>
+<div class="hero-copy"><div class="eyebrow">PHILIPPINES FUEL PRICE MONITOR</div><h1>Fuel Prices</h1><p>Latest fuel prices from major brands nationwide. Prices are in PHP per liter. Compare all 11 major brands at a glance.</p></div>
 <svg class="hero-art" viewBox="0 0 760 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="sky" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#071d34"/><stop offset="1" stop-color="#0b2850"/></linearGradient><linearGradient id="canopy" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1a4f8e"/><stop offset=".55" stop-color="#3999ff"/><stop offset="1" stop-color="#163d75"/></linearGradient><filter id="gl"><feGaussianBlur stdDeviation="3"/></filter></defs><rect width="760" height="150" fill="url(#sky)"/><g opacity=".32" fill="#06111f"><rect x="50" y="76" width="30" height="60"/><rect x="82" y="59" width="22" height="77"/><rect x="109" y="70" width="42" height="66"/><rect x="157" y="44" width="27" height="92"/><rect x="190" y="61" width="37" height="75"/><rect x="232" y="50" width="31" height="86"/><rect x="270" y="38" width="23" height="98"/><rect x="298" y="72" width="44" height="64"/><rect x="348" y="58" width="30" height="78"/><rect x="386" y="47" width="34" height="89"/><rect x="426" y="69" width="43" height="67"/></g><path d="M0 125C145 115 256 129 425 119c109-7 227 3 335-11v42H0z" fill="#06111f"/><g transform="translate(475 27)"><path d="M45 47h180l55 20H0z" fill="#174b84"/><path d="M45 44h180l55 19H0z" fill="url(#canopy)"/><rect x="35" y="65" width="230" height="5" rx="2.5" fill="#73c5ff" filter="url(#gl)"/><rect x="36" y="65" width="230" height="2" fill="#b9e7ff"/><rect x="48" y="70" width="13" height="55" rx="2" fill="#1e3f64"/><rect x="220" y="70" width="13" height="55" rx="2" fill="#1e3f64"/><rect x="111" y="81" width="34" height="39" rx="4" fill="#0a2037" stroke="#388fe2"/><rect x="116" y="87" width="24" height="9" rx="2" fill="#4bb8ff"/><circle cx="128" cy="105" r="4" fill="#f4be39"/><path d="M316 120h-72c-10 0-17-8-15-17l5-15h45l17 17h20z" fill="#071827" stroke="#3b7aad"/><circle cx="253" cy="121" r="7" fill="#02070c"/><circle cx="298" cy="121" r="7" fill="#02070c"/></g></svg>
 </div></section>
 
@@ -534,7 +534,6 @@
    ['Fruits','#ffad55'],
    ['Fish & Seafood','#67c9ff'],
    ['Meat','#ff7481'],
-   ['Chicken & Poultry','#ff9ab0'],
    ['Rice & Grains','#f3df71'],
    ['Basic Goods / Others','#b18cff']
  ];
@@ -542,9 +541,10 @@
  function categoryOf(item){
    const n=String(item.name||'').toLowerCase();
    const cat=String(item.category||'').toLowerCase();
+   if(/eggplant/.test(n))return'Vegetables';
    if(/fruit/.test(cat)||/avocado|banana|calamansi|mango|melon|papaya|watermelon|pineapple|orange|apple|coconut/.test(n))return'Fruits';
    if(/fish|seafood/.test(cat)||/alumahan|bangus|galunggong|tilapia|tuna|tamban|bisugo|dalagang bukid|matambaka|salmon|squid|shrimp|prawn|crab|fish/.test(n))return'Fish & Seafood';
-   if(/chicken|poultry/.test(cat)||/chicken|poultry|egg/.test(n))return'Chicken & Poultry';
+   if(/chicken|poultry/.test(cat)||/whole chicken|chicken|poultry/.test(n))return'Meat';
    if(/meat/.test(cat)||/beef|pork|kasim|liempo|brisket|rump|ham/.test(n))return'Meat';
    if(/rice|grain|cereal/.test(cat)||/rice|corn|mungbean|mung bean/.test(n))return'Rice & Grains';
    if(/vegetable/.test(cat)||/pepper|cabbage|chayote|beans|lettuce|pechay|potato|ampalaya|eggplant|sitao|squash|tomato|chili|garlic|ginger|onion|carrot|okra|cucumber|radish|kangkong|spinach/.test(n))return'Vegetables';
@@ -579,10 +579,10 @@
      }).join('');
      return '<section class="food-category"><div class="food-category-head"><div class="food-category-title"><span class="food-category-dot" style="background:'+color+';color:'+color+'"></span>'+name+'</div><div class="food-category-count">'+list.length+' items</div></div><div class="food-items-grid">'+rows+'</div></section>';
    }).join('');
-   if(source&&label)source.textContent=label;
+   if(source)source.textContent="Live";
  }
  function saveCache(j){try{localStorage.setItem('mxFoodGridCache',JSON.stringify(j))}catch(e){}}
- function readCache(){try{const j=JSON.parse(localStorage.getItem('mxFoodGridCache')||'null');if(j&&Array.isArray(j.items)&&j.items.length){renderFood(j.items,'DA • CACHED'+(j.date?' • '+j.date:''));return true}}catch(e){}return false}
+ function readCache(){try{const j=JSON.parse(localStorage.getItem('mxFoodGridCache')||'null');if(j&&Array.isArray(j.items)&&j.items.length){renderFood(j.items,"Live");return true}}catch(e){}return false}
  async function refresh(){
    try{
      const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),7000);
@@ -591,11 +591,11 @@
      if(!r.ok)throw new Error('HTTP '+r.status);
      const j=await r.json();
      if(!j.ok||!Array.isArray(j.items)||!j.items.length)throw new Error('No DA data');
-     renderFood(j.items,(j.source||'DA').toUpperCase().includes('BANTAY')?'DA • BANTAY PRESYO'+(j.date?' • '+j.date:''):'DA • DAILY INDEX'+(j.date?' • '+j.date:''));
+     renderFood(j.items,"Live");
      saveCache(j);
    }catch(e){}
  }
- renderFood(FOOD_BOOTSTRAP,'DA • QUICK CACHE');
+ renderFood(FOOD_BOOTSTRAP,"Live");
  readCache();
  refresh();
  setInterval(refresh,900000);
