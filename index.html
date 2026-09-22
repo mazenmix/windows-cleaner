@@ -400,7 +400,12 @@
 @media(max-width:720px){.daily-cost-btn{order:3;height:34px;padding:0 11px;font-size:9px}.navright{gap:9px}}
 @media(max-width:520px){.daily-cost-btn{width:100%;justify-content:center;order:5}.navright{width:100%;flex-wrap:wrap}.livebadge{flex:1}}
 
-</style>
+
+.weather-now-btn{height:38px;display:inline-flex;align-items:center;gap:8px;padding:0 14px;border-radius:21px;border:1px solid #236c8f;background:linear-gradient(180deg,#0a3349,#082638);color:#dff5ff;font-size:10px;font-weight:800;letter-spacing:.15px;white-space:nowrap;box-shadow:0 8px 22px rgba(0,0,0,.14);transition:.18s}
+.weather-now-btn span{color:#6bd6ff;font-size:13px;line-height:1}.weather-now-btn:hover{border-color:#4ca9d1;background:#0c3d56;transform:translateY(-1px)}
+@media(max-width:720px){.weather-now-btn{order:2;height:34px;padding:0 11px;font-size:9px}}
+@media(max-width:520px){.weather-now-btn{width:100%;justify-content:center;order:4}}
+\n</style>
 </head>
 <body>
 <div class="site">
@@ -409,7 +414,7 @@
 <a class="brand" href="#prices"><span class="brandcopy stay-brand"><strong>Stay Tuned!</strong><span>By MazenmiX</span></span></a>
 
 <div class="navright">
-<a class="daily-cost-btn" href="./daily-cost-watch.html">Daily Cost <span>→</span></a>
+<a class="weather-now-btn" href="./weather-now.html">Weather Now <span>☁</span></a>\n<a class="daily-cost-btn" href="./daily-cost-watch.html">Daily Cost <span>→</span></a>
 <div class="livebadge"><span class="livedot"></span><span class="livecopy"><b id="liveLabel">Live Prices</b><span id="updatedLabel">Loading source…</span></span></div>
 
 <button class="iconbtn alert-btn" id="alertButton" aria-label="Price alerts">
