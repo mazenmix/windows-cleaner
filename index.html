@@ -386,13 +386,19 @@
   .food-row,.food-row:nth-child(2n),.food-row:nth-child(3n),.food-row:nth-child(4n){border-right:0}
 }
 
+
+.stay-brand{display:flex!important;flex-direction:column;align-items:flex-start;gap:4px}
+.stay-brand strong{display:block;font-size:22px!important;line-height:1!important;font-weight:900!important;letter-spacing:-.35px!important;color:#ff9f2e!important;text-shadow:0 0 12px rgba(255,159,46,.22)}
+.stay-brand span{display:block;font-size:11px!important;line-height:1.1!important;margin-top:0!important;color:#fff!important;font-weight:600!important;letter-spacing:.01em}
+@media(max-width:600px){.stay-brand strong{font-size:19px!important}.stay-brand span{font-size:10px!important}}
+
 </style>
 </head>
 <body>
 <div class="site">
 <header class="header">
 <div class="navbar">
-<a class="brand" href="#prices"><span class="brandcopy"><strong>MX Fuel Watch PH</strong><span>by MazenmiX</span></span></a>
+<a class="brand" href="#prices"><span class="brandcopy stay-brand"><strong>Stay Tuned!</strong><span>By MazenmiX</span></span></a>
 
 <div class="navright">
 <div class="livebadge"><span class="livedot"></span><span class="livecopy"><b id="liveLabel">Live Prices</b><span id="updatedLabel">Loading source…</span></span></div>
