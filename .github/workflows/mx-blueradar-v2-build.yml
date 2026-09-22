@@ -53,6 +53,10 @@ jobs:
           unzip -q MXBlueRadar2-source.zip -d work
           test -f work/MXBlueRadar/settings.gradle
 
+      - name: Apply compile fixes
+        run: |
+          cp patch-v2/BluetoothScanService.java work/MXBlueRadar/app/src/main/java/com/mazenmix/mxblueradar/BluetoothScanService.java
+
       - name: Build PHANTOM v2 debug APK
         working-directory: work/MXBlueRadar
         run: gradle --no-daemon --stacktrace assembleDebug
