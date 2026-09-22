@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Daily Cost Watch PH — MazenmiX</title>
+<title>Daily Cost PH — MazenmiX</title>
 <meta name="theme-color" content="#061526">
 <meta name="description" content="Daily Cost Watch PH — Philippine electricity, toll, transport, exchange, mobile, grocery, medicine and everyday cost monitoring.">
 <link rel="icon" href="./favicon.svg" type="image/svg+xml">
@@ -49,6 +49,20 @@
 .grocery-more:hover{border-color:#3c8ed0;background:#0b2b48}
 @media(max-width:700px){.grocery-tools{align-items:stretch;flex-direction:column}.grocery-result-count{padding-left:3px}.grocery-rows{grid-template-columns:1fr}.grocery-rows .row:nth-child(odd),.grocery-rows .row:nth-child(even){padding-left:0;padding-right:0;border-right:0}}
 
+
+.news-ticker{height:40px;border-bottom:1px solid #183c59;background:linear-gradient(90deg,#061827,#081e32);display:flex;align-items:stretch;overflow:hidden}
+.news-label{flex:0 0 auto;min-width:112px;padding:0 14px;display:flex;align-items:center;justify-content:center;gap:7px;background:#071522;border-right:1px solid #254c67;color:#ffd54d;font-size:8px;font-weight:950;letter-spacing:1px;z-index:2;box-shadow:10px 0 20px rgba(2,12,20,.38)}
+.news-label:before{content:"";width:7px;height:7px;border-radius:50%;background:#19e398;box-shadow:0 0 10px #19e398}
+.news-window{min-width:0;flex:1;overflow:hidden;display:flex;align-items:center}
+.news-track{display:flex;align-items:center;width:max-content;white-space:nowrap;will-change:transform;animation:newsMarquee var(--news-duration,70s) linear infinite}
+.news-ticker:hover .news-track{animation-play-state:paused}
+.news-item{display:inline-flex;align-items:center;gap:8px;padding:0 15px;font-size:10px;color:#dbe9f4}
+.news-source{font-size:8px;font-weight:900;letter-spacing:.45px;color:#64bcff}
+.news-headline{font-weight:650;color:#eaf2f8}
+.news-sep{color:#ffd33f;font-size:12px;font-weight:900;text-shadow:0 0 8px rgba(255,211,63,.35)}
+@keyframes newsMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media(max-width:700px){.news-label{min-width:85px;padding:0 9px;font-size:7px}.news-item{font-size:9px;padding:0 11px}.news-source{font-size:7px}.news-ticker{height:37px}}
+
 </style>
 </head>
 <body>
@@ -60,18 +74,63 @@
 </div>
 </div></header>
 
+<div class="news-ticker" id="newsTicker">
+  <div class="news-label">PH NEWS</div>
+  <div class="news-window"><div class="news-track" id="newsTrack"><span class="news-item"><span class="news-headline">Loading latest Philippines headlines…</span></span></div></div>
+</div>
+
 <section class="hero"><div class="hero-inner">
-<div><div class="eyebrow">PHILIPPINES EVERYDAY COST MONITOR</div><h1>Daily Cost Watch</h1>
+<div><div class="eyebrow">PHILIPPINES EVERYDAY COST MONITOR</div><h1>Daily Cost</h1>
 <p>Everyday Philippine costs from official or authoritative sources. The page checks sources automatically in the background and keeps the latest verified values available if a source is temporarily unreachable.</p></div>
 <div class="global-status" id="globalStatus">AUTO-CHECK • EVERY 15 MIN</div>
 </div></section>
 
 <main class="content">
-<div class="section-title"><h2>Everyday Costs</h2><span>11 monitored sections • source-by-source updates</span></div>
 <div class="grid" id="costGrid"></div>
 </main>
 
 <footer class="footer"><div class="footer-inner">A project by MazenmiX <span class="heart">♥</span></div></footer>
+
+<script>
+(function(){
+ const track=document.getElementById("newsTrack");
+ if(!track)return;
+ const KEY="mxPhilippinesNewsCache";
+ function escNews(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
+ function renderNews(items){
+   if(!Array.isArray(items)||!items.length)return;
+   const one=items.map(x=>'<a class="news-item" href="'+escNews(x.url||"#")+'" target="_blank" rel="noopener"><span class="news-source">'+escNews(x.source||"NEWS")+'</span><span class="news-headline">'+escNews(x.headline||"")+'</span><span class="news-sep">◆</span></a>').join("");
+   track.innerHTML=one+one;
+   requestAnimationFrame(()=>{
+     const half=track.scrollWidth/2;
+     const duration=Math.max(28,half/135);
+     track.style.setProperty("--news-duration",duration+"s");
+   });
+ }
+ function fromCache(){
+   try{
+     const j=JSON.parse(localStorage.getItem(KEY)||"null");
+     if(j&&Array.isArray(j.items)&&j.items.length){renderNews(j.items);return true}
+   }catch(e){}
+   return false;
+ }
+ async function refreshNews(){
+   const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),10000);
+   try{
+     const r=await fetch("/api/news?ts="+Date.now(),{cache:"no-store",signal:ctrl.signal});
+     if(!r.ok)throw new Error("HTTP "+r.status);
+     const j=await r.json();
+     if(j&&j.ok&&Array.isArray(j.items)&&j.items.length){
+       renderNews(j.items);
+       try{localStorage.setItem(KEY,JSON.stringify(j))}catch(e){}
+     }
+   }catch(e){}finally{clearTimeout(timer)}
+ }
+ fromCache();
+ refreshNews();
+ setInterval(refreshNews,300000);
+})();
+</script>
 
 <script>
 (function(){
@@ -149,7 +208,7 @@ function renderGroceryCard(data){
  const resultText=groceryState.query?(filtered.length+" matches"):(total+" grocery items");
  const more=filtered.length>groceryState.visible;
  const asof=d.updated||d.as_of||"Latest DTI SRP bulletin";
- return '<article class="cost-card grocery-card" id="card-grocery"><div class="card-head"><div class="icon">'+cfg.icon+'</div><div class="titlebox"><h3>'+cfg.title+'</h3><a class="source-name" target="_blank" rel="noopener" href="'+esc(d.source_url||"https://www.dti.gov.ph/konsyumer/latest-srps-basic-necessities-prime-commodities")+'">'+esc(d.source||"Department of Trade and Industry • SRP Bulletin")+' ↗</a></div><span class="status">Live</span></div><div class="grocery-tools"><input class="grocery-search" id="grocerySearch" type="search" autocomplete="off" placeholder="Search grocery item, brand, unit or category…" value="'+esc(groceryState.query)+'"><span class="grocery-result-count" id="groceryResultCount">'+esc(resultText)+'</span></div><div class="grocery-rows" id="groceryRows">'+groceryRowsHtml(d)+'</div><div class="grocery-actions"><button class="grocery-more" id="groceryMore"'+(more?"":" style=\"display:none\"")+'>Show More</button></div><div class="card-note">Suggested retail prices from the official DTI BNPC SRP bulletin. Actual store prices can be lower and may vary by location or SKU.</div><div class="card-foot"><span class="asof">'+esc(asof)+'</span><span class="checked">'+timeLabel(d.checked_at)+'</span></div></article>';
+ return '<article class="cost-card grocery-card" id="card-grocery"><div class="card-head"><div class="icon">'+cfg.icon+'</div><div class="titlebox"><h3>'+cfg.title+'</h3></div><span class="status">Live</span></div><div class="grocery-tools"><input class="grocery-search" id="grocerySearch" type="search" autocomplete="off" placeholder="Search grocery item, brand, unit or category…" value="'+esc(groceryState.query)+'"><span class="grocery-result-count" id="groceryResultCount">'+esc(resultText)+'</span></div><div class="grocery-rows" id="groceryRows">'+groceryRowsHtml(d)+'</div><div class="grocery-actions"><button class="grocery-more" id="groceryMore"'+(more?"":" style=\"display:none\"")+'>Show More</button></div><div class="card-foot"><span class="asof">'+esc(asof)+'</span><span class="checked">'+timeLabel(d.checked_at)+'</span></div></article>';
 }
 function updateGroceryBody(){
  const d=cache.grocery||normalize("grocery",null),filtered=groceryFiltered(d),total=groceryList(d).length;
@@ -192,7 +251,7 @@ function renderMedicineCard(data){
  const resultText=medicineState.query?(filtered.length+" matches"):(total+" medicines");
  const more=filtered.length>medicineState.visible;
  const asof=d.updated||d.as_of||"Latest EAMC published list";
- return '<article class="cost-card medicine-card" id="card-medicine"><div class="card-head"><div class="icon">'+cfg.icon+'</div><div class="titlebox"><h3>'+cfg.title+'</h3><a class="source-name" target="_blank" rel="noopener" href="'+esc(d.source_url||"https://eamc.doh.gov.ph/drugs-and-medicines-price-list/")+'">'+esc(d.source||"DOH • East Avenue Medical Center")+' ↗</a></div><span class="status">Live</span></div><div class="medicine-tools"><input class="medicine-search" id="medicineSearch" type="search" autocomplete="off" placeholder="Search medicine, brand, strength or category…" value="'+esc(medicineState.query)+'"><span class="medicine-result-count" id="medicineResultCount">'+esc(resultText)+'</span></div><div class="medicine-rows" id="medicineRows">'+medicineRowsHtml(d)+'</div><div class="medicine-actions"><button class="medicine-more" id="medicineMore"'+(more?"":" style=\"display:none\"")+'>Show More</button></div><div class="card-note">Prices shown are EAMC hospital pharmacy selling prices from the official published medicine list; retail pharmacy prices elsewhere may differ.</div><div class="card-foot"><span class="asof">'+esc(asof)+'</span><span class="checked">'+timeLabel(d.checked_at)+'</span></div></article>';
+ return '<article class="cost-card medicine-card" id="card-medicine"><div class="card-head"><div class="icon">'+cfg.icon+'</div><div class="titlebox"><h3>'+cfg.title+'</h3></div><span class="status">Live</span></div><div class="medicine-tools"><input class="medicine-search" id="medicineSearch" type="search" autocomplete="off" placeholder="Search medicine, brand, strength or category…" value="'+esc(medicineState.query)+'"><span class="medicine-result-count" id="medicineResultCount">'+esc(resultText)+'</span></div><div class="medicine-rows" id="medicineRows">'+medicineRowsHtml(d)+'</div><div class="medicine-actions"><button class="medicine-more" id="medicineMore"'+(more?"":" style=\"display:none\"")+'>Show More</button></div><div class="card-foot"><span class="asof">'+esc(asof)+'</span><span class="checked">'+timeLabel(d.checked_at)+'</span></div></article>';
 }
 function renderCard(sec,data){
  if(sec==="grocery")return renderGroceryCard(data);
