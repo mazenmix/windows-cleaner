@@ -23,6 +23,55 @@
 @media(max-width:1180px){.brand{min-width:240px}.navlinks a{padding:0 11px}.lpg-grid{grid-template-columns:repeat(3,1fr)}.filters{flex-wrap:wrap}.searchbox{width:190px}}
 @media(max-width:900px){.header{height:auto;position:relative}.navbar{height:auto;min-height:62px;padding:10px 16px;flex-wrap:wrap;gap:10px}.brand{min-width:0;flex:1}.navlinks{order:3;width:100%;height:42px;overflow-x:auto}.navlinks a{height:42px}.navright{margin-left:auto}.livebadge{min-width:0}.hero-inner{padding:18px 16px;min-height:130px}.hero-art{width:62%;opacity:.6}.hero-copy{max-width:64%}.hero h1{font-size:31px}.toolbar{padding:10px 16px;flex-wrap:wrap}.browse-label{width:100%}.area-scroller{order:2;width:100%}.filters{order:3;width:100%}.searchbox{flex:1;min-width:180px}.content{padding:16px}.lpg-grid{grid-template-columns:repeat(2,1fr)}.footer-inner{padding:13px 16px}}
 @media(max-width:600px){.brandcopy strong{font-size:16px}.brandcopy span{font-size:9px}.mxmark{width:41px}.navright .iconbtn:nth-last-child(-n+2){display:none}.livecopy span{max-width:130px;overflow:hidden;text-overflow:ellipsis}.hero-inner{min-height:120px}.hero-copy{max-width:100%}.hero-art{opacity:.18;width:100%}.hero h1{font-size:29px}.hero p{font-size:11px;line-height:1.5}.filters{display:grid;grid-template-columns:1fr 1fr}.searchbox{grid-column:1/-1;width:100%}.select{width:100%}.content{padding:12px}.table-shell{border-radius:10px}.fuel-table td{height:47px;padding:7px 11px}.fuel-table th{padding:0 11px}.table-foot{gap:10px;align-items:flex-start;height:auto;padding:8px 10px;flex-direction:column}.info-banner{align-items:flex-start;flex-wrap:wrap}.leafbox{width:100%}.close-banner{position:absolute;right:20px}.lpg-head{align-items:flex-start;flex-direction:column}.lpg-title h2{font-size:21px}.weight-tabs{width:100%}.weight{flex:1}.lpg-grid{grid-template-columns:1fr}.lpg-card{min-height:100px}.footer-inner{align-items:flex-start;gap:16px;flex-direction:column}}
+
+/* --- MX smart summary / mobile cards / price alerts --- */
+.summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.summary-card{border:1px solid #17456c;border-radius:12px;background:linear-gradient(145deg,#0a2239,#071a2c);padding:13px 15px;min-height:82px;box-shadow:0 10px 28px rgba(0,0,0,.12)}
+.summary-label{font-size:9px;letter-spacing:.75px;text-transform:uppercase;color:#6f99ba;font-weight:800}
+.summary-value{font-size:22px;line-height:1;margin-top:8px;font-weight:900;letter-spacing:-.6px}
+.summary-brand{font-size:10px;margin-top:6px;color:#8caec8}
+.summary-card.green .summary-value{color:#13e49b}.summary-card.blue .summary-value{color:#59aaff}.summary-card.gold .summary-value{color:#ffc234}.summary-card.purple .summary-value{color:#b56aff}
+
+.mobile-fuel-list{display:none;gap:10px;margin-bottom:14px}
+.mobile-brand-card{border:1px solid #173e5f;border-radius:13px;background:linear-gradient(145deg,#0a2238,#07192b);padding:13px 14px}
+.mobile-brand-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.mobile-brand-name{display:flex;align-items:center;gap:9px;font-weight:800;font-size:13px}
+.mobile-stations{font-size:9px;color:#7196b2}
+.mobile-price-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.mobile-price{border:1px solid #133650;border-radius:10px;background:#071827;padding:9px 10px;min-width:0}
+.mobile-price small{display:block;color:#668ba7;font-size:8px;text-transform:uppercase;letter-spacing:.45px;margin-bottom:4px}
+.mobile-price .price-main{font-size:15px}
+.mobile-price .delta{font-size:8px}
+
+.alert-btn{position:relative}
+.alert-count{position:absolute;right:-4px;top:-5px;min-width:16px;height:16px;border-radius:9px;background:#ff435b;color:#fff;display:none;place-items:center;font-size:8px;font-weight:900;border:2px solid #061526}
+.alert-count.show{display:grid}
+.alert-modal{position:fixed;inset:0;z-index:120;background:rgba(1,8,15,.74);backdrop-filter:blur(7px);display:none;align-items:center;justify-content:center;padding:18px}
+.alert-modal.open{display:flex}
+.alert-panel{width:min(470px,100%);border:1px solid #1d527d;border-radius:17px;background:linear-gradient(180deg,#0b263f,#071a2c);box-shadow:0 24px 80px rgba(0,0,0,.48);overflow:hidden}
+.alert-head{padding:16px 18px;border-bottom:1px solid #173d5c;display:flex;align-items:center;justify-content:space-between}
+.alert-head h3{margin:0;font-size:16px}.alert-close{width:30px;height:30px;border:1px solid #1a4568;border-radius:50%;background:#07192b;color:#8dafc9;cursor:pointer}
+.alert-body{padding:16px 18px}
+.alert-note{font-size:10px;color:#789bb7;line-height:1.55;margin-bottom:13px}
+.alert-form{display:grid;grid-template-columns:1fr 1fr auto;gap:8px}
+.alert-select,.alert-input{height:39px;border:1px solid #1b4b72;border-radius:10px;background:#06192a;color:#dfeaf3;padding:0 11px;outline:none;font-size:11px;min-width:0}
+.alert-save{height:39px;border:0;border-radius:10px;background:linear-gradient(180deg,#62bbff,#318aff);color:#06182a;padding:0 14px;font-size:11px;font-weight:900;cursor:pointer}
+.alert-list{margin-top:13px;display:grid;gap:8px}
+.alert-item{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #173d5b;border-radius:10px;background:#071a2c;padding:10px 11px}
+.alert-item b{font-size:11px}.alert-item span{font-size:9px;color:#7296b2;display:block;margin-top:2px}
+.alert-remove{border:0;background:#321522;color:#ff6273;border-radius:8px;padding:7px 9px;font-size:9px;cursor:pointer}
+.alert-empty{font-size:10px;color:#6489a7;padding:8px 0}
+
+@media(max-width:900px){.summary-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){
+ .summary-grid{grid-template-columns:repeat(2,1fr);gap:8px}.summary-card{min-height:74px;padding:11px}.summary-value{font-size:19px}
+ .table-shell{display:none}.mobile-fuel-list{display:grid}
+ .mobile-price-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .alert-form{grid-template-columns:1fr 1fr}.alert-save{grid-column:1/-1;width:100%}
+ .navright{gap:9px}.livebadge{min-width:0}.iconbtn{width:36px;height:36px}
+}
+@media(max-width:380px){.summary-grid{grid-template-columns:1fr}.mobile-price-grid{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
 <body>
@@ -34,6 +83,9 @@
 <div class="navright">
 <div class="livebadge"><span class="livedot"></span><span class="livecopy"><b id="liveLabel">Live Prices</b><span id="updatedLabel">Loading source…</span></span></div>
 
+<button class="iconbtn alert-btn" id="alertButton" aria-label="Price alerts">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 9a6 6 0 1 0-12 0c0 7-3 7-3 8.5h18C21 16 18 16 18 9Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 20h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+<span class="alert-count" id="alertCount">0</span></button>
 <button class="iconbtn" id="refreshAll" aria-label="Refresh"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 11a8 8 0 1 0-2 5.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M20 5v6h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 
 </div></div></header>
@@ -44,6 +96,13 @@
 </div></section>
 
 <main class="content">
+<section class="summary-grid" id="summaryGrid">
+<article class="summary-card green"><div class="summary-label">Cheapest Diesel</div><div class="summary-value" id="sumDiesel">—</div><div class="summary-brand" id="sumDieselBrand">—</div></article>
+<article class="summary-card blue"><div class="summary-label">Cheapest 91</div><div class="summary-value" id="sum91">—</div><div class="summary-brand" id="sum91Brand">—</div></article>
+<article class="summary-card gold"><div class="summary-label">Cheapest 95</div><div class="summary-value" id="sum95">—</div><div class="summary-brand" id="sum95Brand">—</div></article>
+<article class="summary-card purple"><div class="summary-label">Cheapest LPG 11kg</div><div class="summary-value" id="sumLpg">—</div><div class="summary-brand" id="sumLpgBrand">—</div></article>
+</section>
+<section class="mobile-fuel-list" id="mobileFuelCards"></section>
 <section class="table-shell"><div class="table-scroll"><table class="fuel-table"><thead><tr><th>BRAND</th><th>STATIONS</th><th>DIESEL</th><th>PREM DIESEL</th><th>UNLEADED 91</th><th>E-GAS</th><th>PREM 95</th><th>PREM 97</th><th>KEROSENE</th></tr></thead><tbody id="fuelRows"></tbody></table></div><div class="table-foot"><span id="brandCountText">Showing 11 brands</span><span>Prices are updated from GasWatch PH / DOE source data. PHP per liter.</span></div></section>
 
 
@@ -52,7 +111,23 @@
 </main>
 
 <footer class="footer"><div class="footer-inner"><div class="footer-note">A project by MazenmiX <span class="heart">♥</span> &nbsp; For a Smarter, Greener Philippines.</div></div></footer>
-</div><div class="toast" id="toast"></div>
+</div><div class="alert-modal" id="alertModal">
+<div class="alert-panel">
+ <div class="alert-head"><h3>🔔 Price Alerts</h3><button class="alert-close" id="alertClose" aria-label="Close">×</button></div>
+ <div class="alert-body">
+  <div class="alert-note">Set a target price. The alert stays saved on this device. When the latest available price is at or below your target, MX Fuel Watch PH can notify you.</div>
+  <div class="alert-form">
+   <select class="alert-select" id="alertFuel">
+    <option value="diesel">Diesel</option><option value="unleaded91">Unleaded 91</option><option value="prem95">Premium 95</option><option value="prem97">Premium 97</option><option value="kerosene">Kerosene</option><option value="lpg">LPG 11kg</option>
+   </select>
+   <input class="alert-input" id="alertTarget" type="number" min="1" step="0.01" placeholder="Target price">
+   <button class="alert-save" id="alertSave">Save Alert</button>
+  </div>
+  <div class="alert-list" id="alertList"></div>
+ </div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
 
 <script>
 (function(){
@@ -76,18 +151,94 @@ function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show')
 function getRanks(key){return fuelData.filter(r=>r[key]&&Number.isFinite(r[key][0])).map(r=>r[key][0]).sort((a,b)=>a-b)}
 function priceClass(key,val){const vals=getRanks(key);if(!vals.length)return'price-mid';const a=vals[Math.floor((vals.length-1)*.33)],b=vals[Math.floor((vals.length-1)*.66)];return val<=a?'price-low':val>=b?'price-high':'price-mid'}
 function cell(row,key){const v=row[key];if(!v)return'<span class="price-na">N/A</span>';const delta=Number(v[1]||0),dir=delta<0?'down':'up',arrow=delta<0?'▼':'▲';return '<span class="price-main '+priceClass(key,v[0])+'">'+Number(v[0]).toFixed(2)+'</span><span class="delta '+dir+'">'+arrow+' '+(delta>=0?'+':'')+delta.toFixed(2)+'</span>'}
+
+const mobileLabels={diesel:'Diesel',premDiesel:'Prem Diesel',unleaded91:'Unleaded 91',eGas:'E-Gas',prem95:'Premium 95',prem97:'Premium 97',kerosene:'Kerosene'};
+let priceAlerts=[];
+try{priceAlerts=JSON.parse(localStorage.getItem('mxFuelPriceAlerts')||'[]')}catch(e){priceAlerts=[]}
+function cheapestFuel(key){
+ const valid=fuelData.filter(r=>r[key]&&Number.isFinite(r[key][0])).slice().sort((a,b)=>a[key][0]-b[key][0]);
+ return valid[0]||null;
+}
+function renderSummary(){
+ const d=cheapestFuel('diesel'),g91=cheapestFuel('unleaded91'),g95=cheapestFuel('prem95');
+ const l=lpgData.slice().sort((a,b)=>a.price-b.price)[0];
+ $('sumDiesel').textContent=d?'₱'+d.diesel[0].toFixed(2):'—';$('sumDieselBrand').textContent=d?d.name:'—';
+ $('sum91').textContent=g91?'₱'+g91.unleaded91[0].toFixed(2):'—';$('sum91Brand').textContent=g91?g91.name:'—';
+ $('sum95').textContent=g95?'₱'+g95.prem95[0].toFixed(2):'—';$('sum95Brand').textContent=g95?g95.name:'—';
+ $('sumLpg').textContent=l?'₱'+l.price.toLocaleString('en-PH'):'—';$('sumLpgBrand').textContent=l?l.name:'—';
+}
+function mobileCell(row,key){
+ const v=row[key];
+ if(!v)return '<div class="mobile-price"><small>'+mobileLabels[key]+'</small><span class="price-na">N/A</span></div>';
+ const d=Number(v[1]||0),dir=d<0?'down':'up',arrow=d<0?'▼':'▲';
+ return '<div class="mobile-price"><small>'+mobileLabels[key]+'</small><span class="price-main '+priceClass(key,v[0])+'">'+Number(v[0]).toFixed(2)+'</span><span class="delta '+dir+'">'+arrow+' '+(d>=0?'+':'')+d.toFixed(2)+'</span></div>';
+}
+function renderMobileFuel(){
+ $('mobileFuelCards').innerHTML=fuelData.map(r=>'<article class="mobile-brand-card"><div class="mobile-brand-head"><div class="mobile-brand-name"><span class="branddot" style="background:'+brandColors[r.name]+';color:'+brandColors[r.name]+'"></span>'+r.name+'</div><div class="mobile-stations">'+r.stations+' stations</div></div><div class="mobile-price-grid">'+cols.map(k=>mobileCell(r,k)).join('')+'</div></article>').join('');
+}
+function saveAlerts(){localStorage.setItem('mxFuelPriceAlerts',JSON.stringify(priceAlerts));renderAlertList()}
+function alertLabel(type){return type==='lpg'?'LPG 11kg':mobileLabels[type]||type}
+function currentAlertPrice(type){
+ if(type==='lpg'){const x=lpgData.slice().sort((a,b)=>a.price-b.price)[0];return x?{price:x.price,brand:x.name}:null}
+ const x=cheapestFuel(type);return x?{price:x[type][0],brand:x.name}:null;
+}
+function renderAlertList(){
+ const list=$('alertList'),count=$('alertCount');
+ if(count){count.textContent=priceAlerts.length;count.classList.toggle('show',priceAlerts.length>0)}
+ if(!list)return;
+ if(!priceAlerts.length){list.innerHTML='<div class="alert-empty">No saved alerts yet.</div>';return}
+ list.innerHTML=priceAlerts.map((a,i)=>'<div class="alert-item"><div><b>'+alertLabel(a.type)+' ≤ ₱'+Number(a.target).toLocaleString('en-PH',{maximumFractionDigits:2})+'</b><span>Saved on this device</span></div><button class="alert-remove" data-alert-remove="'+i+'">Remove</button></div>').join('');
+ list.querySelectorAll('[data-alert-remove]').forEach(b=>b.addEventListener('click',()=>{priceAlerts.splice(Number(b.dataset.alertRemove),1);saveAlerts()}));
+}
+async function maybeEnableNotifications(){
+ if(!('Notification' in window))return false;
+ if(Notification.permission==='granted')return true;
+ if(Notification.permission==='default'){try{return (await Notification.requestPermission())==='granted'}catch(e){}}
+ return false;
+}
+async function checkPriceAlerts(){
+ if(!priceAlerts.length)return;
+ const canNotify=await maybeEnableNotifications();
+ let changed=false;
+ priceAlerts.forEach(a=>{
+   const cur=currentAlertPrice(a.type);if(!cur)return;
+   const hit=cur.price<=Number(a.target);
+   const sig=cur.brand+'|'+cur.price;
+   if(hit&&a.lastHit!==sig){
+     a.lastHit=sig;changed=true;
+     const msg=alertLabel(a.type)+' is ₱'+Number(cur.price).toLocaleString('en-PH',{maximumFractionDigits:2})+' at '+cur.brand;
+     toast('🔔 '+msg);
+     if(canNotify){try{new Notification('MX Fuel Watch PH',{body:msg,icon:'./favicon.svg'})}catch(e){}}
+   }
+   if(!hit&&a.lastHit){a.lastHit='';changed=true}
+ });
+ if(changed){localStorage.setItem('mxFuelPriceAlerts',JSON.stringify(priceAlerts));renderAlertList()}
+}
+
 function renderFuel(){
  const rows=fuelData.slice();
  $('fuelRows').innerHTML=rows.map(r=>'<tr><td><div class="brandcell"><span class="branddot" style="background:'+brandColors[r.name]+';color:'+brandColors[r.name]+'"></span>'+r.name+'</div></td><td class="station-count">'+r.stations+'</td>'+cols.map(k=>'<td>'+cell(r,k)+'</td>').join('')+'</tr>').join('');
  $('brandCountText').textContent='Showing '+rows.length+' brands';
+ renderSummary();renderMobileFuel();checkPriceAlerts();
 }
-function renderLpg(){const factor=selectedKg/11;const sorted=lpgData.slice().sort((a,b)=>a.price-b.price),cheapest=sorted[0]&&sorted[0].name;$('lpgGrid').innerHTML=lpgData.map(x=>{const p=Math.round(x.price*factor),isCheap=x.name===cheapest,chg=Math.round(x.change*factor);return '<article class="lpg-card '+(isCheap?'cheapest':'')+'"><div class="lpg-name"><span class="lpg-dot" style="background:'+x.color+'"></span>'+x.name+'</div>'+(isCheap?'<span class="cheapest-badge">Cheapest</span>':'')+'<div class="lpg-price"><small>PHP</small>'+p.toLocaleString('en-PH')+'</div><div class="lpg-bottom"><span>'+selectedKg+'kg tank</span><span class="lpg-change '+(chg<0?'down':'up')+'">'+(chg<0?'▼ ':'▲ +')+chg+'</span></div></article>'}).join('')}
+function renderLpg(){const factor=selectedKg/11;const sorted=lpgData.slice().sort((a,b)=>a.price-b.price),cheapest=sorted[0]&&sorted[0].name;$('lpgGrid').innerHTML=lpgData.map(x=>{const p=Math.round(x.price*factor),isCheap=x.name===cheapest,chg=Math.round(x.change*factor);return '<article class="lpg-card '+(isCheap?'cheapest':'')+'"><div class="lpg-name"><span class="lpg-dot" style="background:'+x.color+'"></span>'+x.name+'</div>'+(isCheap?'<span class="cheapest-badge">Cheapest</span>':'')+'<div class="lpg-price"><small>PHP</small>'+p.toLocaleString('en-PH')+'</div><div class="lpg-bottom"><span>'+selectedKg+'kg tank</span><span class="lpg-change '+(chg<0?'down':'up')+'">'+(chg<0?'▼ ':'▲ +')+chg+'</span></div></article>'}).join('');renderSummary();checkPriceAlerts();}
 function parsePriceCell(txt){txt=String(txt||'').trim();if(!txt||/N\/A/i.test(txt))return null;const m=txt.match(/([0-9]+(?:\.[0-9]+)?)\s*([↑↓])?\s*([+-]?[0-9]+(?:\.[0-9]+)?)?/);if(!m)return null;let d=m[3]?parseFloat(m[3]):0;if(m[2]==='↓'&&d>0)d=-d;return[parseFloat(m[1]),d]}
 function parseGasWatch(text){const lines=text.split(/\r?\n/);const newRows=[];for(const line of lines){if(!line.includes('|'))continue;const parts=line.split('|').map(s=>s.trim()).filter((s,i,a)=>!(i===0&&s==='')&&!(i===a.length-1&&s===''));if(parts.length<9)continue;if(!Object.prototype.hasOwnProperty.call(brandColors,parts[0]))continue;newRows.push({name:parts[0],stations:parseInt(parts[1],10)||0,diesel:parsePriceCell(parts[2]),premDiesel:parsePriceCell(parts[3]),unleaded91:parsePriceCell(parts[4]),eGas:parsePriceCell(parts[5]),prem95:parsePriceCell(parts[6]),prem97:parsePriceCell(parts[7]),kerosene:parsePriceCell(parts[8])})}if(newRows.length>=8)fuelData=newRows;const date=(text.match(/Prices updated\s+([^\n]+)/i)||[])[1]||(text.match(/As of\s+([A-Z][a-z]+\s+\d{1,2},\s+\d{4})/i)||[])[1];if(date)$('updatedLabel').textContent='Updated '+date.trim();const section=(text.split('## Gasul / LPG Prices')[1]||'').split('## How We Track Prices')[0]||'';const names=['Regasco','Solane','Petron Gasul','SL Gas','Phoenix LPG','Total Gas'];const found={};names.forEach(name=>{const esc=name.replace(/[.*+?^$()|[\]\\{}]/g,'\\$&');const m=section.match(new RegExp('(?:^|\\n)'+esc+'\\s*\\n\\s*PHP\\s*([0-9,]+)','i'));if(m)found[name]=parseInt(m[1].replace(/,/g,''),10)});if(Object.keys(found).length)lpgData=lpgData.map(x=>found[x.name]?Object.assign({},x,{price:found[x.name]}):x)}
 async function refreshSource(manual){if(manual){$('liveLabel').textContent='Updating…';document.body.classList.add('loading-shimmer')}try{const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),11000);const r=await fetch('https://r.jina.ai/https://gaswatchph.com/',{cache:'no-store',signal:ctrl.signal});clearTimeout(timer);if(!r.ok)throw new Error('HTTP '+r.status);parseGasWatch(await r.text());renderFuel();renderLpg();$('liveLabel').textContent='Live Prices';if(manual)toast('Fuel and LPG prices refreshed')}catch(e){$('liveLabel').textContent='Live Prices';if($('updatedLabel').textContent.indexOf('Loading')===0)$('updatedLabel').textContent='Using latest saved data';if(manual)toast('Source unavailable — latest saved prices kept')}finally{document.body.classList.remove('loading-shimmer')}}
 $('refreshAll').addEventListener('click',()=>refreshSource(true));
 
 document.querySelectorAll('.weight').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.weight').forEach(x=>x.classList.remove('active'));b.classList.add('active');selectedKg=Number(b.dataset.kg);renderLpg()}));
+
+$('alertButton').addEventListener('click',()=>{$('alertModal').classList.add('open');renderAlertList()});
+$('alertClose').addEventListener('click',()=>{$('alertModal').classList.remove('open')});
+$('alertModal').addEventListener('click',e=>{if(e.target===$('alertModal'))$('alertModal').classList.remove('open')});
+$('alertSave').addEventListener('click',async()=>{
+ const type=$('alertFuel').value,target=parseFloat($('alertTarget').value);
+ if(!Number.isFinite(target)||target<=0){toast('Enter a valid target price');return}
+ priceAlerts.push({type,target,lastHit:''});saveAlerts();$('alertTarget').value='';toast('Price alert saved');await maybeEnableNotifications();checkPriceAlerts();
+});
+renderAlertList();
+
 renderFuel();renderLpg();refreshSource(false);setInterval(()=>refreshSource(false),60000);
 })();
 </script>
