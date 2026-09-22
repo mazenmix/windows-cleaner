@@ -1,0 +1,59 @@
+name: Build MX BlueRadar APK
+
+on:
+  push:
+    branches:
+      - mx-blueradar-build-temp
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle 9.6.0
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.6.0'
+
+      - name: Prepare Android SDK
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+
+      - name: Extract source
+        run: |
+          unzip -q tmp/MXBlueRadar-source.zip -d work
+          test -f work/MXBlueRadar/settings.gradle
+
+      - name: Build debug APK
+        working-directory: work/MXBlueRadar
+        run: gradle --no-daemon --stacktrace assembleDebug
+
+      - name: Verify APK
+        run: |
+          test -f work/MXBlueRadar/app/build/outputs/apk/debug/app-debug.apk
+          ls -lh work/MXBlueRadar/app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose work/MXBlueRadar/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Rename APK
+        run: cp work/MXBlueRadar/app/build/outputs/apk/debug/app-debug.apk MX-BlueRadar-v1.0.0-debug.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MX-BlueRadar-APK
+          path: MX-BlueRadar-v1.0.0-debug.apk
+          if-no-files-found: error
