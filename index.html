@@ -153,6 +153,95 @@
 }
 @media(prefers-reduced-motion:reduce){.pse-scroll-track{animation:none}}
 
+
+/* --- Official Philippine food price ticker (DA Daily Price Index) --- */
+.food-ticker-shell{
+  display:flex;
+  align-items:stretch;
+  min-height:46px;
+  border-bottom:1px solid #173b5d;
+  background:linear-gradient(90deg,#071727,#0a2030 52%,#071727);
+  overflow:hidden;
+}
+.food-ticker-label{
+  position:relative;
+  z-index:3;
+  flex:0 0 auto;
+  min-width:142px;
+  padding:0 15px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  background:linear-gradient(135deg,#23311c,#183424);
+  border-right:1px solid #315b39;
+  color:#e8f8df;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.8px;
+  white-space:nowrap;
+  box-shadow:9px 0 22px rgba(2,10,17,.25);
+}
+.food-ticker-label:before{
+  content:"";
+  width:8px;height:8px;border-radius:50%;
+  background:#8be04f;
+  box-shadow:0 0 12px rgba(139,224,79,.7);
+}
+.food-ticker-main{min-width:0;flex:1;overflow:hidden;display:flex;align-items:center}
+.food-scroll-mask{width:100%;overflow:hidden;white-space:nowrap;position:relative}
+.food-scroll-mask:before,.food-scroll-mask:after{content:"";position:absolute;top:0;bottom:0;width:30px;z-index:2;pointer-events:none}
+.food-scroll-mask:before{left:0;background:linear-gradient(90deg,#081b2b,transparent)}
+.food-scroll-mask:after{right:0;background:linear-gradient(270deg,#081b2b,transparent)}
+.food-scroll-track{
+  display:inline-flex;
+  align-items:center;
+  min-width:max-content;
+  height:46px;
+  will-change:transform;
+  animation:foodTickerMove 180s linear infinite;
+}
+.food-scroll-track:hover{animation-play-state:paused}
+.food-item{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  height:30px;
+  padding:0 16px;
+  border-right:1px solid rgba(63,102,95,.34);
+  font-variant-numeric:tabular-nums;
+}
+.food-name{font-size:10px;font-weight:850;color:#eef8f0;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+.food-trend{font-size:8px;font-weight:900;line-height:1;transform:translateY(-1px)}
+.food-price{font-size:10px;font-weight:850;color:#dce9f2}
+.food-change{font-size:9px;font-weight:800}
+.food-up .food-trend,.food-up .food-change{color:#ff5a68}
+.food-down .food-trend,.food-down .food-change{color:#21df9b}
+.food-flat .food-trend,.food-flat .food-change{color:#91a9bc}
+.food-ticker-source{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  padding:0 12px;
+  border-left:1px solid #143c5f;
+  color:#6f91aa;
+  font-size:8px;
+  letter-spacing:.4px;
+  white-space:nowrap;
+  background:#061526;
+}
+.food-placeholder{height:46px;display:flex;align-items:center;padding:0 18px;color:#718fab;font-size:10px}
+@keyframes foodTickerMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media(max-width:700px){
+  .food-ticker-shell{min-height:44px}
+  .food-ticker-label{min-width:76px;padding:0 9px;font-size:9px;letter-spacing:.35px}
+  .food-ticker-label span{display:none}
+  .food-ticker-source{display:none}
+  .food-item{padding:0 13px;gap:6px}
+  .food-name,.food-price{font-size:9px}.food-change{font-size:8px}
+}
+@media(prefers-reduced-motion:reduce){.food-scroll-track{animation:none}}
+
 </style>
 </head>
 <body>
@@ -181,6 +270,17 @@
     </div>
   </div>
   <div class="pse-ticker-delay">TRADINGVIEW • PSE 15 MIN DELAY</div>
+</section>
+<section class="food-ticker-shell" id="foodTicker" aria-label="Philippine food market price ticker">
+  <div class="food-ticker-label">FOOD <span>MARKET</span></div>
+  <div class="food-ticker-main">
+    <div class="food-scroll-mask">
+      <div class="food-scroll-track" id="foodScrollTrack">
+        <div class="food-placeholder">Loading official DA food prices…</div>
+      </div>
+    </div>
+  </div>
+  <div class="food-ticker-source" id="foodTickerSource">DA • DAILY INDEX</div>
 </section>
 
 
@@ -222,6 +322,62 @@
 </div>
 </div>
 <div class="toast" id="toast"></div>
+
+<script>
+(function(){
+ const track=document.getElementById('foodScrollTrack');
+ const source=document.getElementById('foodTickerSource');
+
+ function money(v){
+   if(!Number.isFinite(v))return '—';
+   return '₱'+v.toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});
+ }
+ function setFoodSpeed(){
+   requestAnimationFrame(()=>{
+     const half=Math.max(1,track.scrollWidth/2);
+     // ~21 px/sec: deliberately a little slower than the stock ticker.
+     const seconds=Math.max(150,Math.round(half/21));
+     track.style.animationDuration=seconds+'s';
+   });
+ }
+ function renderFood(items,date){
+   if(!Array.isArray(items)||!items.length)throw new Error('No food prices');
+   const one=items.map(x=>{
+     const ch=Number(x.change_pct);
+     const has=Number.isFinite(ch);
+     const cls=has?(ch>0?'food-up':ch<0?'food-down':'food-flat'):'food-flat';
+     const tri=has?(ch>0?'▲':ch<0?'▼':'•'):'•';
+     const pct=has?((ch>0?'+':'')+ch.toFixed(2)+'%'):'';
+     const unit=x.unit==='pc'?'pc':x.unit==='L'?'L':'kg';
+     return '<span class="food-item '+cls+'" title="'+String(x.name).replace(/"/g,'&quot;')+'">'+
+       '<span class="food-name">'+x.name+'</span>'+
+       '<span class="food-trend">'+tri+'</span>'+
+       '<span class="food-price">'+money(Number(x.price))+'/'+unit+'</span>'+
+       (pct?'<span class="food-change">'+pct+'</span>':'')+
+       '</span>';
+   }).join('');
+   track.innerHTML=one+one;
+   if(source)source.textContent='DA • '+(date||'DAILY INDEX');
+   setFoodSpeed();
+ }
+ async function loadFoodPrices(){
+   try{
+     const r=await fetch('/api/food?ts='+Date.now(),{cache:'no-store'});
+     if(!r.ok)throw new Error('HTTP '+r.status);
+     const j=await r.json();
+     if(!j.ok||!Array.isArray(j.items)||!j.items.length)throw new Error(j.error||'No DA data');
+     renderFood(j.items,j.date);
+   }catch(e){
+     track.innerHTML='<div class="food-placeholder">DA food prices temporarily unavailable • retrying automatically…</div>';
+     if(source)source.textContent='DA • RETRYING';
+   }
+ }
+ loadFoodPrices();
+ // DA publishes daily; checking every 15 minutes picks up a new official file shortly after publication.
+ setInterval(loadFoodPrices,900000);
+ window.addEventListener('resize',setFoodSpeed);
+})();
+</script>
 
 <script>
 (function(){
