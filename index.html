@@ -242,6 +242,150 @@
 }
 @media(prefers-reduced-motion:reduce){.food-scroll-track{animation:none}}
 
+
+/* --- Categorized food price section --- */
+.food-prices-section{
+  max-width:1460px;
+  margin:0 auto;
+  padding:18px 34px 20px;
+  border-bottom:1px solid #153957;
+}
+.food-prices-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:14px;
+}
+.food-eyebrow{
+  font-size:9px;
+  letter-spacing:1.5px;
+  color:#75b99d;
+  font-weight:900;
+}
+.food-prices-head h2{
+  margin:5px 0 4px;
+  font-size:25px;
+  letter-spacing:-.7px;
+}
+.food-prices-head p{
+  margin:0;
+  color:#7799b3;
+  font-size:10px;
+}
+.food-source-pill{
+  flex:0 0 auto;
+  border:1px solid #245d47;
+  border-radius:18px;
+  background:#08281d;
+  color:#84e4b2;
+  padding:8px 12px;
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.45px;
+  white-space:nowrap;
+}
+.food-category-stack{
+  display:grid;
+  gap:11px;
+}
+.food-category{
+  border:1px solid #173f60;
+  border-radius:12px;
+  overflow:hidden;
+  background:linear-gradient(145deg,#081d31,#071827);
+  box-shadow:0 10px 28px rgba(0,0,0,.12);
+}
+.food-category-head{
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:0 13px;
+  border-bottom:1px solid #173b59;
+  background:rgba(11,38,61,.82);
+}
+.food-category-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:11px;
+  font-weight:900;
+}
+.food-category-dot{
+  width:8px;height:8px;border-radius:50%;
+  box-shadow:0 0 10px currentColor;
+}
+.food-category-count{
+  color:#668aa5;
+  font-size:8px;
+}
+.food-items-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
+.food-row{
+  min-width:0;
+  min-height:45px;
+  padding:8px 12px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  border-right:1px solid rgba(28,67,98,.5);
+  border-bottom:1px solid rgba(28,67,98,.45);
+}
+.food-row:nth-child(4n){border-right:0}
+.food-row-name{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:10px;
+  font-weight:800;
+}
+.food-row-right{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+.food-row-price{
+  color:#e4edf4;
+  font-size:10px;
+  font-weight:900;
+}
+.food-row-trend{
+  font-size:7px;
+  font-weight:900;
+}
+.food-row-change{
+  font-size:8px;
+  font-weight:900;
+}
+.food-row.up .food-row-trend,.food-row.up .food-row-change{color:#ff596b}
+.food-row.down .food-row-trend,.food-row.down .food-row-change{color:#17dea0}
+.food-row.flat .food-row-trend,.food-row.flat .food-row-change{display:none}
+@media(max-width:1000px){
+  .food-items-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .food-row:nth-child(4n){border-right:1px solid rgba(28,67,98,.5)}
+  .food-row:nth-child(3n){border-right:0}
+}
+@media(max-width:720px){
+  .food-prices-section{padding:15px 16px 18px}
+  .food-prices-head{align-items:flex-start;flex-direction:column}
+  .food-source-pill{align-self:flex-start}
+  .food-items-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .food-row:nth-child(3n){border-right:1px solid rgba(28,67,98,.5)}
+  .food-row:nth-child(2n){border-right:0}
+}
+@media(max-width:430px){
+  .food-items-grid{grid-template-columns:1fr}
+  .food-row,.food-row:nth-child(2n),.food-row:nth-child(3n),.food-row:nth-child(4n){border-right:0}
+}
+
 </style>
 </head>
 <body>
@@ -271,17 +415,19 @@
   </div>
   <div class="pse-ticker-delay">TRADINGVIEW • PSE 15 MIN DELAY</div>
 </section>
-<section class="food-ticker-shell" id="foodTicker" aria-label="Philippine food market price ticker">
-  <div class="food-ticker-label">FOOD <span>MARKET</span></div>
-  <div class="food-ticker-main">
-    <div class="food-scroll-mask">
-      <div class="food-scroll-track" id="foodScrollTrack">
-        <div class="food-placeholder">Loading official DA food prices…</div>
-      </div>
+<section class="food-prices-section" id="foodPricesSection">
+  <div class="food-prices-head">
+    <div>
+      <div class="food-eyebrow">PHILIPPINES FOOD PRICE MONITOR</div>
+      <h2>Food Prices Today</h2>
+      <p>Official DA food and agricultural commodity prices, grouped so everything is visible at a glance.</p>
     </div>
+    <div class="food-source-pill" id="foodSourcePill">DA • QUICK CACHE</div>
   </div>
-  <div class="food-ticker-source" id="foodTickerSource">DA • DAILY INDEX</div>
+  <div class="food-category-stack" id="foodCategoryStack"></div>
 </section>
+
+
 
 
 <section class="hero" id="prices"><div class="hero-inner">
@@ -325,8 +471,9 @@
 
 <script>
 (function(){
- const track=document.getElementById('foodScrollTrack');
- const source=document.getElementById('foodTickerSource');
+ const stack=document.getElementById('foodCategoryStack');
+ const source=document.getElementById('foodSourcePill');
+
  const FOOD_BOOTSTRAP=[
   {name:'Corn (White)',price:120,unit:'kg',change_pct:null},
   {name:'Corn (Yellow)',price:120,unit:'kg',change_pct:null},
@@ -382,154 +529,76 @@
   {name:'White Onion',price:100,unit:'kg',change_pct:null}
  ];
 
- function money(v){
-   if(!Number.isFinite(v))return '—';
-   return '₱'+v.toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});
- }
- function setFoodSpeed(){
-   requestAnimationFrame(()=>{
-     const half=Math.max(1,track.scrollWidth/2);
-     // ~21 px/sec: deliberately a little slower than the stock ticker.
-     const seconds=Math.max(150,Math.round(half/21));
-     track.style.animationDuration=seconds+'s';
-   });
+ const categories=[
+   ['Vegetables','#68dc8c'],
+   ['Fruits','#ffad55'],
+   ['Fish & Seafood','#67c9ff'],
+   ['Meat','#ff7481'],
+   ['Chicken & Poultry','#ff9ab0'],
+   ['Rice & Grains','#f3df71'],
+   ['Basic Goods / Others','#b18cff']
+ ];
+
+ function categoryOf(item){
+   const n=String(item.name||'').toLowerCase();
+   const cat=String(item.category||'').toLowerCase();
+   if(/fruit/.test(cat)||/avocado|banana|calamansi|mango|melon|papaya|watermelon|pineapple|orange|apple|coconut/.test(n))return'Fruits';
+   if(/fish|seafood/.test(cat)||/alumahan|bangus|galunggong|tilapia|tuna|tamban|bisugo|dalagang bukid|matambaka|salmon|squid|shrimp|prawn|crab|fish/.test(n))return'Fish & Seafood';
+   if(/chicken|poultry/.test(cat)||/chicken|poultry|egg/.test(n))return'Chicken & Poultry';
+   if(/meat/.test(cat)||/beef|pork|kasim|liempo|brisket|rump|ham/.test(n))return'Meat';
+   if(/rice|grain|cereal/.test(cat)||/rice|corn|mungbean|mung bean/.test(n))return'Rice & Grains';
+   if(/vegetable/.test(cat)||/pepper|cabbage|chayote|beans|lettuce|pechay|potato|ampalaya|eggplant|sitao|squash|tomato|chili|garlic|ginger|onion|carrot|okra|cucumber|radish|kangkong|spinach/.test(n))return'Vegetables';
+   return'Basic Goods / Others';
  }
  function foodNameColor(name){
    const n=String(name||'').toLowerCase();
-   if(/avocado/.test(n)) return '#78d96b';
-   if(/papaya/.test(n)) return '#ff9f43';
-   if(/banana/.test(n)) return '#ffd84d';
-   if(/mango/.test(n)) return '#ffbf3f';
-   if(/tomato/.test(n)) return '#ff6b6b';
-   if(/onion/.test(n)) return '#c28cff';
-   if(/garlic/.test(n)) return '#f2e7c8';
-   if(/carrot/.test(n)) return '#ff8a3d';
-   if(/cabbage|lettuce|pechay|kangkong|spinach/.test(n)) return '#62dc8a';
-   if(/eggplant/.test(n)) return '#b884ff';
-   if(/potato/.test(n)) return '#d7b078';
-   if(/corn/.test(n)) return '#ffe169';
-   if(/rice/.test(n)) return '#e9edf2';
-   if(/egg/.test(n)) return '#ffd36a';
-   if(/chicken/.test(n)) return '#ff9fae';
-   if(/pork/.test(n)) return '#ff8b9c';
-   if(/beef/.test(n)) return '#ff6f70';
-   if(/fish|tilapia|bangus|galunggong|tuna/.test(n)) return '#65c9ff';
-   const palette=['#6fe7d8','#72b8ff','#ff9fcf','#b48cff','#ffb65c','#7ee08b','#f3df69','#8fd3ff','#ff8f7a','#b7e46f','#d49bff','#67d4ff'];
-   let h=0;for(let i=0;i<n.length;i++)h=((h<<5)-h+n.charCodeAt(i))|0;
-   return palette[Math.abs(h)%palette.length];
+   if(/avocado/.test(n))return'#78d96b'; if(/papaya/.test(n))return'#ff9f43';
+   if(/banana/.test(n))return'#ffd84d'; if(/mango/.test(n))return'#ffbf3f';
+   if(/tomato/.test(n))return'#ff6b6b'; if(/onion/.test(n))return'#c28cff';
+   if(/garlic/.test(n))return'#f2e7c8'; if(/carrot/.test(n))return'#ff8a3d';
+   if(/cabbage|lettuce|pechay|kangkong|spinach/.test(n))return'#62dc8a';
+   if(/eggplant/.test(n))return'#b884ff'; if(/potato/.test(n))return'#d7b078';
+   if(/rice/.test(n))return'#e9edf2'; if(/egg/.test(n))return'#ffd36a';
+   if(/chicken/.test(n))return'#ff9fae'; if(/pork/.test(n))return'#ff8b9c';
+   if(/beef/.test(n))return'#ff6f70'; if(/fish|tilapia|bangus|galunggong|tuna|alumahan/.test(n))return'#65c9ff';
+   const p=['#6fe7d8','#72b8ff','#ff9fcf','#b48cff','#ffb65c','#7ee08b','#f3df69','#8fd3ff','#ff8f7a','#b7e46f'];
+   let h=0;for(let i=0;i<n.length;i++)h=((h<<5)-h+n.charCodeAt(i))|0;return p[Math.abs(h)%p.length];
  }
-function renderFood(items,date){
-   if(!Array.isArray(items)||!items.length)throw new Error('No food prices');
-   const one=items.map(x=>{
-     const ch=Number(x.change_pct);
-     const has=Number.isFinite(ch);
-     const moved=has&&Math.abs(ch)>=0.005;
-     const cls=moved?(ch>0?'food-up':'food-down'):'food-flat';
-     const tri=moved?(ch>0?'▲':'▼'):'•';
-     const pct=moved?((ch>0?'+':'')+ch.toFixed(2)+'%'):'';
-     const unit=x.unit==='pc'?'pc':x.unit==='L'?'L':'kg';
-     const nameColor=foodNameColor(x.name);
-     return '<span class="food-item '+cls+'" title="'+String(x.name).replace(/"/g,'&quot;')+'">'+
-       '<span class="food-name" style="color:'+nameColor+'">'+x.name+'</span>'+
-       '<span class="food-trend">'+tri+'</span>'+
-       '<span class="food-price">'+money(Number(x.price))+'/'+unit+'</span>'+
-       (pct?'<span class="food-change">'+pct+'</span>':'')+
-       '</span>';
+ function unitLabel(x){return x.unit==='pc'?'pc':x.unit==='L'?'L':x.unit||'kg'}
+ function renderFood(items,label){
+   const groups={};categories.forEach(([name])=>groups[name]=[]);
+   items.forEach(x=>groups[categoryOf(x)].push(x));
+   stack.innerHTML=categories.map(([name,color])=>{
+     const list=groups[name].slice().sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+     if(!list.length)return'';
+     const rows=list.map(x=>{
+       const ch=Number(x.change_pct),moved=Number.isFinite(ch)&&Math.abs(ch)>=.005;
+       const cls=moved?(ch>0?'up':'down'):'flat',tri=moved?(ch>0?'▲':'▼'):'';
+       const pct=moved?((ch>0?'+':'')+ch.toFixed(2)+'%'):'';
+       return '<div class="food-row '+cls+'"><div class="food-row-name" style="color:'+foodNameColor(x.name)+'">'+x.name+'</div><div class="food-row-right"><span class="food-row-trend">'+tri+'</span><span class="food-row-price">₱'+Number(x.price).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2})+'/'+unitLabel(x)+'</span>'+(pct?'<span class="food-row-change">'+pct+'</span>':'')+'</div></div>';
+     }).join('');
+     return '<section class="food-category"><div class="food-category-head"><div class="food-category-title"><span class="food-category-dot" style="background:'+color+';color:'+color+'"></span>'+name+'</div><div class="food-category-count">'+list.length+' items</div></div><div class="food-items-grid">'+rows+'</div></section>';
    }).join('');
-   track.innerHTML=one+one;
-   if(source)source.textContent='DA • '+(date||'DAILY INDEX');
-   setFoodSpeed();
+   if(source&&label)source.textContent=label;
  }
- let retryTimer=null;
- let foodRendered=false;
- function saveFoodCache(payload){
-   try{localStorage.setItem('mxFoodCache',JSON.stringify({saved:Date.now(),payload}))}catch(e){}
- }
- function loadFoodCache(){
+ function saveCache(j){try{localStorage.setItem('mxFoodGridCache',JSON.stringify(j))}catch(e){}}
+ function readCache(){try{const j=JSON.parse(localStorage.getItem('mxFoodGridCache')||'null');if(j&&Array.isArray(j.items)&&j.items.length){renderFood(j.items,'DA • CACHED'+(j.date?' • '+j.date:''));return true}}catch(e){}return false}
+ async function refresh(){
    try{
-     const x=JSON.parse(localStorage.getItem('mxFoodCache')||'null');
-     if(x&&x.payload&&Array.isArray(x.payload.items)&&x.payload.items.length){
-       renderFood(x.payload.items,x.payload.date);
-       foodRendered=true;
-       if(source)source.textContent='DA • CACHED'+(x.payload.date?' • '+x.payload.date:'');
-       return true;
-     }
-   }catch(e){}
-   return false;
- }
- function withTimeout(url,ms){
-   const ctrl=new AbortController();
-   const t=setTimeout(()=>ctrl.abort(),ms);
-   return fetch(url,{cache:'no-store',signal:ctrl.signal}).finally(()=>clearTimeout(t));
- }
- function parseReaderRows(text){
-   const out=[],lines=String(text||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-   for(const line of lines){
-     if(!line.includes('|'))continue;
-     const p=line.split('|').map(x=>x.trim()).filter(Boolean);
-     if(p.length<2||p.some(x=>/commodity|prevailing retail price|average retail price/i.test(x)))continue;
-     const ni=p.findIndex(x=>/[A-Za-z]/.test(x)&&!/^(php|kg|pc|piece|unit|low|high|min|max)$/i.test(x));
-     if(ni<0)continue;
-     const name=p[ni].replace(/[*_#]/g,'').trim();
-     const nums=[];
-     p.forEach((v,i)=>{if(i===ni)return;const m=v.match(/(?:₱|PHP|PhP|P)?\s*(\d{1,4}(?:,\d{3})*(?:\.\d{1,2})?)/g)||[];m.forEach(s=>{const n=Number(s.replace(/[^\d.]/g,''));if(Number.isFinite(n)&&n>0&&n<10000)nums.push(n)})});
-     if(!name||!nums.length)continue;
-     out.push({name,price:nums[nums.length-1],unit:/egg|coconut/i.test(name)?'pc':'kg',change_pct:null});
-   }
-   const seen=new Set();
-   return out.filter(x=>{const k=x.name.toLowerCase();if(seen.has(k))return false;seen.add(k);return true});
- }
- async function directDAFallback(){
-   const page=await withTimeout('https://r.jina.ai/https://www.da.gov.ph/price-monitoring/',10000);
-   if(!page.ok)throw new Error('DA reader page '+page.status);
-   const md=await page.text();
-   const sec=(md.split(/###\s+Daily Price Index/i)[1]||md);
-   const links=[...sec.matchAll(/\[([^\]]*2026[^\]]*)\]\((https?:\/\/[^)]+\.pdf[^)]*)\)/gi)];
-   if(!links.length)throw new Error('No DA PDF link');
-   const latest=links[0],date=latest[1].replace(/\s+/g,' ').trim(),pdf=latest[2];
-   const pr=await withTimeout('https://r.jina.ai/'+pdf,12000);
-   if(!pr.ok)throw new Error('DA PDF reader '+pr.status);
-   const items=parseReaderRows(await pr.text());
-   if(items.length<5)throw new Error('No parsed DA items');
-   return{ok:true,source:'Department of Agriculture – Daily Price Index',date,items};
- }
- async function loadFoodPrices(background=false){
-   try{
-     if(!foodRendered&&!background){
-       track.innerHTML='<div class="food-placeholder">Loading official DA food prices…</div>';
-     }
-     const r=await withTimeout('/api/food?ts='+Date.now(),6500);
+     const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),7000);
+     const r=await fetch('/api/food?ts='+Date.now(),{cache:'no-store',signal:ctrl.signal});
+     clearTimeout(timer);
      if(!r.ok)throw new Error('HTTP '+r.status);
      const j=await r.json();
-     if(!j.ok||!Array.isArray(j.items)||!j.items.length)throw new Error(j.error||'No DA data');
-     if(retryTimer){clearTimeout(retryTimer);retryTimer=null}
-     renderFood(j.items,j.date);foodRendered=true;saveFoodCache(j);
-     if(source){
-       const src=(j.source||'DA').toUpperCase().includes('BANTAY')?'DA • BANTAY PRESYO':'DA • DAILY INDEX';
-       source.textContent=src+(j.date?' • '+j.date:'');
-     }
-   }catch(primaryErr){
-     try{
-       const j=await directDAFallback();
-       renderFood(j.items,j.date);foodRendered=true;saveFoodCache(j);
-       if(source)source.textContent='DA • DAILY INDEX'+(j.date?' • '+j.date:'');
-     }catch(fallbackErr){
-       if(!foodRendered&&!loadFoodCache()){
-         track.innerHTML='<div class="food-placeholder">DA food prices reconnecting…</div>';
-         if(source)source.textContent='DA • RECONNECTING';
-       }
-       if(retryTimer)clearTimeout(retryTimer);
-       retryTimer=setTimeout(()=>loadFoodPrices(foodRendered),15000);
-     }
-   }
+     if(!j.ok||!Array.isArray(j.items)||!j.items.length)throw new Error('No DA data');
+     renderFood(j.items,(j.source||'DA').toUpperCase().includes('BANTAY')?'DA • BANTAY PRESYO'+(j.date?' • '+j.date:''):'DA • DAILY INDEX'+(j.date?' • '+j.date:''));
+     saveCache(j);
+   }catch(e){}
  }
- renderFood(FOOD_BOOTSTRAP,'August 7, 2026');
- foodRendered=true;
- if(source)source.textContent='DA • QUICK CACHE • AUG 7, 2026';
- const hadFoodCache=loadFoodCache();
- loadFoodPrices(true);
- setInterval(()=>loadFoodPrices(true),900000);
- window.addEventListener('resize',setFoodSpeed);
+ renderFood(FOOD_BOOTSTRAP,'DA • QUICK CACHE');
+ readCache();
+ refresh();
+ setInterval(refresh,900000);
 })();
 </script>
 
