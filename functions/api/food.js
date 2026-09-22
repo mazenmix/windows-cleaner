@@ -314,12 +314,36 @@ async function loadDpi(){
   };
 }
 
-export async function onRequestGet(){
+export async function onRequestGet(context){
   const errors=[];
+  const req=context && context.request ? context.request : new Request("https://local/api/food");
+  const cache=typeof caches!=="undefined" ? caches.default : null;
+  const cacheKey=new Request(new URL("/api/food-cache-v3",req.url).toString(),{method:"GET"});
+
+  if(cache){
+    try{
+      const hit=await cache.match(cacheKey);
+      if(hit) return hit;
+    }catch{}
+  }
+
+  const makeSuccess=(payload,maxAge)=>{
+    const response=new Response(JSON.stringify(payload),{
+      headers:{
+        "content-type":"application/json; charset=utf-8",
+        "cache-control":"public, max-age="+maxAge+", s-maxage="+maxAge,
+        "access-control-allow-origin":"*"
+      }
+    });
+    if(cache && context && typeof context.waitUntil==="function"){
+      context.waitUntil(cache.put(cacheKey,response.clone()).catch(()=>{}));
+    }
+    return response;
+  };
 
   try{
     const data=await loadBantay();
-    return new Response(JSON.stringify({
+    return makeSuccess({
       ok:true,
       source:data.source,
       scope:"Philippine agricultural and basic commodity monitoring",
@@ -328,18 +352,12 @@ export async function onRequestGet(){
       updated_at:new Date().toISOString(),
       count:data.items.length,
       items:data.items
-    }),{
-      headers:{
-        "content-type":"application/json; charset=utf-8",
-        "cache-control":"public, max-age=600, s-maxage=600",
-        "access-control-allow-origin":"*"
-      }
-    });
+    },21600);
   }catch(e){errors.push("Bantay Presyo: "+String(e))}
 
   try{
     const data=await loadDpi();
-    return new Response(JSON.stringify({
+    return makeSuccess({
       ok:true,
       source:data.source,
       scope:"Selected wet markets in the National Capital Region",
@@ -349,13 +367,7 @@ export async function onRequestGet(){
       count:data.items.length,
       items:data.items,
       fallback_used:true
-    }),{
-      headers:{
-        "content-type":"application/json; charset=utf-8",
-        "cache-control":"public, max-age=900, s-maxage=900",
-        "access-control-allow-origin":"*"
-      }
-    });
+    },21600);
   }catch(e){errors.push("DA DPI: "+String(e))}
 
   return new Response(JSON.stringify({
