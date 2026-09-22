@@ -76,7 +76,7 @@
 
 <div class="news-ticker" id="newsTicker">
   <div class="news-label">PH NEWS</div>
-  <div class="news-window"><div class="news-track" id="newsTrack"><span class="news-item"><span class="news-headline">Loading latest Philippines headlines…</span></span></div></div>
+  <div class="news-window"><div class="news-track" id="newsTrack"></div></div>
 </div>
 
 <section class="hero"><div class="hero-inner">
@@ -96,6 +96,22 @@
  const track=document.getElementById("newsTrack");
  if(!track)return;
  const KEY="mxPhilippinesNewsCache";
+ const NEWS_BOOTSTRAP=[
+  {source:"PHILSTAR",headline:"Philippines and EU move closer to a free-trade agreement after decade of talks",url:"https://www.philstar.com/headlines/2026/09/22/2558098/philippines-eu-move-closer-free-trade-agreement-after-decade-talks"},
+  {source:"REUTERS",headline:"EU and Philippines reach initial free-trade deal",url:"https://www.reuters.com/world/asia-pacific/eu-philippines-agree-free-trade-deal-2026-09-22/"},
+  {source:"REUTERS",headline:"Canada says Philippines and ASEAN trade talks are over 90% complete",url:"https://www.reuters.com/world/asia-pacific/canada-says-philippines-asean-trade-talks-90-complete-eyes-november-finish-2026-09-22/"},
+  {source:"PNA",headline:"Visayas grid placed under yellow alert Tuesday",url:"https://www.pna.gov.ph/articles"},
+  {source:"PNA",headline:"LTFRB to submit fare hike recommendation by October",url:"https://www.pna.gov.ph/articles"},
+  {source:"PNA",headline:"Trough of low pressure area to bring rain to parts of the Philippines",url:"https://www.pna.gov.ph/articles"},
+  {source:"PHILSTAR",headline:"PAGASA says LPA east of Philippines has high chance of becoming a tropical depression",url:"https://www.philstar.com/headlines"},
+  {source:"PHILSTAR",headline:"Two-day transport strike over rising fuel prices set for September 29–30",url:"https://www.philstar.com/headlines"},
+  {source:"ABS-CBN",headline:"Piston sets nationwide transport strike for September 29–30",url:"https://www.abs-cbn.com/news/nation/2026/9/22/piston-sets-transport-strike-on-sept-29-30-0907"},
+  {source:"PHILSTAR",headline:"Victory Liner and bus groups warn services are at risk as fuel costs rise",url:"https://www.philstar.com/headlines"},
+  {source:"PHILSTAR",headline:"Cybersecurity agency directs Discord and Reddit to establish Philippine offices",url:"https://www.philstar.com/headlines"},
+  {source:"PHILSTAR",headline:"Four Russia-bound Filipinos recruited for military work stopped at NAIA",url:"https://www.philstar.com/headlines"},
+  {source:"PNA",headline:"NCIP approves proposed NSCR extension to New Clark City",url:"https://www.pna.gov.ph/articles"},
+  {source:"REUTERS",headline:"Mitsubishi moves to raise stake in Ayala in a major Philippines investment",url:"https://www.reuters.com/world/asia-pacific/mitsubishi-boost-stake-philippines-ayala-7095-million-deal-2026-09-21/"}
+ ];
  function escNews(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
  function renderNews(items){
    if(!Array.isArray(items)||!items.length)return;
@@ -126,7 +142,7 @@
      }
    }catch(e){}finally{clearTimeout(timer)}
  }
- fromCache();
+ if(!fromCache())renderNews(NEWS_BOOTSTRAP);
  refreshNews();
  setInterval(refreshNews,300000);
 })();
