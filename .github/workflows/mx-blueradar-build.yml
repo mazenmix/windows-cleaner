@@ -43,15 +43,20 @@ jobs:
           echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
           echo "$ANDROID_HOME/build-tools/36.0.0" >> "$GITHUB_PATH"
 
-      - name: Reassemble and verify source
+      - name: Reassemble source
         run: |
           cat tmp/source-p00 tmp/source-p01 tmp/source-p02 tmp/source-p03 tmp/source-p04 tmp/source-p05 > MXBlueRadar-source.zip
           echo "64137843875073d32c46e110a62e36f53959d0ba5dd313d2ddf15915a6aa0ff6  MXBlueRadar-source.zip" | sha256sum -c -
-          unzip -t MXBlueRadar-source.zip
           rm -rf work
           mkdir -p work
           unzip -q MXBlueRadar-source.zip -d work
           test -f work/MXBlueRadar/settings.gradle
+
+      - name: Apply v1.0.1 name resolver patch
+        run: |
+          cp patch/DeviceClassifier.java work/MXBlueRadar/app/src/main/java/com/mazenmix/mxblueradar/DeviceClassifier.java
+          cp patch/BluetoothScanService.java work/MXBlueRadar/app/src/main/java/com/mazenmix/mxblueradar/BluetoothScanService.java
+          cp patch/app-build.gradle work/MXBlueRadar/app/build.gradle
 
       - name: Build debug APK
         working-directory: work/MXBlueRadar
@@ -65,11 +70,11 @@ jobs:
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$APK"
 
       - name: Rename APK
-        run: cp work/MXBlueRadar/app/build/outputs/apk/debug/app-debug.apk MX-BlueRadar-v1.0.0-debug.apk
+        run: cp work/MXBlueRadar/app/build/outputs/apk/debug/app-debug.apk MX-BlueRadar-v1.0.1-name-resolver.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MX-BlueRadar-APK
-          path: MX-BlueRadar-v1.0.0-debug.apk
+          name: MX-BlueRadar-v1.0.1
+          path: MX-BlueRadar-v1.0.1-name-resolver.apk
           if-no-files-found: error
