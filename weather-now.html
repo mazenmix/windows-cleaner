@@ -18,7 +18,7 @@ a{text-decoration:none;color:inherit}button,input,select{font:inherit;color:inhe
 .navbar{max-width:1480px;min-height:64px;margin:auto;padding:10px 32px;display:flex;align-items:center;justify-content:space-between;gap:14px}
 .brand strong{display:block;font-size:22px;line-height:1;color:var(--orange);font-weight:900;letter-spacing:-.4px}.brand span{display:block;font-size:10px;color:#fff;margin-top:4px;font-weight:600}
 .nav-actions{display:flex;align-items:center;gap:10px}.navbtn,.refresh{height:46px;display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:0 19px;border-radius:24px;border:1px solid #2f6f9f;background:linear-gradient(180deg,#0d3558,#092642);color:#f1f8ff;font-size:12px;font-weight:900;letter-spacing:.15px;cursor:pointer;box-shadow:0 10px 26px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.04)}.navbtn:hover,.refresh:hover{border-color:#58aee3;background:#0e3d62;transform:translateY(-1px)}.refresh{border-color:#2d7758}.refresh .spin{display:inline-block;color:#4ce6a5;font-size:15px}.refresh.loading .spin{animation:rot .75s linear infinite}@keyframes rot{to{transform:rotate(360deg)}}
-.livebar{height:34px;display:flex;align-items:center;justify-content:center;gap:8px;border-bottom:1px solid #173c59;background:linear-gradient(90deg,#061725,#082136,#061725);color:#7eddb6;font-size:8px;font-weight:900;letter-spacing:.8px}.livebar:before{content:"";width:7px;height:7px;border-radius:50%;background:#18e29a;box-shadow:0 0 12px #18e29a}
+.livebar{height:39px;display:flex;align-items:center;justify-content:center;gap:11px;border-bottom:1px solid #173c59;background:linear-gradient(90deg,#061725,#082136,#061725);color:#7eddb6;font-size:12.5px;font-weight:900;letter-spacing:.9px}.livebar:before{content:"";width:10px;height:10px;flex:0 0 10px;border-radius:50%;background:#18e29a;box-shadow:0 0 0 0 rgba(24,226,154,.35),0 0 14px rgba(24,226,154,.95);animation:livePulse 1.15s ease-in-out infinite}@keyframes livePulse{0%,100%{transform:scale(.9);box-shadow:0 0 0 0 rgba(24,226,154,.38),0 0 10px rgba(24,226,154,.8)}50%{transform:scale(1.14);box-shadow:0 0 0 6px rgba(24,226,154,0),0 0 20px rgba(24,226,154,1)}}
 .hero{max-width:1480px;margin:auto;padding:18px 32px 12px}.weather-hero{position:relative;overflow:hidden;border:1px solid #1a4b73;border-radius:20px;background:
 linear-gradient(135deg,rgba(10,44,73,.98),rgba(5,25,43,.97) 58%,rgba(8,33,54,.96));box-shadow:var(--shadow);min-height:252px}
 .weather-hero:before{content:"";position:absolute;width:360px;height:360px;border-radius:50%;right:-80px;top:-160px;background:radial-gradient(circle at 40% 42%,rgba(86,185,255,.34),rgba(31,104,168,.13) 42%,transparent 68%);filter:blur(2px)}
@@ -55,7 +55,7 @@ linear-gradient(135deg,rgba(10,44,73,.98),rgba(5,25,43,.97) 58%,rgba(8,33,54,.96
 @keyframes weatherNewsMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
 /* Readability pass */
-.livebar{font-size:11px}
+.livebar{font-size:12.5px}
 .location-name{font-size:13.5px}.updated{font-size:9.5px}.feels{font-size:10.5px}
 .metric label{font-size:8.5px}.metric b{font-size:13.5px}.metric small{font-size:8.5px}
 .control-title{font-size:11.5px}.select,.search-input{font-size:11.5px}.search-result b{font-size:11.5px}.search-result span{font-size:9.5px}.action{font-size:9.5px}.location-hint{font-size:9px}
@@ -67,7 +67,7 @@ linear-gradient(135deg,rgba(10,44,73,.98),rgba(5,25,43,.97) 58%,rgba(8,33,54,.96
 .week label{font-size:8.5px}.week .range{font-size:10.5px}.week .weekly-temp{font-size:21px}.week .weekly-rain{font-size:9.5px}.week .weekly-wind{font-size:8.5px}
 .s2s-card h3{font-size:11.5px}.s2s-card p{font-size:9.5px}.s2s-item{font-size:9px}
 .source-pill{font-size:9px}.source-note{font-size:9px}.footer-inner{font-size:10px}.loading-card{font-size:11.5px}
-@media(max-width:650px){.weather-news-label{min-width:100px;padding:0 10px;font-size:8px}.weather-news-item{font-size:10.2px;padding:0 11px}.weather-news-source{font-size:8px}.weather-news{height:39px;min-height:39px;max-height:39px}.livebar{font-size:9.5px}.section-head h2{font-size:17px}}
+@media(max-width:650px){.weather-news-label{min-width:100px;padding:0 10px;font-size:8px}.weather-news-item{font-size:10.2px;padding:0 11px}.weather-news-source{font-size:8px}.weather-news{height:39px;min-height:39px;max-height:39px}.livebar{font-size:10.8px}.section-head h2{font-size:17px}}
 
 </style>
 </head>
