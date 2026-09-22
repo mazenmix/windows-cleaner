@@ -69,7 +69,22 @@ linear-gradient(135deg,rgba(10,44,73,.98),rgba(5,25,43,.97) 58%,rgba(8,33,54,.96
 .source-pill{font-size:9px}.source-note{font-size:9px}.footer-inner{font-size:10px}.loading-card{font-size:11.5px}
 @media(max-width:650px){.weather-news-label{min-width:100px;padding:0 10px;font-size:8px}.weather-news-item{font-size:10.2px;padding:0 11px}.weather-news-source{font-size:8px}.weather-news{height:39px;min-height:39px;max-height:39px}.livebar{font-size:10.8px}.section-head h2{font-size:17px}}
 
-.brand{cursor:default;user-select:none}</style>
+.brand{cursor:default;user-select:none}
+/* Bigger 16-day forecast typography */
+.day{padding:14px 11px;min-height:168px}
+.day .date{font-size:11px!important;font-weight:800;letter-spacing:.15px;color:#9abbd4!important}
+.day .ico{font-size:31px!important;margin:9px 0!important}
+.day .hi{font-size:16px!important;font-weight:950!important}
+.day .lo{font-size:13px!important;color:#89a8c0!important}
+.day .pp{font-size:10.5px!important;font-weight:750;margin-top:8px!important;color:#72d2ff!important}
+.day .wind{font-size:10px!important;font-weight:700;margin-top:6px!important;color:#8ba8bd!important}
+.day .flood{margin-top:9px;padding:8px 7px;border-radius:10px;border:1px solid #246853;background:#082e25;color:#79edb9;font-size:11.5px;font-weight:950;letter-spacing:.05px;line-height:1.15}
+.day .flood.mid{border-color:#7e6a25;background:#30280b;color:#ffe06b}
+.day .flood.high{border-color:#8b3b43;background:#35171c;color:#ff929c}
+.day .flood.extreme{border-color:#ff9f2e;background:rgba(255,112,0,.18);color:#ffb23f;box-shadow:0 0 0 1px rgba(255,159,46,.16),0 0 18px rgba(255,119,0,.28);text-shadow:0 0 10px rgba(255,159,46,.32)}
+@media(max-width:650px){.day{min-height:164px}.day .date{font-size:10.5px!important}.day .hi{font-size:15.5px!important}.day .lo{font-size:12.5px!important}.day .pp{font-size:10px!important}.day .wind{font-size:9.5px!important}.day .flood{font-size:11px}}
+
+</style>
 </head>
 <body>
 <header class="header"><div class="navbar">
@@ -265,7 +280,7 @@ function renderDaily(d){
  dailyGrid.innerHTML=Array.from({length:len},(_,i)=>{
   const info=weatherInfo(x.weather_code?.[i],true);
   const flood=dailyFloodPotential(x,i);
-  const fc=flood>=65?"high":flood>=35?"mid":"";
+  const fc=flood>=80?"extreme":flood>=65?"high":flood>=35?"mid":"";
   return '<div class="day"><div class="date">'+(i===0?"TODAY":fmtDate(x.time[i],{weekday:"short",month:"short",day:"numeric"}))+'</div><div class="ico">'+info[1]+'</div><div class="hi">'+n(x.temperature_2m_max?.[i])+'° <span class="lo">'+n(x.temperature_2m_min?.[i])+'°</span></div><div class="pp">💧 '+n(x.precipitation_probability_max?.[i])+'% • '+n(x.precipitation_sum?.[i],1)+'mm</div><div class="flood '+fc+'">🌊 Flood Potential '+flood+'%</div><div class="wind">gust '+n(x.wind_gusts_10m_max?.[i])+' km/h</div></div>'
  }).join("");
 }
