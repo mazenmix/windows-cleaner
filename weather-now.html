@@ -81,7 +81,7 @@ linear-gradient(135deg,rgba(10,44,73,.98),rgba(5,25,43,.97) 58%,rgba(8,33,54,.96
 </div>
 </div></header>
 
-<div class="livebar" id="livebar">Live updates from the world’s most advanced weather satellites.</div>
+<div class="livebar" id="livebar">Live updates from the world’s most advanced weather satellites by MazenmiX</div>
 <div class="weather-news" id="weatherNews"><div class="weather-news-label">WEATHER NEWS</div><div class="weather-news-window"><div class="weather-news-track" id="weatherNewsTrack"></div></div></div>
 
 <section class="hero">
@@ -288,7 +288,7 @@ function renderSources(d){
  sourcesEl.innerHTML=(d.sources||[]).map(x=>'<a class="source-pill" href="'+esc(x.url)+'" target="_blank" rel="noopener"><b>'+esc(x.name)+'</b> • '+esc(x.role)+'</a>').join("");
  sourceNote.textContent="";
 }
-function renderAll(d){state.data=d;renderHero(d);renderRisks(d);renderAlerts(d);renderHours(d);renderDaily(d);renderOutlook(d);renderS2S(d);renderSources(d);livebar.textContent="Live updates from the world’s most advanced weather satellites."}
+function renderAll(d){state.data=d;renderHero(d);renderRisks(d);renderAlerts(d);renderHours(d);renderDaily(d);renderOutlook(d);renderS2S(d);renderSources(d);livebar.textContent="Live updates from the world’s most advanced weather satellites by MazenmiX"}
 
 async function loadWeather(force=false){
  refreshBtn.classList.add("loading");
@@ -298,7 +298,7 @@ async function loadWeather(force=false){
   const j=await r.json();if(!j.ok)throw new Error(j.error||"Weather unavailable");
   renderAll(j);saveLoc();
  }catch(e){
-  livebar.textContent="Live updates from the world’s most advanced weather satellites.";
+  livebar.textContent="Live updates from the world’s most advanced weather satellites by MazenmiX";
   if(!state.data)hero.innerHTML='<div class="loading-card">Unable to load weather data. Tap Refresh to try again.</div>';
  }finally{refreshBtn.classList.remove("loading")}
 }
