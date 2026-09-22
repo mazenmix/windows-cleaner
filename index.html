@@ -387,6 +387,7 @@ function renderFood(items,date){
    setFoodSpeed();
  }
  let retryTimer=null;
+ let foodRendered=false;
  function saveFoodCache(payload){
    try{localStorage.setItem('mxFoodCache',JSON.stringify({saved:Date.now(),payload}))}catch(e){}
  }
@@ -395,6 +396,7 @@ function renderFood(items,date){
      const x=JSON.parse(localStorage.getItem('mxFoodCache')||'null');
      if(x&&x.payload&&Array.isArray(x.payload.items)&&x.payload.items.length){
        renderFood(x.payload.items,x.payload.date);
+       foodRendered=true;
        if(source)source.textContent='DA • CACHED'+(x.payload.date?' • '+x.payload.date:'');
        return true;
      }
@@ -437,38 +439,39 @@ function renderFood(items,date){
    if(items.length<5)throw new Error('No parsed DA items');
    return{ok:true,source:'Department of Agriculture – Daily Price Index',date,items};
  }
- async function loadFoodPrices(){
+ async function loadFoodPrices(background=false){
    try{
-     track.innerHTML='<div class="food-placeholder">Loading official DA food prices…</div>';
+     if(!foodRendered&&!background){
+       track.innerHTML='<div class="food-placeholder">Loading official DA food prices…</div>';
+     }
      const r=await withTimeout('/api/food?ts='+Date.now(),6500);
      if(!r.ok)throw new Error('HTTP '+r.status);
      const j=await r.json();
      if(!j.ok||!Array.isArray(j.items)||!j.items.length)throw new Error(j.error||'No DA data');
      if(retryTimer){clearTimeout(retryTimer);retryTimer=null}
-     renderFood(j.items,j.date);saveFoodCache(j);
+     renderFood(j.items,j.date);foodRendered=true;saveFoodCache(j);
      if(source){
        const src=(j.source||'DA').toUpperCase().includes('BANTAY')?'DA • BANTAY PRESYO':'DA • DAILY INDEX';
        source.textContent=src+(j.date?' • '+j.date:'');
      }
    }catch(primaryErr){
      try{
-       if(source)source.textContent='DA • DIRECT FALLBACK';
        const j=await directDAFallback();
-       renderFood(j.items,j.date);saveFoodCache(j);
+       renderFood(j.items,j.date);foodRendered=true;saveFoodCache(j);
        if(source)source.textContent='DA • DAILY INDEX'+(j.date?' • '+j.date:'');
      }catch(fallbackErr){
-       if(!loadFoodCache()){
+       if(!foodRendered&&!loadFoodCache()){
          track.innerHTML='<div class="food-placeholder">DA food prices reconnecting…</div>';
          if(source)source.textContent='DA • RECONNECTING';
        }
        if(retryTimer)clearTimeout(retryTimer);
-       retryTimer=setTimeout(loadFoodPrices,15000);
+       retryTimer=setTimeout(()=>loadFoodPrices(foodRendered),15000);
      }
    }
  }
- loadFoodCache();
- loadFoodPrices();
- setInterval(loadFoodPrices,900000);
+ const hadFoodCache=loadFoodCache();
+ loadFoodPrices(hadFoodCache);
+ setInterval(()=>loadFoodPrices(true),900000);
  window.addEventListener('resize',setFoodSpeed);
 })();
 </script>
