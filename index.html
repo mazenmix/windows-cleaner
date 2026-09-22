@@ -109,10 +109,6 @@
   box-shadow:0 0 12px rgba(18,228,155,.85);
 }
 .pse-ticker-main{min-width:0;flex:1;display:flex;align-items:center;overflow:hidden}
-.pse-ticker-main .tradingview-widget-container,
-.pse-ticker-main .tradingview-widget-container__widget{
-  width:100%!important;
-}
 .pse-ticker-delay{
   flex:0 0 auto;
   display:flex;
@@ -131,6 +127,31 @@
   .pse-ticker-label span{display:none}
   .pse-ticker-delay{display:none}
 }
+
+
+.custom-pse-main{overflow:hidden!important;position:relative}
+.pse-scroll-mask{width:100%;overflow:hidden;white-space:nowrap;position:relative}
+.pse-scroll-mask:before,.pse-scroll-mask:after{content:"";position:absolute;top:0;bottom:0;width:30px;z-index:2;pointer-events:none}
+.pse-scroll-mask:before{left:0;background:linear-gradient(90deg,#071a2d,transparent)}
+.pse-scroll-mask:after{right:0;background:linear-gradient(270deg,#071a2d,transparent)}
+.pse-scroll-track{display:inline-flex;align-items:center;min-width:max-content;height:48px;will-change:transform;animation:pseTickerMove 58s linear infinite}
+.pse-scroll-track:hover{animation-play-state:paused}
+.pse-stock-item{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 17px;border-right:1px solid rgba(56,100,137,.34);font-variant-numeric:tabular-nums}
+.pse-symbol{font-size:11px;font-weight:900;letter-spacing:.25px;color:#f2f8fd}
+.pse-trend{font-size:8px;font-weight:900;line-height:1;transform:translateY(-1px)}
+.pse-price{font-size:11px;font-weight:800;color:#d9e8f5;letter-spacing:.05px}
+.pse-change{font-size:10px;font-weight:800}
+.pse-up .pse-trend,.pse-up .pse-change{color:#13e49b}
+.pse-down .pse-trend,.pse-down .pse-change{color:#ff5266}
+.pse-flat .pse-trend,.pse-flat .pse-change{color:#91a9bc}
+.pse-stock-placeholder{height:48px;display:flex;align-items:center;padding:0 18px;color:#718fab;font-size:10px}
+@keyframes pseTickerMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media(max-width:700px){
+ .pse-scroll-track{animation-duration:64s}
+ .pse-stock-item{padding:0 13px;gap:6px}
+ .pse-symbol,.pse-price{font-size:10px}.pse-change{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){.pse-scroll-track{animation:none}}
 
 </style>
 </head>
@@ -152,38 +173,14 @@
 
 <section class="pse-ticker-shell" id="pseTicker" aria-label="Philippine stock market ticker">
   <div class="pse-ticker-label">PSE <span>MARKET</span></div>
-  <div class="pse-ticker-main">
-    <div class="tradingview-widget-container">
-      <div class="tradingview-widget-container__widget"></div>
-      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-      {
-        "symbols": [
-          {"description":"PSEi","proName":"PSE:PSEI"},
-          {"description":"SM","proName":"PSE:SM"},
-          {"description":"SMPH","proName":"PSE:SMPH"},
-          {"description":"BDO","proName":"PSE:BDO"},
-          {"description":"BPI","proName":"PSE:BPI"},
-          {"description":"AC","proName":"PSE:AC"},
-          {"description":"ALI","proName":"PSE:ALI"},
-          {"description":"ICT","proName":"PSE:ICT"},
-          {"description":"JFC","proName":"PSE:JFC"},
-          {"description":"TEL","proName":"PSE:TEL"},
-          {"description":"GLO","proName":"PSE:GLO"},
-          {"description":"MBT","proName":"PSE:MBT"},
-          {"description":"MER","proName":"PSE:MER"},
-          {"description":"AEV","proName":"PSE:AEV"},
-          {"description":"AP","proName":"PSE:AP"}
-        ],
-        "showSymbolLogo": true,
-        "isTransparent": true,
-        "displayMode": "adaptive",
-        "colorTheme": "dark",
-        "locale": "en"
-      }
-      </script>
+  <div class="pse-ticker-main custom-pse-main">
+    <div class="pse-scroll-mask">
+      <div class="pse-scroll-track" id="pseScrollTrack">
+        <div class="pse-stock-placeholder">Loading Philippine market prices…</div>
+      </div>
     </div>
   </div>
-  <div class="pse-ticker-delay">PSE • 15 MIN DELAY</div>
+  <div class="pse-ticker-delay">TRADINGVIEW • PSE 15 MIN DELAY</div>
 </section>
 
 
@@ -225,6 +222,57 @@
 </div>
 </div>
 <div class="toast" id="toast"></div>
+
+<script>
+(function(){
+ const PSE_SYMBOLS=[
+  ['PSEI','PSE:PSEI'],['SM','PSE:SM'],['SMPH','PSE:SMPH'],['BDO','PSE:BDO'],
+  ['BPI','PSE:BPI'],['AC','PSE:AC'],['ALI','PSE:ALI'],['ICT','PSE:ICT'],
+  ['JFC','PSE:JFC'],['TEL','PSE:TEL'],['GLO','PSE:GLO'],['MBT','PSE:MBT'],
+  ['MER','PSE:MER'],['AEV','PSE:AEV'],['AP','PSE:AP']
+ ];
+ const track=document.getElementById('pseScrollTrack');
+ function fmtPrice(v){
+   if(!Number.isFinite(v))return '—';
+   const d=v<10?3:v<100?2:2;
+   return '₱'+v.toLocaleString('en-PH',{minimumFractionDigits:d,maximumFractionDigits:d});
+ }
+ function renderStocks(map){
+   const one=PSE_SYMBOLS.map(([label,ticker])=>{
+     const q=map[ticker]||{};
+     const ch=Number(q.change);
+     const cls=Number.isFinite(ch)?(ch>0?'pse-up':ch<0?'pse-down':'pse-flat'):'pse-flat';
+     const tri=Number.isFinite(ch)?(ch>0?'▲':ch<0?'▼':'•'):'•';
+     const pct=Number.isFinite(ch)?((ch>0?'+':'')+ch.toFixed(2)+'%'):'—';
+     return '<span class="pse-stock-item '+cls+'"><span class="pse-symbol">'+label+'</span><span class="pse-trend">'+tri+'</span><span class="pse-price">'+fmtPrice(Number(q.close))+'</span><span class="pse-change">'+pct+'</span></span>';
+   }).join('');
+   track.innerHTML=one+one;
+ }
+ async function loadPSE(){
+   try{
+     const r=await fetch('https://scanner.tradingview.com/global/scan',{
+       method:'POST',
+       headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({
+         symbols:{tickers:PSE_SYMBOLS.map(x=>x[1]),query:{types:[]}},
+         columns:['close','change'],
+         range:[0,PSE_SYMBOLS.length]
+       }),
+       cache:'no-store'
+     });
+     if(!r.ok)throw new Error('HTTP '+r.status);
+     const j=await r.json(),map={};
+     (j.data||[]).forEach(x=>{map[x.s]={close:Number(x.d&&x.d[0]),change:Number(x.d&&x.d[1])}});
+     if(!Object.keys(map).length)throw new Error('No market data');
+     renderStocks(map);
+   }catch(e){
+     track.innerHTML='<div class="pse-stock-placeholder">PSE prices temporarily unavailable • retrying automatically…</div>';
+   }
+ }
+ loadPSE();
+ setInterval(loadPSE,60000);
+})();
+</script>
 
 <script>
 (function(){
