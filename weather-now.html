@@ -81,7 +81,7 @@ linear-gradient(135deg,rgba(10,44,73,.98),rgba(5,25,43,.97) 58%,rgba(8,33,54,.96
 .day .flood{margin-top:9px;padding:8px 7px;border-radius:10px;border:1px solid #246853;background:#082e25;color:#79edb9;font-size:11.5px;font-weight:950;letter-spacing:.05px;line-height:1.15}
 .day .flood.mid{border-color:#7e6a25;background:#30280b;color:#ffe06b}
 .day .flood.high{border-color:#8b3b43;background:#35171c;color:#ff929c}
-.day .flood.extreme{border-color:#ff9f2e;background:rgba(255,112,0,.18);color:#ffb23f;box-shadow:0 0 0 1px rgba(255,159,46,.16),0 0 18px rgba(255,119,0,.28);text-shadow:0 0 10px rgba(255,159,46,.32)}
+.day .flood.extreme{border-color:#ff3347;background:rgba(255,25,45,.22);color:#ff4d5f;box-shadow:0 0 0 1px rgba(255,51,71,.28),0 0 22px rgba(255,25,45,.46);text-shadow:0 0 12px rgba(255,51,71,.72)}.day .flood.extreme .flood-warning{display:inline-block;margin-left:5px;color:#ff3347;font-size:13px;filter:drop-shadow(0 0 6px rgba(255,51,71,.95));animation:floodWarningPulse 1s ease-in-out infinite}@keyframes floodWarningPulse{0%,100%{transform:scale(.92);opacity:.82}50%{transform:scale(1.12);opacity:1}}
 @media(max-width:650px){.day{min-height:164px}.day .date{font-size:10.5px!important}.day .hi{font-size:15.5px!important}.day .lo{font-size:12.5px!important}.day .pp{font-size:10px!important}.day .wind{font-size:9.5px!important}.day .flood{font-size:11px}}
 
 
@@ -293,7 +293,8 @@ function renderDaily(d){
   const info=weatherInfo(x.weather_code?.[i],true);
   const flood=dailyFloodPotential(x,i);
   const fc=flood>=80?"extreme":flood>=65?"high":flood>=35?"mid":"";
-  return '<div class="day"><div class="date">'+(i===0?"TODAY":fmtDate(x.time[i],{weekday:"short",month:"short",day:"numeric"}))+'</div><div class="ico">'+info[1]+'</div><div class="hi">'+n(x.temperature_2m_max?.[i])+'° <span class="lo">'+n(x.temperature_2m_min?.[i])+'°</span></div><div class="pp">💧 '+n(x.precipitation_probability_max?.[i])+'% • '+n(x.precipitation_sum?.[i],1)+'mm</div><div class="flood '+fc+'">🌊 Flood Potential '+flood+'%</div><div class="wind">gust '+n(x.wind_gusts_10m_max?.[i])+' km/h</div></div>'
+  const floodWarning=flood>=80?'<span class="flood-warning" aria-label="Warning">⚠</span>':'';
+  return '<div class="day"><div class="date">'+(i===0?"TODAY":fmtDate(x.time[i],{weekday:"short",month:"short",day:"numeric"}))+'</div><div class="ico">'+info[1]+'</div><div class="hi">'+n(x.temperature_2m_max?.[i])+'° <span class="lo">'+n(x.temperature_2m_min?.[i])+'°</span></div><div class="pp">💧 '+n(x.precipitation_probability_max?.[i])+'% • '+n(x.precipitation_sum?.[i],1)+'mm</div><div class="flood '+fc+'">🌊 Flood Potential '+flood+'%'+floodWarning+'</div><div class="wind">gust '+n(x.wind_gusts_10m_max?.[i])+' km/h</div></div>'
  }).join("");
 }
 function renderOutlook(d){
