@@ -360,20 +360,28 @@
    if(source)source.textContent='DA • '+(date||'DAILY INDEX');
    setFoodSpeed();
  }
+ let retryTimer=null;
  async function loadFoodPrices(){
    try{
      const r=await fetch('/api/food?ts='+Date.now(),{cache:'no-store'});
      if(!r.ok)throw new Error('HTTP '+r.status);
      const j=await r.json();
      if(!j.ok||!Array.isArray(j.items)||!j.items.length)throw new Error(j.error||'No DA data');
+     if(retryTimer){clearTimeout(retryTimer);retryTimer=null}
      renderFood(j.items,j.date);
+     if(source){
+       const src=(j.source||'DA').toUpperCase().includes('BANTAY')?'DA • BANTAY PRESYO':'DA • DAILY INDEX';
+       source.textContent=src+(j.date?' • '+j.date:'');
+     }
    }catch(e){
-     track.innerHTML='<div class="food-placeholder">DA food prices temporarily unavailable • retrying automatically…</div>';
-     if(source)source.textContent='DA • RETRYING';
+     track.innerHTML='<div class="food-placeholder">DA food prices temporarily unavailable • reconnecting…</div>';
+     if(source)source.textContent='DA • RECONNECTING';
+     if(retryTimer)clearTimeout(retryTimer);
+     retryTimer=setTimeout(loadFoodPrices,20000);
    }
  }
  loadFoodPrices();
- // DA publishes daily; checking every 15 minutes picks up a new official file shortly after publication.
+ // Official data is checked every 15 minutes; connection failures retry after 20 seconds.
  setInterval(loadFoodPrices,900000);
  window.addEventListener('resize',setFoodSpeed);
 })();
