@@ -1,4 +1,4 @@
-name: Build MX BlueRadar APK
+name: Prepare MX BlueRadar Offline Toolchain
 
 on:
   push:
@@ -9,9 +9,9 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  toolchain:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     env:
       ANDROID_HOME: /usr/local/lib/android/sdk
       ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
@@ -34,47 +34,40 @@ jobs:
       - name: Install Android SDK 36
         run: |
           SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          if [ ! -x "$SDKMANAGER" ]; then
-            SDKMANAGER="$ANDROID_HOME/cmdline-tools/16.0/bin/sdkmanager"
-          fi
-          test -x "$SDKMANAGER"
+          if [ ! -x "$SDKMANAGER" ]; then SDKMANAGER="$ANDROID_HOME/cmdline-tools/16.0/bin/sdkmanager"; fi
           yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0" "platform-tools"
-          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
-          echo "$ANDROID_HOME/build-tools/36.0.0" >> "$GITHUB_PATH"
+          "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Reassemble source
+      - name: Prime Android Gradle Plugin cache
         run: |
-          cat tmp/source-p00 tmp/source-p01 tmp/source-p02 tmp/source-p03 tmp/source-p04 tmp/source-p05 > MXBlueRadar-source.zip
-          echo "64137843875073d32c46e110a62e36f53959d0ba5dd313d2ddf15915a6aa0ff6  MXBlueRadar-source.zip" | sha256sum -c -
-          rm -rf work
-          mkdir -p work
-          unzip -q MXBlueRadar-source.zip -d work
-          test -f work/MXBlueRadar/settings.gradle
-
-      - name: Apply v1.0.1 name resolver patch
-        run: |
+          cat tmp/source-p00 tmp/source-p01 tmp/source-p02 tmp/source-p03 tmp/source-p04 tmp/source-p05 > source.zip
+          echo "64137843875073d32c46e110a62e36f53959d0ba5dd313d2ddf15915a6aa0ff6  source.zip" | sha256sum -c -
+          mkdir work && unzip -q source.zip -d work
           cp patch/DeviceClassifier.java work/MXBlueRadar/app/src/main/java/com/mazenmix/mxblueradar/DeviceClassifier.java
           cp patch/BluetoothScanService.java work/MXBlueRadar/app/src/main/java/com/mazenmix/mxblueradar/BluetoothScanService.java
           cp patch/app-build.gradle work/MXBlueRadar/app/build.gradle
+          cd work/MXBlueRadar
+          gradle --no-daemon assembleDebug
 
-      - name: Build debug APK
-        working-directory: work/MXBlueRadar
-        run: gradle --no-daemon --stacktrace assembleDebug
-
-      - name: Verify APK
+      - name: Package offline build toolchain
         run: |
-          APK="work/MXBlueRadar/app/build/outputs/apk/debug/app-debug.apk"
-          test -f "$APK"
-          ls -lh "$APK"
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$APK"
+          set -eux
+          GRADLE_BIN="$(readlink -f "$(command -v gradle)")"
+          GRADLE_ROOT="$(cd "$(dirname "$GRADLE_BIN")/.." && pwd)"
+          mkdir -p bundle/android-sdk/platforms bundle/android-sdk/build-tools bundle/gradle bundle/gradle-user-home/caches
+          cp -a "$ANDROID_HOME/platforms/android-36" bundle/android-sdk/platforms/
+          cp -a "$ANDROID_HOME/build-tools/36.0.0" bundle/android-sdk/build-tools/
+          cp -a "$GRADLE_ROOT"/. bundle/gradle/
+          cp -a "$HOME/.gradle/caches/modules-2" bundle/gradle-user-home/caches/
+          if [ -d "$HOME/.gradle/caches/9.6.0" ]; then cp -a "$HOME/.gradle/caches/9.6.0" bundle/gradle-user-home/caches/; fi
+          if [ -d "$HOME/.gradle/caches/jars-9" ]; then cp -a "$HOME/.gradle/caches/jars-9" bundle/gradle-user-home/caches/; fi
+          tar -cf MX-Android-Offline-Toolchain.tar bundle
+          ls -lh MX-Android-Offline-Toolchain.tar
 
-      - name: Rename APK
-        run: cp work/MXBlueRadar/app/build/outputs/apk/debug/app-debug.apk MX-BlueRadar-v1.0.1-name-resolver.apk
-
-      - name: Upload APK
+      - name: Upload toolchain
         uses: actions/upload-artifact@v4
         with:
-          name: MX-BlueRadar-v1.0.1
-          path: MX-BlueRadar-v1.0.1-name-resolver.apk
+          name: MX-Android-Offline-Toolchain
+          path: MX-Android-Offline-Toolchain.tar
+          compression-level: 0
           if-no-files-found: error
