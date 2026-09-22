@@ -214,7 +214,7 @@ function buildControls(){
  '<select class="select" id="regionSelect">'+REGIONS.map((r,i)=>'<option value="'+i+'">'+esc(r[0])+'</option>').join("")+'</select>'+
  '<div class="search-wrap"><input class="search-input" id="placeSearch" type="search" autocomplete="off" placeholder="Search city, province or municipality…"><div class="search-results" id="searchResults"></div></div>'+
  '<div class="control-actions"><button class="action primary" id="useLocation">Use My Location</button><button class="action" id="applyRegion">Load Region</button></div>'+
- '<div class="location-hint">Search covers Philippine cities, municipalities and provinces. Long-range outlook is probabilistic and becomes less precise farther into the future.</div></div>';
+ '<div class="location-hint">Search covers Philippine cities, municipalities and provinces.</div></div>';
 }
 function renderHero(d){
  const c=d.forecast.current||{},info=weatherInfo(c.weather_code,c.is_day!==0);
