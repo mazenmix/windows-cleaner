@@ -72,6 +72,66 @@
 }
 @media(max-width:380px){.summary-grid{grid-template-columns:1fr}.mobile-price-grid{grid-template-columns:1fr 1fr}}
 
+
+/* --- Philippine Stock Exchange ticker --- */
+.pse-ticker-shell{
+  display:flex;
+  align-items:stretch;
+  min-height:48px;
+  border-bottom:1px solid #173b5d;
+  background:linear-gradient(90deg,#061526,#081d31 56%,#061526);
+  box-shadow:inset 0 -1px 0 rgba(68,142,205,.05);
+  overflow:hidden;
+}
+.pse-ticker-label{
+  position:relative;
+  z-index:3;
+  flex:0 0 auto;
+  min-width:132px;
+  padding:0 16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  background:linear-gradient(135deg,#0a3152,#0b2440);
+  border-right:1px solid #1a4f7a;
+  color:#d9efff;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.9px;
+  white-space:nowrap;
+  box-shadow:9px 0 22px rgba(2,10,17,.28);
+}
+.pse-ticker-label:before{
+  content:"";
+  width:8px;height:8px;border-radius:50%;
+  background:#12e49b;
+  box-shadow:0 0 12px rgba(18,228,155,.85);
+}
+.pse-ticker-main{min-width:0;flex:1;display:flex;align-items:center;overflow:hidden}
+.pse-ticker-main .tradingview-widget-container,
+.pse-ticker-main .tradingview-widget-container__widget{
+  width:100%!important;
+}
+.pse-ticker-delay{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  padding:0 12px;
+  border-left:1px solid #143c5f;
+  color:#668eae;
+  font-size:8px;
+  letter-spacing:.45px;
+  white-space:nowrap;
+  background:#061526;
+}
+@media(max-width:700px){
+  .pse-ticker-shell{min-height:46px}
+  .pse-ticker-label{min-width:72px;padding:0 9px;font-size:9px;letter-spacing:.45px}
+  .pse-ticker-label span{display:none}
+  .pse-ticker-delay{display:none}
+}
+
 </style>
 </head>
 <body>
@@ -89,6 +149,43 @@
 <button class="iconbtn" id="refreshAll" aria-label="Refresh"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 11a8 8 0 1 0-2 5.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M20 5v6h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 
 </div></div></header>
+
+<section class="pse-ticker-shell" id="pseTicker" aria-label="Philippine stock market ticker">
+  <div class="pse-ticker-label">PSE <span>MARKET</span></div>
+  <div class="pse-ticker-main">
+    <div class="tradingview-widget-container">
+      <div class="tradingview-widget-container__widget"></div>
+      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+      {
+        "symbols": [
+          {"description":"PSEi","proName":"PSE:PSEI"},
+          {"description":"SM","proName":"PSE:SM"},
+          {"description":"SMPH","proName":"PSE:SMPH"},
+          {"description":"BDO","proName":"PSE:BDO"},
+          {"description":"BPI","proName":"PSE:BPI"},
+          {"description":"AC","proName":"PSE:AC"},
+          {"description":"ALI","proName":"PSE:ALI"},
+          {"description":"ICT","proName":"PSE:ICT"},
+          {"description":"JFC","proName":"PSE:JFC"},
+          {"description":"TEL","proName":"PSE:TEL"},
+          {"description":"GLO","proName":"PSE:GLO"},
+          {"description":"MBT","proName":"PSE:MBT"},
+          {"description":"MER","proName":"PSE:MER"},
+          {"description":"AEV","proName":"PSE:AEV"},
+          {"description":"AP","proName":"PSE:AP"}
+        ],
+        "showSymbolLogo": true,
+        "isTransparent": true,
+        "displayMode": "adaptive",
+        "colorTheme": "dark",
+        "locale": "en"
+      }
+      </script>
+    </div>
+  </div>
+  <div class="pse-ticker-delay">PSE • 15 MIN DELAY</div>
+</section>
+
 
 <section class="hero" id="prices"><div class="hero-inner">
 <div class="hero-copy"><div class="eyebrow">PHILIPPINES FUEL PRICE MONITOR</div><h1>Price Comparison</h1><p>Latest fuel prices from major brands nationwide. Prices are in PHP per liter. Compare all 11 major brands at a glance.</p></div>
