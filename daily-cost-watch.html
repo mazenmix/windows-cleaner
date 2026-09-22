@@ -35,6 +35,20 @@
 .medicine-more:hover{border-color:#3c8ed0;background:#0b2b48}
 @media(max-width:700px){.medicine-tools{align-items:stretch;flex-direction:column}.medicine-result-count{padding-left:3px}.medicine-rows{grid-template-columns:1fr}.medicine-rows .row:nth-child(odd),.medicine-rows .row:nth-child(even){padding-left:0;padding-right:0;border-right:0}}
 
+
+.grocery-card{grid-column:1/-1}
+.grocery-tools{padding:12px 14px 8px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(30,72,106,.48)}
+.grocery-search{flex:1;height:38px;border:1px solid #1d4f78;border-radius:21px;background:#061a2c;color:#eaf4fb;padding:0 14px;outline:none;font-size:10px}
+.grocery-search::placeholder{color:#5f82a0}.grocery-search:focus{border-color:#3b93d6;box-shadow:0 0 0 3px rgba(59,147,214,.08)}
+.grocery-result-count{flex:0 0 auto;color:#6f97b6;font-size:8px;white-space:nowrap}
+.grocery-rows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:4px 14px}
+.grocery-rows .row:nth-child(odd){padding-right:14px;border-right:1px solid rgba(30,72,106,.48)}
+.grocery-rows .row:nth-child(even){padding-left:14px}
+.grocery-actions{padding:10px 14px 12px;display:flex;justify-content:center}
+.grocery-more{height:34px;padding:0 16px;border-radius:18px;border:1px solid #205783;background:#082238;color:#b8d7ed;font-size:9px;font-weight:800;cursor:pointer}
+.grocery-more:hover{border-color:#3c8ed0;background:#0b2b48}
+@media(max-width:700px){.grocery-tools{align-items:stretch;flex-direction:column}.grocery-result-count{padding-left:3px}.grocery-rows{grid-template-columns:1fr}.grocery-rows .row:nth-child(odd),.grocery-rows .row:nth-child(even){padding-left:0;padding-right:0;border-right:0}}
+
 </style>
 </head>
 <body>
@@ -92,6 +106,7 @@ const BOOT={
 const grid=document.getElementById("costGrid"),globalStatus=document.getElementById("globalStatus"),refreshBtn=document.getElementById("refreshAll");
 const cache={};
 const medicineState={query:"",visible:24};
+const groceryState={query:"",visible:24};
 try{Object.assign(cache,JSON.parse(localStorage.getItem("mxDailyCostCacheV2")||"{}"))}catch(e){}
 
 function normalize(sec,data){
@@ -105,6 +120,50 @@ function timeLabel(iso){
  try{return "Checked "+new Date(iso).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}catch(e){return "Checked"}
 }
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
+function groceryList(data){
+ const raw=(data&&Array.isArray(data.items)&&data.items.length)?data.items:[];
+ if(raw.length&&raw[0]&&Object.prototype.hasOwnProperty.call(raw[0],"name")){
+   return raw.map(x=>({
+     label:x.name||"",
+     value:"₱"+Number(x.price||0).toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2}),
+     detail:[x.unit,x.category].filter(Boolean).join(" • "),
+     search:[x.name,x.unit,x.category].filter(Boolean).join(" ").toLowerCase()
+   }));
+ }
+ const b=normalize("grocery",data);
+ return b.items.map(x=>({label:x.label,value:x.value,detail:x.detail||"",search:[x.label,x.detail].join(" ").toLowerCase()}));
+}
+function groceryFiltered(data){
+ const q=groceryState.query.trim().toLowerCase();
+ const all=groceryList(data);
+ return q?all.filter(x=>x.search.includes(q)):all;
+}
+function groceryRowsHtml(data){
+ const filtered=groceryFiltered(data),shown=filtered.slice(0,groceryState.visible);
+ if(!shown.length)return '<div class="row" style="grid-column:1/-1"><div><span class="row-label">No grocery item found</span><span class="row-detail">Try another product, brand, unit or category.</span></div></div>';
+ return shown.map(x=>'<div class="row"><div><span class="row-label">'+esc(x.label)+'</span>'+(x.detail?'<span class="row-detail">'+esc(x.detail)+'</span>':'')+'</div><div class="row-value">'+esc(x.value)+'</div></div>').join("");
+}
+function renderGroceryCard(data){
+ const cfg=sections.find(x=>x.id==="grocery"),d=data||cache.grocery||normalize("grocery",null);
+ const isLive=d.live===true&&!d.fallback;
+ const filtered=groceryFiltered(d),total=groceryList(d).length;
+ const resultText=groceryState.query?(filtered.length+" matches"):(total+" grocery items");
+ const more=filtered.length>groceryState.visible;
+ const asof=d.updated||d.as_of||"Latest DTI SRP bulletin";
+ return '<article class="cost-card grocery-card" id="card-grocery"><div class="card-head"><div class="icon">'+cfg.icon+'</div><div class="titlebox"><h3>'+cfg.title+'</h3><a class="source-name" target="_blank" rel="noopener" href="'+esc(d.source_url||"https://www.dti.gov.ph/konsyumer/latest-srps-basic-necessities-prime-commodities")+'">'+esc(d.source||"Department of Trade and Industry • SRP Bulletin")+' ↗</a></div><span class="status '+(isLive?"":"cache")+'">'+(isLive?"Live Source":"Verified Cache")+'</span></div><div class="grocery-tools"><input class="grocery-search" id="grocerySearch" type="search" autocomplete="off" placeholder="Search grocery item, brand, unit or category…" value="'+esc(groceryState.query)+'"><span class="grocery-result-count" id="groceryResultCount">'+esc(resultText)+'</span></div><div class="grocery-rows" id="groceryRows">'+groceryRowsHtml(d)+'</div><div class="grocery-actions"><button class="grocery-more" id="groceryMore"'+(more?"":" style=\"display:none\"")+'>Show More</button></div><div class="card-note">Suggested retail prices from the official DTI BNPC SRP bulletin. Actual store prices can be lower and may vary by location or SKU.</div><div class="card-foot"><span class="asof">'+esc(asof)+'</span><span class="checked">'+timeLabel(d.checked_at)+'</span></div></article>';
+}
+function updateGroceryBody(){
+ const d=cache.grocery||normalize("grocery",null),filtered=groceryFiltered(d),total=groceryList(d).length;
+ const rows=document.getElementById("groceryRows"),count=document.getElementById("groceryResultCount"),more=document.getElementById("groceryMore");
+ if(rows)rows.innerHTML=groceryRowsHtml(d);
+ if(count)count.textContent=groceryState.query?(filtered.length+" matches"):(total+" grocery items");
+ if(more)more.style.display=filtered.length>groceryState.visible?"":"none";
+}
+function bindGroceryControls(){
+ const input=document.getElementById("grocerySearch"),more=document.getElementById("groceryMore");
+ if(input&&!input.dataset.bound){input.dataset.bound="1";input.addEventListener("input",e=>{groceryState.query=e.target.value;groceryState.visible=24;updateGroceryBody()})}
+ if(more&&!more.dataset.bound){more.dataset.bound="1";more.addEventListener("click",()=>{groceryState.visible+=24;updateGroceryBody()})}
+}
 function medicineList(data){
  const raw=(data&&Array.isArray(data.items)&&data.items.length)?data.items:[];
  if(raw.length&&raw[0]&&Object.prototype.hasOwnProperty.call(raw[0],"description")){
@@ -138,6 +197,7 @@ function renderMedicineCard(data){
  return '<article class="cost-card medicine-card" id="card-medicine"><div class="card-head"><div class="icon">'+cfg.icon+'</div><div class="titlebox"><h3>'+cfg.title+'</h3><a class="source-name" target="_blank" rel="noopener" href="'+esc(d.source_url||"https://eamc.doh.gov.ph/drugs-and-medicines-price-list/")+'">'+esc(d.source||"DOH • East Avenue Medical Center")+' ↗</a></div><span class="status '+(isLive?"":"cache")+'">'+(isLive?"Live Source":"Verified Cache")+'</span></div><div class="medicine-tools"><input class="medicine-search" id="medicineSearch" type="search" autocomplete="off" placeholder="Search medicine, brand, strength or category…" value="'+esc(medicineState.query)+'"><span class="medicine-result-count" id="medicineResultCount">'+esc(resultText)+'</span></div><div class="medicine-rows" id="medicineRows">'+medicineRowsHtml(d)+'</div><div class="medicine-actions"><button class="medicine-more" id="medicineMore"'+(more?"":" style=\"display:none\"")+'>Show More</button></div><div class="card-note">Prices shown are EAMC hospital pharmacy selling prices from the official published medicine list; retail pharmacy prices elsewhere may differ.</div><div class="card-foot"><span class="asof">'+esc(asof)+'</span><span class="checked">'+timeLabel(d.checked_at)+'</span></div></article>';
 }
 function renderCard(sec,data){
+ if(sec==="grocery")return renderGroceryCard(data);
  if(sec==="medicine")return renderMedicineCard(data);
  const cfg=sections.find(x=>x.id===sec),d=normalize(sec,data),isLive=d.live===true&&!d.fallback;
  const rows=d.items.map(x=>'<div class="row"><div><span class="row-label">'+esc(x.label)+'</span>'+(x.detail?'<span class="row-detail">'+esc(x.detail)+'</span>':'')+'</div><div class="row-value">'+esc(x.value)+'</div></div>').join("");
@@ -158,27 +218,37 @@ function bindMedicineControls(){
 }
 function renderAll(){
  grid.innerHTML=sections.map(s=>renderCard(s.id,cache[s.id]||null)).join("");
+ bindGroceryControls();
  bindMedicineControls();
 }
 function save(){try{localStorage.setItem("mxDailyCostCacheV2",JSON.stringify(cache))}catch(e){}}
 function rerenderOne(sec){
  const old=document.getElementById("card-"+sec);if(!old)return;
  const wrap=document.createElement("div");wrap.innerHTML=renderCard(sec,cache[sec]);old.replaceWith(wrap.firstElementChild);
+ if(sec==="grocery")bindGroceryControls();
  if(sec==="medicine")bindMedicineControls();
 }
 async function refreshOne(sec,force){
- const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),15000);
+ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),18000);
  try{
-   const endpoint=sec==="medicine"
-     ?("/api/medicines"+(force?"?force=1":"?v=1")+"&ts="+Date.now())
-     :("/api/daily-cost?section="+encodeURIComponent(sec)+(force?"&force=1":"")+"&ts="+Date.now());
+   let endpoint;
+   if(sec==="medicine")endpoint="/api/medicines"+(force?"?force=1":"?v=1")+"&ts="+Date.now();
+   else if(sec==="grocery")endpoint="/api/grocery"+(force?"?force=1":"?v=1")+"&ts="+Date.now();
+   else endpoint="/api/daily-cost?section="+encodeURIComponent(sec)+(force?"&force=1":"")+"&ts="+Date.now();
+
    const r=await fetch(endpoint,{cache:"no-store",signal:ctrl.signal});
    if(!r.ok)throw new Error("HTTP "+r.status);
    const j=await r.json();
+
    if(sec==="medicine"){
      if(j&&j.ok&&Array.isArray(j.items)&&j.items.length){
        cache.medicine={...j,live:true,fallback:false,as_of:j.updated||"Latest EAMC published list"};
        save();rerenderOne("medicine");
+     }
+   }else if(sec==="grocery"){
+     if(j&&j.ok&&Array.isArray(j.items)&&j.items.length){
+       cache.grocery={...j,live:true,fallback:false,as_of:j.updated||"Latest DTI SRP bulletin"};
+       save();rerenderOne("grocery");
      }
    }else if(j&&j.ok&&Array.isArray(j.items)&&j.items.length){
      cache[sec]=j;save();rerenderOne(sec);
