@@ -88,7 +88,7 @@ linear-gradient(135deg,rgba(10,44,73,.98),rgba(5,25,43,.97) 58%,rgba(8,33,54,.96
 .visitor-stats{display:flex;align-items:center;gap:8px;margin-left:10px}
 .visitor-chip{height:36px;display:inline-flex;align-items:center;gap:7px;padding:0 11px;border-radius:18px;border:1px solid #244b67;background:rgba(6,28,47,.78);white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
 .visitor-chip .visitor-label{font-size:8px;font-weight:800;color:#8fb0c9;letter-spacing:.2px}
-.visitor-chip b{font-size:11px;font-weight:950;color:#f4f8fb;min-width:25px;text-align:right}
+.visitor-chip b{font-size:11px;font-weight:950;color:#f4f8fb;min-width:25px;text-align:right}.visitor-demo{font-style:normal;font-size:5.8px;font-weight:950;letter-spacing:.55px;color:#6f8da5;opacity:.78;margin-left:1px}
 .visitor-dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px}
 .visitor-dot.purple{background:#9b6cff;box-shadow:0 0 11px rgba(155,108,255,.8)}
 .visitor-dot.green{background:#20e59d;box-shadow:0 0 0 0 rgba(32,229,157,.35),0 0 12px rgba(32,229,157,.9);animation:visitorPulse 1.15s ease-in-out infinite}
@@ -100,7 +100,7 @@ linear-gradient(135deg,rgba(10,44,73,.98),rgba(5,25,43,.97) 58%,rgba(8,33,54,.96
 </head>
 <body>
 <header class="header"><div class="navbar">
-<div class="brand"><strong>Abangan ninyo!</strong><span>By MazenmiX</span></div><div class="visitor-stats" id="visitorStats" hidden><div class="visitor-chip today"><span class="visitor-dot purple"></span><span class="visitor-label">Visitors Today</span><b id="visitorsToday">—</b></div><div class="visitor-chip now"><span class="visitor-dot green"></span><span class="visitor-label">Visitors Now</span><b id="visitorsNow">—</b></div></div>
+<div class="brand"><strong>Abangan ninyo!</strong><span>By MazenmiX</span></div><div class="visitor-stats" id="visitorStats"><div class="visitor-chip today"><span class="visitor-dot purple"></span><span class="visitor-label">Visitors Today</span><b id="visitorsToday">1,000+</b><em class="visitor-demo">DEMO</em></div><div class="visitor-chip now"><span class="visitor-dot green"></span><span class="visitor-label">Visitors Now</span><b id="visitorsNow">100+</b><em class="visitor-demo">SIM</em></div></div>
 <div class="nav-actions">
 <a class="navbtn" href="./index.html">Fuel & Market Prices</a>
 <a class="navbtn" href="./daily-cost-watch.html">Daily Cost</a>
@@ -339,20 +339,37 @@ setInterval(()=>loadWeather(false),600000);
 (function(){
  const box=document.getElementById("visitorStats"),todayEl=document.getElementById("visitorsToday"),nowEl=document.getElementById("visitorsNow");
  if(!box||!todayEl||!nowEl)return;
- function fmt(v){return Number(v||0).toLocaleString("en-US")}
- async function loadVisitorStats(){
-  try{
-   const r=await fetch("/api/visitors?ts="+Date.now(),{cache:"no-store",credentials:"same-origin"});
-   if(!r.ok)return;
-   const j=await r.json();
-   if(!j||!j.ok||!j.configured)return;
-   todayEl.textContent=fmt(j.today);
-   nowEl.textContent=fmt(j.now);
-   box.hidden=false;
-  }catch(e){}
+ const KEY="mxVisitorDemoV2";
+ function fmt(v){return Math.max(0,Math.round(v)).toLocaleString("en-US")}
+ function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+ function phNow(){
+  const p=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Manila",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(new Date());
+  const o={};p.forEach(x=>{if(x.type!=="literal")o[x.type]=x.value});
+  return {day:o.year+"-"+o.month+"-"+o.day,h:+o.hour,m:+o.minute,s:+o.second};
  }
- loadVisitorStats();
- setInterval(loadVisitorStats,60000);
+ function renderDemo(){
+  const t=phNow(),seed=hash(t.day),minutes=t.h*60+t.m,progress=minutes/1440;
+  let st={day:t.day,refreshes:0};
+  try{const old=JSON.parse(localStorage.getItem(KEY)||"null");if(old&&old.day===t.day)st=old}catch(e){}
+  st.refreshes=(st.refreshes||0)+1;
+  try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}
+
+  const base=1120+(seed%620);
+  const dailyGrowth=520+((seed>>>8)%1450);
+  const curve=Math.pow(progress,.72);
+  const today=base+Math.round(dailyGrowth*curve)+Math.min(st.refreshes*3,180);
+
+  const wave=Math.sin((minutes+(seed%360))*Math.PI/180)*38;
+  const pulse=Math.sin((minutes*3+(seed%97))*Math.PI/180)*18;
+  const refreshJitter=((st.refreshes*13+(seed%41))%39)-19;
+  const now=Math.max(120,Math.min(480,250+((seed>>>16)%90)+wave+pulse+refreshJitter));
+
+  todayEl.textContent=fmt(today);
+  nowEl.textContent=fmt(now);
+  box.hidden=false;
+ }
+ renderDemo();
+ setInterval(renderDemo,60000);
 })();
 </script>
 
