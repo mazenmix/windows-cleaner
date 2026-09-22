@@ -62,12 +62,45 @@ jobs:
           if [ -d "$HOME/.gradle/caches/9.6.0" ]; then cp -a "$HOME/.gradle/caches/9.6.0" bundle/gradle-user-home/caches/; fi
           if [ -d "$HOME/.gradle/caches/jars-9" ]; then cp -a "$HOME/.gradle/caches/jars-9" bundle/gradle-user-home/caches/; fi
           tar -cf MX-Android-Offline-Toolchain.tar bundle
-          ls -lh MX-Android-Offline-Toolchain.tar
+          sha256sum MX-Android-Offline-Toolchain.tar | tee toolchain.sha256
+          split -b 300M -d -a 2 MX-Android-Offline-Toolchain.tar toolchain.part
+          ls -lh MX-Android-Offline-Toolchain.tar toolchain.part*
 
-      - name: Upload toolchain
+      - name: Upload part 00
         uses: actions/upload-artifact@v4
         with:
-          name: MX-Android-Offline-Toolchain
-          path: MX-Android-Offline-Toolchain.tar
+          name: MX-Toolchain-Part00
+          path: toolchain.part00
           compression-level: 0
+          if-no-files-found: error
+
+      - name: Upload part 01
+        uses: actions/upload-artifact@v4
+        with:
+          name: MX-Toolchain-Part01
+          path: toolchain.part01
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: Upload part 02
+        uses: actions/upload-artifact@v4
+        with:
+          name: MX-Toolchain-Part02
+          path: toolchain.part02
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: Upload part 03
+        uses: actions/upload-artifact@v4
+        with:
+          name: MX-Toolchain-Part03
+          path: toolchain.part03
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: Upload checksum
+        uses: actions/upload-artifact@v4
+        with:
+          name: MX-Toolchain-Checksum
+          path: toolchain.sha256
           if-no-files-found: error
