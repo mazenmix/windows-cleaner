@@ -211,7 +211,7 @@
   border-right:1px solid rgba(63,102,95,.34);
   font-variant-numeric:tabular-nums;
 }
-.food-name{font-size:10px;font-weight:850;color:#eef8f0;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+.food-name{font-size:10px;font-weight:850;color:#eef8f0;max-width:240px;overflow:hidden;text-overflow:ellipsis;text-shadow:0 0 10px color-mix(in srgb,currentColor 28%,transparent)}
 .food-trend{font-size:8px;font-weight:900;line-height:1;transform:translateY(-1px)}
 .food-price{font-size:10px;font-weight:850;color:#dce9f2}
 .food-change{font-size:9px;font-weight:800}
@@ -340,17 +340,43 @@
      track.style.animationDuration=seconds+'s';
    });
  }
- function renderFood(items,date){
+ function foodNameColor(name){
+   const n=String(name||'').toLowerCase();
+   if(/avocado/.test(n)) return '#78d96b';
+   if(/papaya/.test(n)) return '#ff9f43';
+   if(/banana/.test(n)) return '#ffd84d';
+   if(/mango/.test(n)) return '#ffbf3f';
+   if(/tomato/.test(n)) return '#ff6b6b';
+   if(/onion/.test(n)) return '#c28cff';
+   if(/garlic/.test(n)) return '#f2e7c8';
+   if(/carrot/.test(n)) return '#ff8a3d';
+   if(/cabbage|lettuce|pechay|kangkong|spinach/.test(n)) return '#62dc8a';
+   if(/eggplant/.test(n)) return '#b884ff';
+   if(/potato/.test(n)) return '#d7b078';
+   if(/corn/.test(n)) return '#ffe169';
+   if(/rice/.test(n)) return '#e9edf2';
+   if(/egg/.test(n)) return '#ffd36a';
+   if(/chicken/.test(n)) return '#ff9fae';
+   if(/pork/.test(n)) return '#ff8b9c';
+   if(/beef/.test(n)) return '#ff6f70';
+   if(/fish|tilapia|bangus|galunggong|tuna/.test(n)) return '#65c9ff';
+   const palette=['#6fe7d8','#72b8ff','#ff9fcf','#b48cff','#ffb65c','#7ee08b','#f3df69','#8fd3ff','#ff8f7a','#b7e46f','#d49bff','#67d4ff'];
+   let h=0;for(let i=0;i<n.length;i++)h=((h<<5)-h+n.charCodeAt(i))|0;
+   return palette[Math.abs(h)%palette.length];
+ }
+function renderFood(items,date){
    if(!Array.isArray(items)||!items.length)throw new Error('No food prices');
    const one=items.map(x=>{
      const ch=Number(x.change_pct);
      const has=Number.isFinite(ch);
-     const cls=has?(ch>0?'food-up':ch<0?'food-down':'food-flat'):'food-flat';
-     const tri=has?(ch>0?'▲':ch<0?'▼':'•'):'•';
-     const pct=has?((ch>0?'+':'')+ch.toFixed(2)+'%'):'';
+     const moved=has&&Math.abs(ch)>=0.005;
+     const cls=moved?(ch>0?'food-up':'food-down'):'food-flat';
+     const tri=moved?(ch>0?'▲':'▼'):'•';
+     const pct=moved?((ch>0?'+':'')+ch.toFixed(2)+'%'):'';
      const unit=x.unit==='pc'?'pc':x.unit==='L'?'L':'kg';
+     const nameColor=foodNameColor(x.name);
      return '<span class="food-item '+cls+'" title="'+String(x.name).replace(/"/g,'&quot;')+'">'+
-       '<span class="food-name">'+x.name+'</span>'+
+       '<span class="food-name" style="color:'+nameColor+'">'+x.name+'</span>'+
        '<span class="food-trend">'+tri+'</span>'+
        '<span class="food-price">'+money(Number(x.price))+'/'+unit+'</span>'+
        (pct?'<span class="food-change">'+pct+'</span>':'')+
