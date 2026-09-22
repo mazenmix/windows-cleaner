@@ -96,7 +96,7 @@
 <section class="hero"><div class="hero-inner">
 <div><div class="eyebrow">PHILIPPINES EVERYDAY COST MONITOR</div><h1>Daily Cost</h1>
 <p>Everyday Philippine costs from official or authoritative sources. The page checks sources automatically in the background and keeps the latest verified values available if a source is temporarily unreachable.</p></div>
-<div class="global-status" id="globalStatus">AUTO-CHECK • EVERY 15 MIN</div>
+<div class="global-status" id="globalStatus">Live Now</div>
 </div></section>
 
 <main class="content">
@@ -345,7 +345,7 @@ async function refreshOne(sec,force){
 async function refreshAll(force){
  refreshBtn.classList.add("loading");globalStatus.textContent="CHECKING 11 SOURCES…";
  await Promise.allSettled(sections.map(s=>refreshOne(s.id,force)));
- refreshBtn.classList.remove("loading");globalStatus.textContent="AUTO-CHECK • EVERY 15 MIN";
+ refreshBtn.classList.remove("loading");globalStatus.textContent="Live Now";
 }
 refreshBtn.addEventListener("click",()=>refreshAll(true));
 
