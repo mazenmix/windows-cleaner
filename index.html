@@ -392,6 +392,14 @@
 .stay-brand span{display:block;font-size:11px!important;line-height:1.1!important;margin-top:0!important;color:#fff!important;font-weight:600!important;letter-spacing:.01em}
 @media(max-width:600px){.stay-brand strong{font-size:19px!important}.stay-brand span{font-size:10px!important}}
 
+
+.daily-cost-btn{height:38px;display:inline-flex;align-items:center;gap:8px;padding:0 14px;border-radius:21px;border:1px solid #205783;background:linear-gradient(180deg,#0b2a46,#081f35);color:#d9ebfa;font-size:10px;font-weight:800;letter-spacing:.15px;white-space:nowrap;box-shadow:0 8px 22px rgba(0,0,0,.14);transition:.18s}
+.daily-cost-btn span{color:#ff9f2e;font-size:15px;line-height:1;transition:.18s}
+.daily-cost-btn:hover{border-color:#3c8ed0;background:#0d3152;transform:translateY(-1px)}
+.daily-cost-btn:hover span{transform:translateX(2px)}
+@media(max-width:720px){.daily-cost-btn{order:3;height:34px;padding:0 11px;font-size:9px}.navright{gap:9px}}
+@media(max-width:520px){.daily-cost-btn{width:100%;justify-content:center;order:5}.navright{width:100%;flex-wrap:wrap}.livebadge{flex:1}}
+
 </style>
 </head>
 <body>
@@ -401,6 +409,7 @@
 <a class="brand" href="#prices"><span class="brandcopy stay-brand"><strong>Stay Tuned!</strong><span>By MazenmiX</span></span></a>
 
 <div class="navright">
+<a class="daily-cost-btn" href="./daily-cost-watch.html">Daily Cost Watch <span>→</span></a>
 <div class="livebadge"><span class="livedot"></span><span class="livecopy"><b id="liveLabel">Live Prices</b><span id="updatedLabel">Loading source…</span></span></div>
 
 <button class="iconbtn alert-btn" id="alertButton" aria-label="Price alerts">
