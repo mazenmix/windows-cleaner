@@ -19,7 +19,7 @@
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.cost-card{border:1px solid #173f61;border-radius:14px;background:linear-gradient(145deg,#0a2239,#071a2c);overflow:hidden;box-shadow:0 12px 32px rgba(0,0,0,.12);min-width:0}.card-head{min-height:64px;padding:12px 14px;display:flex;align-items:center;gap:11px;border-bottom:1px solid rgba(32,79,117,.62);background:rgba(9,31,52,.72)}.icon{width:38px;height:38px;flex:0 0 auto;border-radius:11px;display:grid;place-items:center;background:#0c3150;border:1px solid #205c8c;font-size:19px}.titlebox{min-width:0;flex:1}.titlebox h3{font-size:13px;margin:0 0 4px}.source-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#7196b5;font-size:8px}.source-name:hover{color:#94c9f2}.status{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;border-radius:15px;padding:6px 10px;font-size:7px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;border:1px solid #1d8b62;background:linear-gradient(180deg,#0b3b2b,#082a20);color:#8cf2bf;box-shadow:0 0 14px rgba(24,223,152,.08),inset 0 1px 0 rgba(255,255,255,.04)}.status:before{content:"";width:6px;height:6px;border-radius:50%;background:#18df98;box-shadow:0 0 10px #18df98}.rows{padding:4px 14px}.row{min-height:45px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;border-bottom:1px solid rgba(30,72,106,.48)}.row:last-child{border-bottom:0}.row-label{min-width:0;font-size:10px;font-weight:750;color:#d9e7f2}.row-detail{display:block;margin-top:3px;color:#648aa8;font-size:8px;font-weight:500}.row-value{font-size:12px;font-weight:900;color:#fff;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}.card-foot{min-height:38px;padding:8px 14px;border-top:1px solid rgba(30,72,106,.48);display:flex;align-items:center;justify-content:space-between;gap:12px;background:#07192b;color:#668ba7;font-size:7.5px}.asof{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.checked{white-space:nowrap;color:#557895}.card-note{padding:0 14px 10px;color:#6d91ad;font-size:7.5px;line-height:1.5}
 .footer{border-top:1px solid #153957;background:#051321}.footer-inner{max-width:1460px;margin:auto;padding:14px 34px;text-align:right;color:#6487a4;font-size:9px}.heart{color:#ff5164}
 @media(max-width:900px){.grid{grid-template-columns:1fr}.hero-inner{align-items:flex-start;flex-direction:column}.global-status{align-self:flex-start}}
-@media(max-width:700px){.navbar,.hero-inner,.content,.footer-inner{padding-left:16px;padding-right:16px}.navbar{flex-wrap:wrap}.brand{flex:1}.nav-actions{width:100%;display:grid;grid-template-columns:1fr 1fr 1fr}.back,.refresh,.weather-link{width:100%}.back,.refresh{.hero h1{font-size:33px}.section-title{align-items:flex-start;flex-direction:column}.row{gap:8px}.row-value{font-size:11px}}
+@media(max-width:700px){.navbar,.hero-inner,.content,.footer-inner{padding-left:16px;padding-right:16px}.navbar{flex-wrap:wrap}.brand{flex:1}.nav-actions{width:100%;display:grid;grid-template-columns:1fr 1fr 1fr}.back,.refresh,.weather-link{width:100%}.hero h1{font-size:33px}.section-title{align-items:flex-start;flex-direction:column}.row{gap:8px}.row-value{font-size:11px}}
 @media(max-width:420px){.rows{padding-left:11px;padding-right:11px}.card-head{padding-left:11px;padding-right:11px}.row-label{font-size:9.5px}.row-detail{font-size:7.5px}.card-foot{padding-left:11px;padding-right:11px}}
 
 .medicine-card{grid-column:1/-1}
@@ -50,14 +50,14 @@
 @media(max-width:700px){.grocery-tools{align-items:stretch;flex-direction:column}.grocery-result-count{padding-left:3px}.grocery-rows{grid-template-columns:1fr}.grocery-rows .row:nth-child(odd),.grocery-rows .row:nth-child(even){padding-left:0;padding-right:0;border-right:0}}
 
 
-.news-ticker{height:40px;border-bottom:1px solid #183c59;background:linear-gradient(90deg,#061827,#081e32);display:flex;align-items:stretch;overflow:hidden}
+.news-ticker{height:40px;min-height:40px;max-height:40px;border-bottom:1px solid #183c59;background:linear-gradient(90deg,#061827,#081e32);display:flex;align-items:stretch;overflow:hidden}
 .news-label{flex:0 0 auto;min-width:128px;padding:0 15px;display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(180deg,#24100f,#160908);border-right:1px solid #6d2722;color:#ffd7cf;font-size:9.5px;font-weight:500;letter-spacing:1.15px;z-index:2;box-shadow:10px 0 22px rgba(2,12,20,.42),inset 0 1px 0 rgba(255,255,255,.03)}
 .news-label:before{content:"";width:7px;height:7px;border-radius:50%;background:#ff3d32;box-shadow:0 0 0 4px rgba(255,61,50,.09),0 0 12px rgba(255,61,50,.85);animation:breakingPulse 1.15s ease-in-out infinite alternate}
 @keyframes breakingPulse{from{opacity:.75;transform:scale(.92)}to{opacity:1;transform:scale(1.08)}}
-.news-window{min-width:0;flex:1;overflow:hidden;display:flex;align-items:center}
-.news-track{display:flex;align-items:center;width:max-content;white-space:nowrap;will-change:transform;animation:newsMarquee var(--news-duration,70s) linear infinite}
+.news-window{min-width:0;flex:1;overflow:hidden;display:flex;align-items:center;height:100%;white-space:nowrap}
+.news-track{display:flex;flex-wrap:nowrap;flex:0 0 max-content;min-width:max-content;align-items:center;height:100%;white-space:nowrap;will-change:transform;animation:newsMarquee var(--news-duration,70s) linear infinite}
 .news-ticker:hover .news-track{animation-play-state:paused}
-.news-item{display:inline-flex;align-items:center;gap:8px;padding:0 15px;font-size:11.5px;color:#dbe9f4}
+.news-item{display:inline-flex;flex:0 0 auto;align-items:center;gap:8px;padding:0 15px;font-size:11.5px;color:#dbe9f4;white-space:nowrap;line-height:1}
 .news-source{font-size:9px;font-weight:500;letter-spacing:.5px;color:#64bcff}
 .news-headline{font-weight:400;color:#f2f7fb;letter-spacing:.05px}
 .news-sep{color:#ffd33f;font-size:12px;font-weight:900;text-shadow:0 0 8px rgba(255,211,63,.35)}
@@ -70,7 +70,8 @@
 <header class="header"><div class="navbar">
 <a class="brand" href="./index.html"><strong>Stay Tuned!</strong><span>By MazenmiX</span></a>
 <div class="nav-actions">
-<a class="back" href="./index.html"><b>←</b> Back to Fuel Watch</a>\n<a class="weather-link" href="./weather-now.html">Weather Now ☁</a>
+<a class="back" href="./index.html"><b>←</b> Back to Fuel Watch</a>
+<a class="weather-link" href="./weather-now.html">Weather Now ☁</a>
 <button class="refresh" id="refreshAll"><span class="spin">↻</span> Refresh All</button>
 </div>
 </div></header>
