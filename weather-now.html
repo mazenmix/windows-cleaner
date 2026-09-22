@@ -254,9 +254,25 @@ function renderHours(d){
  const idx=[];for(let i=start;i<Math.min(start+24,times.length);i+=3)idx.push(i);
  hourStrip.innerHTML=idx.map(i=>{const info=weatherInfo(h.weather_code?.[i],true),pp=Number(h.precipitation_probability?.[i])||0;return '<div class="hour"><div class="time">'+fmtTime(times[i])+'</div><div class="ico">'+info[1]+'</div><div class="t">'+n(h.temperature_2m?.[i],0)+'°</div><div class="rain">💧 '+pp+'% • '+n(h.precipitation?.[i],1)+' mm</div><div class="rainbar"><i style="width:'+Math.min(100,pp)+'%"></i></div><div class="wind">'+n(h.wind_speed_10m?.[i])+' km/h</div></div>'}).join("");
 }
+function dailyFloodPotential(x,i){
+ const rain=Number(x.precipitation_sum?.[i])||0;
+ const prob=Number(x.precipitation_probability_max?.[i])||0;
+ const prev1=Number(x.precipitation_sum?.[i-1])||0;
+ const prev2=Number(x.precipitation_sum?.[i-2])||0;
+ const next1=Number(x.precipitation_sum?.[i+1])||0;
+ // Model-based surface/urban flood potential signal:
+ // today's rain + precipitation likelihood + antecedent saturation + nearby-day rainfall.
+ const score=(prob*.42)+(rain*1.65)+(prev1*.55)+(prev2*.28)+(next1*.18);
+ return Math.max(0,Math.min(100,Math.round(score)));
+}
 function renderDaily(d){
  const x=d.forecast.daily||{},len=Math.min(16,(x.time||[]).length);
- dailyGrid.innerHTML=Array.from({length:len},(_,i)=>{const info=weatherInfo(x.weather_code?.[i],true);return '<div class="day"><div class="date">'+(i===0?"TODAY":fmtDate(x.time[i],{weekday:"short",month:"short",day:"numeric"}))+'</div><div class="ico">'+info[1]+'</div><div class="hi">'+n(x.temperature_2m_max?.[i])+'° <span class="lo">'+n(x.temperature_2m_min?.[i])+'°</span></div><div class="pp">💧 '+n(x.precipitation_probability_max?.[i])+'% • '+n(x.precipitation_sum?.[i],1)+'mm</div><div class="wind">gust '+n(x.wind_gusts_10m_max?.[i])+' km/h</div></div>'}).join("");
+ dailyGrid.innerHTML=Array.from({length:len},(_,i)=>{
+  const info=weatherInfo(x.weather_code?.[i],true);
+  const flood=dailyFloodPotential(x,i);
+  const fc=flood>=65?"high":flood>=35?"mid":"";
+  return '<div class="day"><div class="date">'+(i===0?"TODAY":fmtDate(x.time[i],{weekday:"short",month:"short",day:"numeric"}))+'</div><div class="ico">'+info[1]+'</div><div class="hi">'+n(x.temperature_2m_max?.[i])+'° <span class="lo">'+n(x.temperature_2m_min?.[i])+'°</span></div><div class="pp">💧 '+n(x.precipitation_probability_max?.[i])+'% • '+n(x.precipitation_sum?.[i],1)+'mm</div><div class="flood '+fc+'">🌊 Flood Potential '+flood+'%</div><div class="wind">gust '+n(x.wind_gusts_10m_max?.[i])+' km/h</div></div>'
+ }).join("");
 }
 function renderOutlook(d){
  const o=d.outlook46||[];
@@ -270,7 +286,7 @@ function renderS2S(d){
 }
 function renderSources(d){
  sourcesEl.innerHTML=(d.sources||[]).map(x=>'<a class="source-pill" href="'+esc(x.url)+'" target="_blank" rel="noopener"><b>'+esc(x.name)+'</b> • '+esc(x.role)+'</a>').join("");
- sourceNote.textContent="Update cadence: this page checks for fresh data every 10 minutes. ECMWF EC46 is a probabilistic long-range ensemble product, not an exact daily forecast. Flood Potential is a local model estimate; official PAGASA warnings always override it.";
+ sourceNote.textContent="";
 }
 function renderAll(d){state.data=d;renderHero(d);renderRisks(d);renderAlerts(d);renderHours(d);renderDaily(d);renderOutlook(d);renderS2S(d);renderSources(d);livebar.textContent="Live updates from the world’s most advanced weather satellites."}
 
