@@ -64,11 +64,23 @@
 @keyframes newsMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media(max-width:700px){.news-label{min-width:112px;padding:0 10px;font-size:7.8px}.news-item{font-size:10.2px;padding:0 11px}.news-source{font-size:8px}.news-ticker{height:39px}}
 
-.brand{cursor:default;user-select:none}</style>
+.brand{cursor:default;user-select:none}
+.visitor-stats{display:flex;align-items:center;gap:8px;margin-left:10px}
+.visitor-chip{height:36px;display:inline-flex;align-items:center;gap:7px;padding:0 11px;border-radius:18px;border:1px solid #244b67;background:rgba(6,28,47,.78);white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+.visitor-chip .visitor-label{font-size:8px;font-weight:800;color:#8fb0c9;letter-spacing:.2px}
+.visitor-chip b{font-size:11px;font-weight:950;color:#f4f8fb;min-width:25px;text-align:right}
+.visitor-dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px}
+.visitor-dot.purple{background:#9b6cff;box-shadow:0 0 11px rgba(155,108,255,.8)}
+.visitor-dot.green{background:#20e59d;box-shadow:0 0 0 0 rgba(32,229,157,.35),0 0 12px rgba(32,229,157,.9);animation:visitorPulse 1.15s ease-in-out infinite}
+@keyframes visitorPulse{0%,100%{transform:scale(.9);box-shadow:0 0 0 0 rgba(32,229,157,.35),0 0 8px rgba(32,229,157,.75)}50%{transform:scale(1.15);box-shadow:0 0 0 5px rgba(32,229,157,0),0 0 17px rgba(32,229,157,1)}}
+@media(max-width:900px){.visitor-stats{order:3;width:100%;margin-left:0;justify-content:flex-start}.visitor-chip{height:34px}.visitor-chip .visitor-label{font-size:7.5px}.visitor-chip b{font-size:10.5px}}
+@media(max-width:520px){.visitor-stats{display:grid;grid-template-columns:1fr 1fr}.visitor-chip{justify-content:center;padding:0 9px}}
+
+</style>
 </head>
 <body>
 <header class="header"><div class="navbar">
-<div class="brand"><strong>Abangan ninyo!</strong><span>By MazenmiX</span></div>
+<div class="brand"><strong>Abangan ninyo!</strong><span>By MazenmiX</span></div><div class="visitor-stats" id="visitorStats" hidden><div class="visitor-chip today"><span class="visitor-dot purple"></span><span class="visitor-label">Visitors Today</span><b id="visitorsToday">—</b></div><div class="visitor-chip now"><span class="visitor-dot green"></span><span class="visitor-label">Visitors Now</span><b id="visitorsNow">—</b></div></div>
 <div class="nav-actions">
 <a class="back" href="./index.html"><b>←</b> Fuel & Market Prices</a>
 <a class="weather-link" href="./weather-now.html">Weather Now ☁</a>
@@ -347,4 +359,25 @@ refreshAll(false);
 setInterval(()=>refreshAll(false),900000);
 })();
 </script>
+<script>
+(function(){
+ const box=document.getElementById("visitorStats"),todayEl=document.getElementById("visitorsToday"),nowEl=document.getElementById("visitorsNow");
+ if(!box||!todayEl||!nowEl)return;
+ function fmt(v){return Number(v||0).toLocaleString("en-US")}
+ async function loadVisitorStats(){
+  try{
+   const r=await fetch("/api/visitors?ts="+Date.now(),{cache:"no-store",credentials:"same-origin"});
+   if(!r.ok)return;
+   const j=await r.json();
+   if(!j||!j.ok||!j.configured)return;
+   todayEl.textContent=fmt(j.today);
+   nowEl.textContent=fmt(j.now);
+   box.hidden=false;
+  }catch(e){}
+ }
+ loadVisitorStats();
+ setInterval(loadVisitorStats,60000);
+})();
+</script>
+
 </body></html>
