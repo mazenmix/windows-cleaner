@@ -11,7 +11,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     steps:
       - name: Checkout
@@ -28,13 +28,18 @@ jobs:
         with:
           gradle-version: '9.6.0'
 
-      - name: Prepare Android SDK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
         run: |
           yes | sdkmanager --licenses >/dev/null || true
           sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
 
       - name: Extract source
         run: |
+          rm -rf work
+          mkdir -p work
           unzip -q tmp/MXBlueRadar-source.zip -d work
           test -f work/MXBlueRadar/settings.gradle
 
