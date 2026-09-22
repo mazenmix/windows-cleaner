@@ -327,6 +327,60 @@
 (function(){
  const track=document.getElementById('foodScrollTrack');
  const source=document.getElementById('foodTickerSource');
+ const FOOD_BOOTSTRAP=[
+  {name:'Corn (White)',price:120,unit:'kg',change_pct:null},
+  {name:'Corn (Yellow)',price:120,unit:'kg',change_pct:null},
+  {name:'Alumahan',price:360,unit:'kg',change_pct:null},
+  {name:'Bangus (Large)',price:290,unit:'kg',change_pct:null},
+  {name:'Bangus (Medium)',price:260,unit:'kg',change_pct:null},
+  {name:'Galunggong (Local)',price:300,unit:'kg',change_pct:null},
+  {name:'Tilapia',price:180,unit:'kg',change_pct:null},
+  {name:'Avocado',price:220,unit:'kg',change_pct:null},
+  {name:'Banana (Lakatan)',price:120,unit:'kg',change_pct:null},
+  {name:'Banana (Latundan)',price:100,unit:'kg',change_pct:null},
+  {name:'Banana (Saba)',price:60,unit:'kg',change_pct:null},
+  {name:'Calamansi',price:120,unit:'kg',change_pct:null},
+  {name:'Mango (Carabao)',price:200,unit:'kg',change_pct:null},
+  {name:'Melon',price:120,unit:'kg',change_pct:null},
+  {name:'Papaya',price:90,unit:'pc',change_pct:null},
+  {name:'Watermelon',price:80,unit:'kg',change_pct:null},
+  {name:'Bell Pepper (Green)',price:180,unit:'pc',change_pct:null},
+  {name:'Bell Pepper (Red)',price:150,unit:'pc',change_pct:null},
+  {name:'Cabbage',price:80,unit:'kg',change_pct:null},
+  {name:'Chayote',price:50,unit:'kg',change_pct:null},
+  {name:'Baguio Beans',price:130,unit:'kg',change_pct:null},
+  {name:'Lettuce (Green Ice)',price:150,unit:'kg',change_pct:null},
+  {name:'Lettuce (Romaine)',price:150,unit:'kg',change_pct:null},
+  {name:'Pechay (Baguio)',price:80,unit:'kg',change_pct:null},
+  {name:'White Potato',price:120,unit:'kg',change_pct:null},
+  {name:'Mungbean',price:150,unit:'kg',change_pct:null},
+  {name:'Ampalaya',price:100,unit:'kg',change_pct:null},
+  {name:'Eggplant',price:100,unit:'kg',change_pct:null},
+  {name:'Pechay (Native)',price:100,unit:'kg',change_pct:null},
+  {name:'Sitao',price:100,unit:'kg',change_pct:null},
+  {name:'Squash',price:60,unit:'kg',change_pct:null},
+  {name:'Tomato',price:100,unit:'kg',change_pct:null},
+  {name:'Beef Brisket',price:400,unit:'kg',change_pct:null},
+  {name:'Beef Rump',price:450,unit:'kg',change_pct:null},
+  {name:'Frozen Kasim',price:240,unit:'kg',change_pct:null},
+  {name:'Frozen Liempo',price:290,unit:'kg',change_pct:null},
+  {name:'Pork Belly (Liempo)',price:370,unit:'kg',change_pct:null},
+  {name:'Pork Ham (Kasim)',price:320,unit:'kg',change_pct:null},
+  {name:'Whole Chicken',price:220,unit:'kg',change_pct:null},
+  {name:'Sugar (Brown)',price:70,unit:'kg',change_pct:null},
+  {name:'Sugar (Refined)',price:80,unit:'kg',change_pct:null},
+  {name:'Sugar (Washed)',price:70,unit:'kg',change_pct:null},
+  {name:'Imported Rice Premium',price:50,unit:'kg',change_pct:null},
+  {name:'Imported Rice Special',price:60,unit:'kg',change_pct:null},
+  {name:'Local Rice Premium',price:55,unit:'kg',change_pct:null},
+  {name:'Local Rice Special',price:60,unit:'kg',change_pct:null},
+  {name:'Local Rice Well Milled',price:45,unit:'kg',change_pct:null},
+  {name:'Chili (Red)',price:150,unit:'kg',change_pct:null},
+  {name:'Garlic (Imported)',price:140,unit:'kg',change_pct:null},
+  {name:'Ginger',price:180,unit:'kg',change_pct:null},
+  {name:'Red Onion',price:120,unit:'kg',change_pct:null},
+  {name:'White Onion',price:100,unit:'kg',change_pct:null}
+ ];
 
  function money(v){
    if(!Number.isFinite(v))return '—';
@@ -469,8 +523,11 @@ function renderFood(items,date){
      }
    }
  }
+ renderFood(FOOD_BOOTSTRAP,'August 7, 2026');
+ foodRendered=true;
+ if(source)source.textContent='DA • QUICK CACHE • AUG 7, 2026';
  const hadFoodCache=loadFoodCache();
- loadFoodPrices(hadFoodCache);
+ loadFoodPrices(true);
  setInterval(()=>loadFoodPrices(true),900000);
  window.addEventListener('resize',setFoodSpeed);
 })();
