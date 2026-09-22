@@ -43,11 +43,14 @@ jobs:
           echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
           echo "$ANDROID_HOME/build-tools/36.0.0" >> "$GITHUB_PATH"
 
-      - name: Extract source
+      - name: Reassemble and verify source
         run: |
+          cat tmp/source-p00 tmp/source-p01 tmp/source-p02 tmp/source-p03 tmp/source-p04 tmp/source-p05 > MXBlueRadar-source.zip
+          echo "64137843875073d32c46e110a62e36f53959d0ba5dd313d2ddf15915a6aa0ff6  MXBlueRadar-source.zip" | sha256sum -c -
+          unzip -t MXBlueRadar-source.zip
           rm -rf work
           mkdir -p work
-          unzip -q tmp/MXBlueRadar-source.zip -d work
+          unzip -q MXBlueRadar-source.zip -d work
           test -f work/MXBlueRadar/settings.gradle
 
       - name: Build debug APK
