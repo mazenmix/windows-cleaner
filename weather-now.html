@@ -108,7 +108,7 @@ linear-gradient(135deg,rgba(10,44,73,.98),rgba(5,25,43,.97) 58%,rgba(8,33,54,.96
 </div>
 </div></header>
 
-<div class="livebar" id="livebar">Live updates from the world’s most advanced weather satellites by MazenmiX</div>
+<div class="livebar" id="livebar">Live weather updates powered by the world’s most advanced satellite systems presented by MazenmiX</div>
 <div class="weather-news" id="weatherNews"><div class="weather-news-label">WEATHER NEWS</div><div class="weather-news-window"><div class="weather-news-track" id="weatherNewsTrack"></div></div></div>
 
 <section class="hero">
@@ -307,7 +307,7 @@ function renderS2S(d){
  s2sGrid.innerHTML='<div class="s2s-card"><h3>🇵🇭 PAGASA S2S • '+esc(s.initial_condition||"Latest run")+'</h3><div class="s2s-list">'+(list.length?list.map(x=>'<div class="s2s-item">'+esc(x)+'</div>').join(""):'<div class="s2s-item">PAGASA subseasonal text is temporarily unavailable.</div>')+'</div></div>'+
  '<div class="s2s-card"><h3>🌐 Cross-Model Confidence</h3><p>Short-range conditions use Open-Meteo Best Match, which automatically selects suitable global weather models. The month-ahead section uses ECMWF EC46 / seasonal ensemble guidance. PAGASA official cyclone, flood and subseasonal products are displayed separately and take priority for Philippine hazards.</p>'+(acc.enabled?'<div class="s2s-item" style="margin-top:10px">AccuWeather cross-check: '+esc(acc.weather_text||"available")+' • '+n(acc.temperature_c,1)+'°C</div>':"")+'</div>';
 }
-function renderAll(d){state.data=d;renderHero(d);renderRisks(d);renderAlerts(d);renderHours(d);renderDaily(d);renderOutlook(d);renderS2S(d);livebar.textContent="Live updates from the world’s most advanced weather satellites by MazenmiX"}
+function renderAll(d){state.data=d;renderHero(d);renderRisks(d);renderAlerts(d);renderHours(d);renderDaily(d);renderOutlook(d);renderS2S(d);livebar.textContent="Live weather updates powered by the world’s most advanced satellite systems presented by MazenmiX"}
 
 async function loadWeather(force=false){
  refreshBtn.classList.add("loading");
@@ -317,7 +317,7 @@ async function loadWeather(force=false){
   const j=await r.json();if(!j.ok)throw new Error(j.error||"Weather unavailable");
   renderAll(j);saveLoc();
  }catch(e){
-  livebar.textContent="Live updates from the world’s most advanced weather satellites by MazenmiX";
+  livebar.textContent="Live weather updates powered by the world’s most advanced satellite systems presented by MazenmiX";
   if(!state.data)hero.innerHTML='<div class="loading-card">Unable to load weather data. Tap Refresh to try again.</div>';
  }finally{refreshBtn.classList.remove("loading")}
 }
