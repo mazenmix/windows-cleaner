@@ -8,6 +8,10 @@ on:
       - ".github/workflows/mx-field-tracker-android.yml"
   workflow_dispatch:
 
+concurrency:
+  group: mx-field-tracker-stable-build
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -33,31 +37,70 @@ jobs:
           yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null || true
           /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
+      - name: Restore stable signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.mxtracker-signing
+          key: mxtracker-stable-signing-v1
+
+      - name: Prepare stable signing key
+        shell: bash
+        run: |
+          set -euo pipefail
+          SIGN_DIR="$HOME/.mxtracker-signing"
+          KEYSTORE="$SIGN_DIR/mxtracker.jks"
+          PASSFILE="$SIGN_DIR/password.txt"
+          mkdir -p "$SIGN_DIR"
+
+          if [ ! -f "$KEYSTORE" ] || [ ! -f "$PASSFILE" ]; then
+            PASSWORD="$(openssl rand -hex 24)"
+            printf "%s" "$PASSWORD" > "$PASSFILE"
+            chmod 600 "$PASSFILE"
+            keytool -genkeypair \
+              -keystore "$KEYSTORE" \
+              -storepass "$PASSWORD" \
+              -keypass "$PASSWORD" \
+              -alias mxtracker \
+              -keyalg RSA \
+              -keysize 4096 \
+              -validity 10000 \
+              -dname "CN=MX Field Tracker, O=Forbes Financial Consultancy Corp., C=IQ"
+          fi
+
+          PASSWORD="$(cat "$PASSFILE")"
+          echo "MX_KEYSTORE_PATH=$KEYSTORE" >> "$GITHUB_ENV"
+          echo "MX_KEYSTORE_PASSWORD=$PASSWORD" >> "$GITHUB_ENV"
+          echo "MX_KEY_ALIAS=mxtracker" >> "$GITHUB_ENV"
+          echo "MX_KEY_PASSWORD=$PASSWORD" >> "$GITHUB_ENV"
+
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.2"
 
-      - name: Build APK
+      - name: Build stable signed APK
         working-directory: mx-field-tracker-android
-        run: gradle assembleDebug --stacktrace
+        run: gradle assembleRelease --stacktrace
 
       - name: Publish APK and update manifest
         shell: bash
         run: |
           set -e
 
-          APK="mx-field-tracker-android/app/build/outputs/apk/debug/app-debug.apk"
+          APK="mx-field-tracker-android/app/build/outputs/apk/release/app-release.apk"
           cp "$APK" mx-field-tracker-android/MX_Field_Tracker.apk
           cp "$APK" mxtracker-site/MX_Field_Tracker.apk
 
           VERSION_CODE=$(grep -m1 'versionCode =' mx-field-tracker-android/app/build.gradle.kts | grep -oE '[0-9]+')
           VERSION_NAME=$(grep -m1 'versionName =' mx-field-tracker-android/app/build.gradle.kts | sed -E 's/.*versionName = "([^"]+)".*/\1/')
+          PUBLISHED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
           cat > mxtracker-site/update.json <<EOF
           {
             "versionCode": ${VERSION_CODE},
             "versionName": "${VERSION_NAME}",
             "apkUrl": "https://mxtracker-5xy.pages.dev/MX_Field_Tracker.apk",
+            "apkUrlFallback": "https://raw.githubusercontent.com/mazenmix/windows-cleaner/main/mxtracker-site/MX_Field_Tracker.apk",
+            "publishedAt": "${PUBLISHED_AT}",
             "notes": "MX Field Tracker update with the latest tracking, reliability and interface improvements."
           }
           EOF
@@ -78,5 +121,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: MX-Field-Tracker-APK
-          path: mx-field-tracker-android/app/build/outputs/apk/debug/app-debug.apk
+          path: mx-field-tracker-android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
