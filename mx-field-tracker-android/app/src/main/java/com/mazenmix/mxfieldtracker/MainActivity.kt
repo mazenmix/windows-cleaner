@@ -86,6 +86,7 @@ class MainActivity : Activity() {
         batteryState = findViewById(R.id.batteryState)
         updateButton = findViewById(R.id.updateButton)
         updateState = findViewById(R.id.updateState)
+        updateState.text = "App version " + BuildConfig.VERSION_NAME + " • Checking updates…"
 
         ensureInstallId()
         employeeName.setText(prefs.getString("name", ""))
@@ -370,7 +371,7 @@ class MainActivity : Activity() {
                     readTimeout = 10000
                     doOutput = true
                     setRequestProperty("Content-Type", "application/json")
-                    setRequestProperty("User-Agent", "MXFieldTracker/1.1")
+                    setRequestProperty("User-Agent", "MXFieldTracker/" + BuildConfig.VERSION_NAME)
                 }
 
                 conn.outputStream.use {
