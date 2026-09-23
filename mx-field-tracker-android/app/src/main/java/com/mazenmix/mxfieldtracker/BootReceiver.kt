@@ -8,11 +8,15 @@ import android.os.Build
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         if (intent?.action != Intent.ACTION_BOOT_COMPLETED) return
-        val prefs = context.getSharedPreferences("mx_tracker", Context.MODE_PRIVATE)
+
+        val prefs =
+            context.getSharedPreferences("mx_tracker", Context.MODE_PRIVATE)
+
         if (!prefs.getBoolean("tracking", false)) return
 
         val service = Intent(context, TrackerService::class.java)
             .setAction(TrackerService.ACTION_START)
+            .putExtra("resume_existing", true)
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -21,7 +25,6 @@ class BootReceiver : BroadcastReceiver() {
                 context.startService(service)
             }
         } catch (_: Exception) {
-            // Android/OEM may block automatic restart; readiness screen will warn on next open.
         }
     }
 }
