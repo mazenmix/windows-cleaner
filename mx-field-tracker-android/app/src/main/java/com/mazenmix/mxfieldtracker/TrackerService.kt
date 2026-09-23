@@ -27,6 +27,15 @@ class TrackerService : Service(), LocationListener {
     private lateinit var locationManager: LocationManager
     private lateinit var queue: QueueDb
     private val executor = Executors.newSingleThreadExecutor()
+    private val heartbeatHandler = Handler(Looper.getMainLooper())
+    private val heartbeatRunnable = object : Runnable {
+        override fun run() {
+            if (prefs.getBoolean("tracking", false)) {
+                sendHeartbeat()
+                heartbeatHandler.postDelayed(this, 30000L)
+            }
+        }
+    }
     private var lastAcceptedAt = 0L
 
     override fun onCreate() {
@@ -40,6 +49,7 @@ class TrackerService : Service(), LocationListener {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
             prefs.edit().putBoolean("tracking", false).apply()
+            stopHeartbeat()
             try { locationManager.removeUpdates(this) } catch (_: Exception) {}
 
             executor.execute {
@@ -57,6 +67,7 @@ class TrackerService : Service(), LocationListener {
         prefs.edit().putBoolean("tracking", true).apply()
         startForeground(NOTIFICATION_ID, buildNotification())
         startLocationUpdates()
+        startHeartbeat()
 
         val resumeExisting =
             intent?.getBooleanExtra("resume_existing", false) == true
@@ -247,6 +258,25 @@ class TrackerService : Service(), LocationListener {
         }
     }
 
+    private fun startHeartbeat() {
+        heartbeatHandler.removeCallbacks(heartbeatRunnable)
+        sendHeartbeat()
+        heartbeatHandler.postDelayed(heartbeatRunnable, 30000L)
+    }
+
+    private fun stopHeartbeat() {
+        heartbeatHandler.removeCallbacks(heartbeatRunnable)
+    }
+
+    private fun sendHeartbeat() {
+        executor.execute {
+            val payload = JSONObject().apply {
+                put("at", System.currentTimeMillis())
+            }
+            postJson("/api/heartbeat", payload.toString())
+        }
+    }
+
     private fun sendShiftEvent(type: String) {
         executor.execute { sendShiftEventBlocking(type) }
     }
@@ -286,7 +316,7 @@ class TrackerService : Service(), LocationListener {
                     readTimeout = 8000
                     doOutput = true
                     setRequestProperty("Content-Type", "application/json")
-                    setRequestProperty("User-Agent", "MXFieldTracker/1.2.1")
+                    setRequestProperty("User-Agent", "MXFieldTracker/1.2.2")
                     setRequestProperty("x-employee-id", employeeId)
                     setRequestProperty("x-device-token", token)
                 }
@@ -324,7 +354,7 @@ class TrackerService : Service(), LocationListener {
                     readTimeout = 10000
                     doOutput = true
                     setRequestProperty("Content-Type", "application/json")
-                    setRequestProperty("User-Agent", "MXFieldTracker/1.2.1")
+                    setRequestProperty("User-Agent", "MXFieldTracker/1.2.2")
                 }
 
             conn.outputStream.use {
@@ -356,6 +386,7 @@ class TrackerService : Service(), LocationListener {
     }
 
     override fun onDestroy() {
+        stopHeartbeat()
         try { locationManager.removeUpdates(this) } catch (_: Exception) {}
         executor.shutdownNow()
         super.onDestroy()
