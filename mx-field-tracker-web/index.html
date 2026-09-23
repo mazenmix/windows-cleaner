@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MX Field Tracker</title>
+  <meta name="theme-color" content="#070a0f" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/assets/style.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">MX</div>
+        <div><h1>Field Tracker</h1><p>LIVE OPERATIONS • MAZENMIX</p></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat"><span>ONLINE</span><strong id="statOnline">0</strong></div>
+        <div class="stat"><span>ON SHIFT</span><strong id="statShift">0</strong></div>
+        <div class="stat"><span>TOTAL</span><strong id="statTotal">0</strong></div>
+      </div>
+      <div class="toolbar">
+        <input id="search" placeholder="Search employee…" />
+        <button id="addEmployee" class="icon-btn" title="Add employee">＋</button>
+      </div>
+      <div id="employeeList" class="employee-list"></div>
+      <div class="footnote">Live location is displayed only while employees use the visible work-shift tracking service.</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow"><span class="pulse"></span> LIVE COMMAND MAP</div>
+          <h2 id="viewTitle">All field representatives</h2>
+        </div>
+        <div class="top-actions">
+          <span id="lastRefresh">Waiting for data…</span>
+          <button id="historyBtn">Route history</button>
+          <button id="logoutBtn" class="ghost">Lock</button>
+        </div>
+      </header>
+      <div id="map"></div>
+      <section id="detailPanel" class="detail-panel hidden">
+        <div class="detail-head">
+          <div><span class="muted">SELECTED EMPLOYEE</span><h3 id="detailName">—</h3></div>
+          <button id="closeDetail" class="ghost">×</button>
+        </div>
+        <div class="detail-grid">
+          <div><span>STATUS</span><strong id="dStatus">—</strong></div>
+          <div><span>SPEED</span><strong id="dSpeed">—</strong></div>
+          <div><span>BATTERY</span><strong id="dBattery">—</strong></div>
+          <div><span>GPS</span><strong id="dAccuracy">—</strong></div>
+          <div><span>LAST SEEN</span><strong id="dSeen">—</strong></div>
+          <div><span>SHIFT START</span><strong id="dShift">—</strong></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="loginModal" class="modal show">
+    <div class="modal-card login-card">
+      <div class="logo big">MX</div>
+      <h2>Command Center</h2>
+      <p>Enter your Cloudflare admin key to open the live operations map.</p>
+      <input id="adminKey" type="password" placeholder="Admin key" />
+      <button id="loginBtn" class="primary">UNLOCK DASHBOARD</button>
+      <div id="loginError" class="error"></div>
+    </div>
+  </div>
+
+  <div id="addModal" class="modal">
+    <div class="modal-card">
+      <div class="modal-title"><h2>Add employee</h2><button class="ghost" data-close="addModal">×</button></div>
+      <label>EMPLOYEE NAME</label><input id="newName" placeholder="Ahmed Hassan" />
+      <label>EMPLOYEE ID</label><input id="newId" placeholder="EMP001" />
+      <button id="createEmployee" class="primary">CREATE TRACKER ID</button>
+      <div id="createdBox" class="created-box hidden">
+        <span>TRACKING KEY — SHOW ONCE</span>
+        <code id="createdKey"></code>
+        <button id="copySetup">COPY APP SETUP</button>
+      </div>
+      <div id="addError" class="error"></div>
+    </div>
+  </div>
+
+  <div id="historyModal" class="modal">
+    <div class="modal-card wide">
+      <div class="modal-title"><h2>Route history</h2><button class="ghost" data-close="historyModal">×</button></div>
+      <div class="history-controls">
+        <select id="historyEmployee"></select>
+        <input id="historyDate" type="date" />
+        <button id="loadHistory" class="primary small">LOAD ROUTE</button>
+        <button id="replayRoute" class="small" disabled>▶ REPLAY</button>
+      </div>
+      <div class="history-stats">
+        <div><span>POINTS</span><strong id="hPoints">0</strong></div>
+        <div><span>DISTANCE</span><strong id="hDistance">0 km</strong></div>
+        <div><span>MAX SPEED</span><strong id="hMaxSpeed">0 km/h</strong></div>
+      </div>
+      <p id="historyInfo" class="muted">Choose an employee and date.</p>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/assets/app.js"></script>
+</body>
+</html>
