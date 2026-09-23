@@ -316,7 +316,7 @@ class TrackerService : Service(), LocationListener {
                     readTimeout = 8000
                     doOutput = true
                     setRequestProperty("Content-Type", "application/json")
-                    setRequestProperty("User-Agent", "MXFieldTracker/1.2.2")
+                    setRequestProperty("User-Agent", "MXFieldTracker/" + BuildConfig.VERSION_NAME)
                     setRequestProperty("x-employee-id", employeeId)
                     setRequestProperty("x-device-token", token)
                 }
@@ -354,7 +354,7 @@ class TrackerService : Service(), LocationListener {
                     readTimeout = 10000
                     doOutput = true
                     setRequestProperty("Content-Type", "application/json")
-                    setRequestProperty("User-Agent", "MXFieldTracker/1.2.2")
+                    setRequestProperty("User-Agent", "MXFieldTracker/" + BuildConfig.VERSION_NAME)
                 }
 
             conn.outputStream.use {
