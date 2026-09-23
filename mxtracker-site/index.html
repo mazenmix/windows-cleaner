@@ -15,7 +15,7 @@ button,input,select{font:inherit}.shell{height:100%;display:grid;grid-template-c
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:20px 0 12px}.stat{padding:13px 12px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.018)}.stat span,.metric span{display:block;color:var(--muted);font-size:9px;font-weight:800;letter-spacing:1.1px}.stat strong{display:block;margin-top:7px;font-size:22px}
 .reg-card{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:12px;background:#0c121a}.reg-card b{font-size:12px}.reg-card small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.switch{position:relative;width:44px;height:24px;border-radius:99px;background:#293342;cursor:pointer;transition:.2s}.switch:after{content:"";position:absolute;width:18px;height:18px;border-radius:50%;background:#a9b4c2;left:3px;top:3px;transition:.2s}.switch.on{background:#174b32}.switch.on:after{left:23px;background:var(--green)}
 .toolbar{display:grid;grid-template-columns:1fr auto;gap:8px}.search{background:#0c121a;border:1px solid #263244;color:#fff;border-radius:13px;padding:12px 13px;width:100%;outline:none}.search:focus{border-color:#3f5b76}.ghost,.action{border:1px solid #2b3748;background:#141c27;color:#fff;border-radius:12px;padding:10px 12px;cursor:pointer;font-weight:750}.action:hover,.ghost:hover{background:#192331}
-.list{overflow:auto;min-height:0;margin-top:10px}.emp{display:grid;grid-template-columns:12px 1fr auto;gap:10px;align-items:center;border:1px solid transparent;border-bottom-color:#17202c;padding:14px 8px;cursor:pointer;border-radius:12px}.emp:hover,.emp.active{background:#121a25;border-color:#243144}.dot{width:9px;height:9px;border-radius:50%;background:#566272}.dot.online{background:var(--green);box-shadow:0 0 0 5px rgba(57,240,140,.08),0 0 14px rgba(57,240,140,.4)}.dot.stale{background:var(--orange)}.emp b{display:block;font-size:14px}.emp small{display:block;color:var(--muted);margin-top:4px;font-size:11px}.speed{font-size:11px;color:#aab4c1;text-align:right}.foot{font-size:10px;color:#586373;line-height:1.45;padding-top:12px}
+.list{overflow:auto;min-height:0;margin-top:10px}.emp{display:grid;grid-template-columns:12px 1fr auto;gap:10px;align-items:center;border:1px solid transparent;border-bottom-color:#17202c;padding:14px 8px;cursor:pointer;border-radius:12px}.emp:hover,.emp.active{background:#121a25;border-color:#243144}.dot{width:9px;height:9px;border-radius:50%;background:#566272}.dot.online{background:var(--green);box-shadow:0 0 0 5px rgba(57,240,140,.08),0 0 14px rgba(57,240,140,.4)}.dot.stale{background:var(--orange)}.emp b{display:block;font-size:14px}.emp small{display:block;color:var(--muted);margin-top:4px;font-size:11px}.emp-side{display:flex;align-items:center;gap:9px}.speed{font-size:11px;color:#aab4c1;text-align:right}.delete-emp{width:28px;height:28px;border-radius:9px;border:1px solid rgba(255,90,103,.28);background:rgba(255,90,103,.08);color:#ff7a85;display:grid;place-items:center;padding:0;cursor:pointer;font-size:14px;line-height:1;transition:.16s}.delete-emp:hover{background:rgba(255,90,103,.18);border-color:rgba(255,90,103,.55);color:#fff}.foot{font-size:10px;color:#586373;line-height:1.45;padding-top:12px}
 .main{position:relative;min-width:0;overflow:hidden}.topbar{position:absolute;z-index:500;top:18px;left:18px;right:18px;min-height:76px;border:1px solid rgba(80,96,118,.36);background:rgba(8,12,18,.86);backdrop-filter:blur(15px);border-radius:18px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 18px 55px rgba(0,0,0,.38)}.eyebrow{font-size:10px;color:#aab4c1;font-weight:800;letter-spacing:1.5px}.pulse{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:7px;animation:p 1.6s infinite}@keyframes p{0%{box-shadow:0 0 0 0 rgba(57,240,140,.45)}70%{box-shadow:0 0 0 10px rgba(57,240,140,0)}100%{box-shadow:0 0 0 0 rgba(57,240,140,0)}}.topbar h2{font-size:18px;margin:5px 0 0}.top-actions{display:flex;gap:8px;align-items:center}.refresh{font-size:10px;color:var(--muted);margin-right:4px}
 #map{height:100%;width:100%;background:#0b1017}.leaflet-control-attribution{background:rgba(8,12,18,.75)!important;color:#687588!important}.leaflet-control-attribution a{color:#8aa4bf!important}.leaflet-control-zoom a{background:#101822!important;color:#fff!important;border-color:#293548!important}
 .marker{width:20px;height:20px;border-radius:50%;background:var(--green);border:3px solid #07110b;box-shadow:0 0 0 4px rgba(57,240,140,.18),0 0 18px rgba(57,240,140,.55)}.marker.off{background:#788493;box-shadow:0 0 0 4px rgba(120,132,147,.13)}
@@ -29,7 +29,7 @@ button,input,select{font:inherit}.shell{height:100%;display:grid;grid-template-c
 <body>
 <div class="shell">
 <aside class="sidebar">
-  <div class="brand"><div class="logo">MX</div><div><h1>Field Tracker</h1><p>LIVE OPERATIONS • MAZENMIX</p></div></div>
+  <div class="brand"><div class="logo">MX</div><div><h1>Field Tracker</h1><p>Forbes Financial Consultancy Corp.</p></div></div>
   <div class="stats">
     <div class="stat"><span>ONLINE</span><strong id="sOnline">0</strong></div>
     <div class="stat"><span>ON SHIFT</span><strong id="sShift">0</strong></div>
@@ -129,9 +129,15 @@ function renderList(){
   $("list").innerHTML=rows.map(e=>{
     const cls=online(e)?"online":stale(e)?"stale":"";
     const state=online(e)?(moving(e)?"Moving":"Online"):(e.received_at?"Last "+ago(e.received_at):"Registered • no GPS yet");
-    return '<div class="emp '+(selected===e.id?"active":"")+'" data-id="'+esc(e.id)+'"><span class="dot '+cls+'"></span><div><b>'+esc(e.name)+'</b><small>'+esc(e.id)+' • '+state+'</small></div><div class="speed">'+Math.round(e.speed||0)+'<br>km/h</div></div>';
+    return '<div class="emp '+(selected===e.id?"active":"")+'" data-id="'+esc(e.id)+'"><span class="dot '+cls+'"></span><div><b>'+esc(e.name)+'</b><small>'+esc(e.id)+' • '+state+'</small></div><div class="emp-side"><div class="speed">'+Math.round(e.speed||0)+'<br>km/h</div><button class="delete-emp" data-delete-id="'+esc(e.id)+'" title="Delete employee" aria-label="Delete '+esc(e.name)+'">×</button></div></div>';
   }).join("")||'<div class="muted" style="font-size:12px;padding:20px 6px">No employees registered yet.</div>';
   document.querySelectorAll(".emp").forEach(el=>el.onclick=()=>selectEmployee(el.dataset.id));
+  document.querySelectorAll(".delete-emp").forEach(btn=>{
+    btn.onclick=e=>{
+      e.stopPropagation();
+      deleteEmployee(btn.dataset.deleteId);
+    };
+  });
 }
 const icon=e=>L.divIcon({className:"",html:'<div class="marker '+(online(e)?"":"off")+'"></div>',iconSize:[20,20],iconAnchor:[10,10]});
 function renderMarkers(){
@@ -145,6 +151,23 @@ function renderMarkers(){
     m.bindPopup("<b>"+esc(e.name)+"</b><br><span>"+(online(e)?"LIVE • ":"")+Math.round(e.speed||0)+" km/h • "+(e.battery>=0?e.battery+"% battery":"battery —")+"<br>"+ago(e.received_at)+"</span>");
   }
   for(const[id,m]of markers){if(!seen.has(id)){map.removeLayer(m);markers.delete(id)}}
+}
+async function deleteEmployee(id){
+  const employee=employees.find(e=>e.id===id);
+  if(!employee)return;
+  const ok=confirm("Delete "+employee.name+"?\n\nThis permanently deletes the employee, location history and shift history.");
+  if(!ok)return;
+  try{
+    await api("/api/admin/employees/"+encodeURIComponent(id),{method:"DELETE"});
+    if(selected===id)closeDetail();
+    const marker=markers.get(id);
+    if(marker){map.removeLayer(marker);markers.delete(id)}
+    employees=employees.filter(e=>e.id!==id);
+    renderList();renderMarkers();renderStats();fillHistory();
+    await refresh();
+  }catch(e){
+    alert("Could not delete employee: "+e.message);
+  }
 }
 function selectEmployee(id){selected=id;renderList();showDetail(id,true)}
 function showDetail(id,fly){
