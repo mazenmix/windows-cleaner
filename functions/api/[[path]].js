@@ -157,6 +157,26 @@ export async function onRequest(context){
       return json({employees:rs.results||[],now:Date.now()});
     }
 
+    if(route.startsWith("admin/employees/")&&request.method==="DELETE"){
+      if(!adminOk(request,env))return json({error:"Unauthorized"},401);
+      const id=decodeURIComponent(route.slice("admin/employees/".length)).trim().toUpperCase();
+      if(!id)return json({error:"Employee ID is required"},400);
+
+      const employee=await env.DB.prepare(
+        "SELECT employee_id,name FROM devices WHERE employee_id=?"
+      ).bind(id).first();
+
+      if(!employee)return json({error:"Employee not found"},404);
+
+      await env.DB.batch([
+        env.DB.prepare("DELETE FROM locations WHERE employee_id=?").bind(id),
+        env.DB.prepare("DELETE FROM shifts WHERE employee_id=?").bind(id),
+        env.DB.prepare("DELETE FROM devices WHERE employee_id=?").bind(id)
+      ]);
+
+      return json({ok:true,deleted:{id:employee.employee_id,name:employee.name}});
+    }
+
     if(route.startsWith("admin/devices/")&&request.method==="POST"){
       if(!adminOk(request,env))return json({error:"Unauthorized"},401);
       const id=decodeURIComponent(route.slice("admin/devices/".length)).toUpperCase();
