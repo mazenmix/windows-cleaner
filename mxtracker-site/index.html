@@ -1,59 +1,213 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MX Field Tracker — Preview</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MX Field Tracker</title>
+<meta name="theme-color" content="#070a0f">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-:root{--bg:#070a0f;--panel:#0d1219;--line:#202b3a;--text:#f5f7fa;--muted:#7f8b9b;--green:#39f08c;--red:#ff5a67;--blue:#59a8ff}
+:root{--bg:#070a0f;--panel:#0d1219;--line:#202b3a;--text:#f5f7fa;--muted:#7f8b9b;--green:#39f08c;--orange:#f7ad45;--red:#ff5a67;--blue:#59a8ff}
 *{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-.shell{height:100%;display:grid;grid-template-columns:360px 1fr}.sidebar{background:linear-gradient(180deg,#0e141d,#090d13);border-right:1px solid var(--line);padding:22px;display:flex;flex-direction:column;min-height:0;z-index:10}
+button,input,select{font:inherit}.shell{height:100%;display:grid;grid-template-columns:370px 1fr}.sidebar{position:relative;z-index:10;background:linear-gradient(180deg,#0e141d,#090d13);border-right:1px solid var(--line);padding:22px;display:flex;flex-direction:column;min-height:0}
 .brand{display:flex;gap:13px;align-items:center}.logo{width:48px;height:48px;border-radius:15px;background:linear-gradient(145deg,#42ff98,#19b965);display:grid;place-items:center;color:#04130a;font-weight:900;letter-spacing:-2px;box-shadow:0 10px 30px rgba(57,240,140,.18)}
 .brand h1{font-size:20px;margin:0}.brand p{margin:4px 0 0;font-size:10px;color:var(--muted);letter-spacing:1.5px;font-weight:700}
-.preview{margin-top:16px;padding:10px 12px;border:1px solid #4d3b1e;background:#1a1409;border-radius:12px;color:#f6c66e;font-size:11px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}.stat{padding:12px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.018)}.stat span{display:block;color:var(--muted);font-size:9px;font-weight:800;letter-spacing:1px}.stat strong{display:block;margin-top:6px;font-size:21px}
-.search{background:#0c121a;border:1px solid #263244;color:#fff;border-radius:13px;padding:12px 13px;width:100%;outline:none}
-.list{overflow:auto;margin-top:10px}.emp{display:grid;grid-template-columns:12px 1fr auto;gap:10px;align-items:center;padding:14px 8px;border-bottom:1px solid #17202c;border-radius:12px;cursor:pointer}.emp:hover,.emp.active{background:#121a25}.dot{width:9px;height:9px;border-radius:50%;background:#566272}.dot.online{background:var(--green);box-shadow:0 0 0 5px rgba(57,240,140,.08),0 0 14px rgba(57,240,140,.4)}.emp b{display:block;font-size:14px}.emp small{display:block;color:var(--muted);margin-top:4px;font-size:11px}.speed{font-size:11px;color:#aab4c1;text-align:right}
-.main{position:relative;min-width:0;overflow:hidden}.topbar{position:absolute;z-index:500;top:18px;left:18px;right:18px;height:76px;border:1px solid rgba(80,96,118,.36);background:rgba(8,12,18,.86);backdrop-filter:blur(15px);border-radius:18px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 18px 55px rgba(0,0,0,.38)}.eyebrow{font-size:10px;color:#aab4c1;font-weight:800;letter-spacing:1.5px}.pulse{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:7px;box-shadow:0 0 0 rgba(57,240,140,.6);animation:p 1.6s infinite}@keyframes p{0%{box-shadow:0 0 0 0 rgba(57,240,140,.45)}70%{box-shadow:0 0 0 10px rgba(57,240,140,0)}100%{box-shadow:0 0 0 0 rgba(57,240,140,0)}}.topbar h2{font-size:18px;margin:5px 0 0}.badge{padding:8px 11px;border:1px solid #2b3748;background:#141c27;border-radius:12px;font-size:11px}
-#map{height:100%;width:100%;background:#0b1017}.leaflet-control-attribution{background:rgba(8,12,18,.75)!important;color:#687588!important}.leaflet-control-attribution a{color:#8aa4bf!important}
-.mx-marker{width:20px;height:20px;border-radius:50%;background:var(--green);border:3px solid #07110b;box-shadow:0 0 0 4px rgba(57,240,140,.18),0 0 18px rgba(57,240,140,.55)}.mx-marker.off{background:#788493;box-shadow:0 0 0 4px rgba(120,132,147,.13)}
-.panel{position:absolute;z-index:500;left:18px;right:18px;bottom:18px;background:rgba(8,12,18,.92);backdrop-filter:blur(14px);border:1px solid #283549;border-radius:18px;padding:17px 18px;box-shadow:0 18px 55px rgba(0,0,0,.38)}.panel h3{margin:4px 0 0;font-size:18px}.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:14px}.grid>div{border:1px solid var(--line);background:#0d141d;border-radius:13px;padding:11px}.grid span{display:block;color:var(--muted);font-size:9px;font-weight:800;letter-spacing:1px}.grid strong{display:block;font-size:13px;margin-top:6px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:20px 0 12px}.stat{padding:13px 12px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.018)}.stat span,.metric span{display:block;color:var(--muted);font-size:9px;font-weight:800;letter-spacing:1.1px}.stat strong{display:block;margin-top:7px;font-size:22px}
+.reg-card{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:12px;background:#0c121a}.reg-card b{font-size:12px}.reg-card small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.switch{position:relative;width:44px;height:24px;border-radius:99px;background:#293342;cursor:pointer;transition:.2s}.switch:after{content:"";position:absolute;width:18px;height:18px;border-radius:50%;background:#a9b4c2;left:3px;top:3px;transition:.2s}.switch.on{background:#174b32}.switch.on:after{left:23px;background:var(--green)}
+.toolbar{display:grid;grid-template-columns:1fr auto;gap:8px}.search{background:#0c121a;border:1px solid #263244;color:#fff;border-radius:13px;padding:12px 13px;width:100%;outline:none}.search:focus{border-color:#3f5b76}.ghost,.action{border:1px solid #2b3748;background:#141c27;color:#fff;border-radius:12px;padding:10px 12px;cursor:pointer;font-weight:750}.action:hover,.ghost:hover{background:#192331}
+.list{overflow:auto;min-height:0;margin-top:10px}.emp{display:grid;grid-template-columns:12px 1fr auto;gap:10px;align-items:center;border:1px solid transparent;border-bottom-color:#17202c;padding:14px 8px;cursor:pointer;border-radius:12px}.emp:hover,.emp.active{background:#121a25;border-color:#243144}.dot{width:9px;height:9px;border-radius:50%;background:#566272}.dot.online{background:var(--green);box-shadow:0 0 0 5px rgba(57,240,140,.08),0 0 14px rgba(57,240,140,.4)}.dot.stale{background:var(--orange)}.emp b{display:block;font-size:14px}.emp small{display:block;color:var(--muted);margin-top:4px;font-size:11px}.speed{font-size:11px;color:#aab4c1;text-align:right}.foot{font-size:10px;color:#586373;line-height:1.45;padding-top:12px}
+.main{position:relative;min-width:0;overflow:hidden}.topbar{position:absolute;z-index:500;top:18px;left:18px;right:18px;min-height:76px;border:1px solid rgba(80,96,118,.36);background:rgba(8,12,18,.86);backdrop-filter:blur(15px);border-radius:18px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 18px 55px rgba(0,0,0,.38)}.eyebrow{font-size:10px;color:#aab4c1;font-weight:800;letter-spacing:1.5px}.pulse{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:7px;animation:p 1.6s infinite}@keyframes p{0%{box-shadow:0 0 0 0 rgba(57,240,140,.45)}70%{box-shadow:0 0 0 10px rgba(57,240,140,0)}100%{box-shadow:0 0 0 0 rgba(57,240,140,0)}}.topbar h2{font-size:18px;margin:5px 0 0}.top-actions{display:flex;gap:8px;align-items:center}.refresh{font-size:10px;color:var(--muted);margin-right:4px}
+#map{height:100%;width:100%;background:#0b1017}.leaflet-control-attribution{background:rgba(8,12,18,.75)!important;color:#687588!important}.leaflet-control-attribution a{color:#8aa4bf!important}.leaflet-control-zoom a{background:#101822!important;color:#fff!important;border-color:#293548!important}
+.marker{width:20px;height:20px;border-radius:50%;background:var(--green);border:3px solid #07110b;box-shadow:0 0 0 4px rgba(57,240,140,.18),0 0 18px rgba(57,240,140,.55)}.marker.off{background:#788493;box-shadow:0 0 0 4px rgba(120,132,147,.13)}
+.panel{position:absolute;z-index:500;left:18px;right:18px;bottom:18px;background:rgba(8,12,18,.93);backdrop-filter:blur(14px);border:1px solid #283549;border-radius:18px;padding:17px 18px;box-shadow:0 18px 55px rgba(0,0,0,.38)}.hidden{display:none!important}.panel-head{display:flex;justify-content:space-between;align-items:center}.panel h3{margin:4px 0 0;font-size:18px}.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:14px}.metric{border:1px solid var(--line);background:#0d141d;border-radius:13px;padding:11px}.metric strong{display:block;font-size:13px;margin-top:6px}
+.modal{position:fixed;z-index:3000;inset:0;background:rgba(2,5,8,.76);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.card{width:min(480px,100%);background:linear-gradient(180deg,#121925,#0b1017);border:1px solid #2a3749;border-radius:24px;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.55)}.card.wide{width:min(720px,100%)}.login{text-align:center}.login .logo{margin:auto;width:64px;height:64px;border-radius:20px}.login h2{margin:15px 0 7px}.login p{color:var(--muted);font-size:13px;line-height:1.5;margin:0 0 18px}.input,select{width:100%;background:#0c121a;border:1px solid #263244;color:#fff;outline:none;border-radius:13px;padding:12px 13px}.primary{width:100%;margin-top:10px;background:var(--green);border:1px solid var(--green);color:#04130a;border-radius:12px;padding:12px;cursor:pointer;font-weight:900}.error{min-height:17px;color:#ff7c86;font-size:11px;margin-top:9px}.modal-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}.modal-title h2{font-size:19px;margin:0}.history-controls{display:grid;grid-template-columns:1.3fr 1fr auto auto;gap:8px}.history-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.history-stats .metric strong{font-size:18px}.muted{color:var(--muted)}.replay{width:16px;height:16px;border-radius:50%;background:var(--blue);border:3px solid #07111b;box-shadow:0 0 0 5px rgba(89,168,255,.2)}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#101722;color:#fff}
-@media(max-width:800px){.shell{grid-template-columns:300px 1fr}.grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:680px){.sidebar{position:absolute;z-index:1000;left:10px;top:106px;width:calc(100% - 20px);max-height:42%;border:1px solid var(--line);border-radius:18px}.shell{display:block}.main{height:100%}.brand,.stats,.preview{display:none}.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.shell{grid-template-columns:300px 1fr}.grid{grid-template-columns:repeat(3,1fr)}.refresh{display:none}}
+@media(max-width:700px){.shell{display:block}.sidebar{position:absolute;z-index:1000;left:10px;top:106px;width:calc(100% - 20px);max-height:45%;border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 55px rgba(0,0,0,.38);padding:14px}.brand,.stats,.reg-card,.foot{display:none}.main{height:100%}.topbar{height:auto}.topbar h2{font-size:15px}.top-actions button{font-size:10px;padding:8px}.grid{grid-template-columns:repeat(2,1fr)}.history-controls{grid-template-columns:1fr 1fr}.card{padding:18px}}
 </style>
 </head>
 <body>
 <div class="shell">
 <aside class="sidebar">
-<div class="brand"><div class="logo">MX</div><div><h1>Field Tracker</h1><p>LIVE OPERATIONS • MAZENMIX</p></div></div>
-<div class="preview">DEMO PREVIEW • sample employee data only</div>
-<div class="stats"><div class="stat"><span>ONLINE</span><strong>2</strong></div><div class="stat"><span>ON SHIFT</span><strong>2</strong></div><div class="stat"><span>TOTAL</span><strong>3</strong></div></div>
-<input id="search" class="search" placeholder="Search employee…">
-<div id="list" class="list"></div>
+  <div class="brand"><div class="logo">MX</div><div><h1>Field Tracker</h1><p>LIVE OPERATIONS • MAZENMIX</p></div></div>
+  <div class="stats">
+    <div class="stat"><span>ONLINE</span><strong id="sOnline">0</strong></div>
+    <div class="stat"><span>ON SHIFT</span><strong id="sShift">0</strong></div>
+    <div class="stat"><span>TOTAL</span><strong id="sTotal">0</strong></div>
+  </div>
+  <div class="reg-card">
+    <div><b>New device registration</b><small id="regText">Checking…</small></div>
+    <div id="regSwitch" class="switch"></div>
+  </div>
+  <div class="toolbar"><input id="search" class="search" placeholder="Search employee…"><button id="fitBtn" class="action">◎</button></div>
+  <div id="list" class="list"></div>
+  <div class="foot">Employees are shown only after they register the company app and start a visible work-shift tracking session.</div>
 </aside>
 <main class="main">
-<header class="topbar"><div><div class="eyebrow"><span class="pulse"></span> LIVE COMMAND MAP</div><h2 id="title">All field representatives</h2></div><div class="badge">PREVIEW MODE</div></header>
-<div id="map"></div>
-<section class="panel"><div><span style="color:#7f8b9b;font-size:9px;font-weight:800;letter-spacing:1px">SELECTED EMPLOYEE</span><h3 id="name">Ahmed Hassan • EMP001</h3></div>
-<div class="grid"><div><span>STATUS</span><strong id="status">🟢 MOVING</strong></div><div><span>SPEED</span><strong id="speed">34 km/h</strong></div><div><span>BATTERY</span><strong id="battery">81%</strong></div><div><span>GPS</span><strong id="gps">±6 m</strong></div><div><span>LAST SEEN</span><strong id="seen">Now</strong></div><div><span>SHIFT START</span><strong id="shift">08:02 AM</strong></div></div>
-</section>
+  <header class="topbar">
+    <div><div class="eyebrow"><span class="pulse"></span> LIVE COMMAND MAP</div><h2 id="title">All field representatives</h2></div>
+    <div class="top-actions"><span id="refreshed" class="refresh">Waiting…</span><button id="historyBtn" class="action">Route history</button><button id="lockBtn" class="ghost">Lock</button></div>
+  </header>
+  <div id="map"></div>
+  <section id="panel" class="panel hidden">
+    <div class="panel-head"><div><span class="muted" style="font-size:9px;font-weight:800;letter-spacing:1px">SELECTED EMPLOYEE</span><h3 id="pName">—</h3></div><button id="closePanel" class="ghost">×</button></div>
+    <div class="grid">
+      <div class="metric"><span>STATUS</span><strong id="pStatus">—</strong></div>
+      <div class="metric"><span>SPEED</span><strong id="pSpeed">—</strong></div>
+      <div class="metric"><span>BATTERY</span><strong id="pBattery">—</strong></div>
+      <div class="metric"><span>GPS</span><strong id="pGps">—</strong></div>
+      <div class="metric"><span>LAST SEEN</span><strong id="pSeen">—</strong></div>
+      <div class="metric"><span>SHIFT START</span><strong id="pShift">—</strong></div>
+    </div>
+  </section>
 </main>
 </div>
+
+<div id="loginModal" class="modal show">
+  <div class="card login"><div class="logo">MX</div><h2>Command Center</h2><p>Enter your private administrator key to access the live field operations dashboard.</p><input id="adminKey" class="input" type="password" placeholder="Administrator key"><button id="unlock" class="primary">UNLOCK DASHBOARD</button><div id="loginError" class="error"></div></div>
+</div>
+
+<div id="historyModal" class="modal">
+  <div class="card wide">
+    <div class="modal-title"><h2>Route history</h2><button id="closeHistory" class="ghost">×</button></div>
+    <div class="history-controls"><select id="hEmployee"></select><input id="hDate" class="input" type="date"><button id="loadHistory" class="action">LOAD</button><button id="replayBtn" class="action" disabled>▶ REPLAY</button></div>
+    <div class="history-stats"><div class="metric"><span>POINTS</span><strong id="hPoints">0</strong></div><div class="metric"><span>DISTANCE</span><strong id="hDistance">0 km</strong></div><div class="metric"><span>MAX SPEED</span><strong id="hSpeed">0 km/h</strong></div></div>
+    <p id="hInfo" class="muted" style="font-size:12px">Choose an employee and date.</p>
+  </div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const employees=[
-{id:'EMP001',name:'Ahmed Hassan',lat:33.3159,lng:44.3658,speed:34,battery:81,gps:6,status:'🟢 MOVING',seen:'Now',shift:'08:02 AM',online:true},
-{id:'EMP002',name:'Ali Kareem',lat:33.3052,lng:44.3487,speed:0,battery:67,gps:4,status:'🟢 ONLINE',seen:'8 sec ago',shift:'08:15 AM',online:true},
-{id:'EMP003',name:'Mohammed Saad',lat:33.3398,lng:44.4012,speed:0,battery:52,gps:9,status:'⚫ OFFLINE',seen:'18 min ago',shift:'Off shift',online:false}
-];
-const map=L.map('map').setView([33.3152,44.3661],12);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'© OpenStreetMap'}).addTo(map);
-const markers={};let selected='EMP001';
-function icon(e){return L.divIcon({className:'',html:'<div class="mx-marker '+(e.online?'':'off')+'"></div>',iconSize:[20,20],iconAnchor:[10,10]})}
-function select(id){selected=id;const e=employees.find(x=>x.id===id);document.getElementById('name').textContent=e.name+' • '+e.id;document.getElementById('title').textContent=e.name;document.getElementById('status').textContent=e.status;document.getElementById('speed').textContent=e.speed+' km/h';document.getElementById('battery').textContent=e.battery+'%';document.getElementById('gps').textContent='±'+e.gps+' m';document.getElementById('seen').textContent=e.seen;document.getElementById('shift').textContent=e.shift;map.flyTo([e.lat,e.lng],15,{duration:.7});render()}
-function render(){const q=document.getElementById('search').value.toLowerCase();document.getElementById('list').innerHTML=employees.filter(e=>!q||e.name.toLowerCase().includes(q)||e.id.toLowerCase().includes(q)).map(e=>'<div class="emp '+(e.id===selected?'active':'')+'" onclick="select(\''+e.id+'\')"><span class="dot '+(e.online?'online':'')+'"></span><div><b>'+e.name+'</b><small>'+e.id+' • '+(e.online?(e.speed?'Moving':'Online'):'Last '+e.seen)+'</small></div><div class="speed">'+e.speed+'<br>km/h</div></div>').join('')}
-employees.forEach(e=>{const m=L.marker([e.lat,e.lng],{icon:icon(e)}).addTo(map).bindPopup('<b>'+e.name+'</b><br><span>'+e.status+' • '+e.speed+' km/h</span>');m.on('click',()=>select(e.id));markers[e.id]=m});
-document.getElementById('search').oninput=render;render();
+let adminKey=sessionStorage.getItem("mx_admin_key")||"";
+let employees=[],selected=null,routeLayer=null,replayMarker=null,replayTimer=null,lastHistory=[];
+const markers=new Map(),$=id=>document.getElementById(id);
+const map=L.map("map").setView([33.3152,44.3661],11);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:20,attribution:"© OpenStreetMap"}).addTo(map);
+
+const esc=s=>String(s??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+const ago=ts=>{if(!ts)return"Never";const s=Math.max(0,(Date.now()-ts)/1000);if(s<15)return"Now";if(s<60)return Math.floor(s)+"s ago";if(s<3600)return Math.floor(s/60)+"m ago";if(s<86400)return Math.floor(s/3600)+"h ago";return Math.floor(s/86400)+"d ago"};
+const online=e=>e.received_at&&Date.now()-e.received_at<45000;
+const stale=e=>e.received_at&&Date.now()-e.received_at<180000;
+const moving=e=>Number(e.speed||0)>=3;
+const fmtTime=ts=>ts?new Date(ts).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"—";
+
+async function api(path,options={}){
+  const r=await fetch(path,{...options,headers:{"content-type":"application/json","x-admin-key":adminKey,...(options.headers||{})}});
+  const data=await r.json().catch(()=>({}));
+  if(r.status===401){lock();throw new Error("Unauthorized")}
+  if(!r.ok)throw new Error(data.error||("HTTP "+r.status));
+  return data;
+}
+function lock(){adminKey="";sessionStorage.removeItem("mx_admin_key");$("loginModal").classList.add("show")}
+async function login(){
+  const k=$("adminKey").value.trim();if(!k)return;
+  $("loginError").textContent="";
+  try{
+    const r=await fetch("/api/admin/ping",{headers:{"x-admin-key":k}});
+    if(!r.ok)throw new Error();
+    adminKey=k;sessionStorage.setItem("mx_admin_key",k);$("loginModal").classList.remove("show");
+    await Promise.all([refresh(),loadRegistration()]);
+  }catch{$("loginError").textContent="Administrator key is not correct."}
+}
+async function refresh(){
+  if(!adminKey)return;
+  try{
+    const d=await api("/api/admin/employees");employees=d.employees||[];
+    renderList();renderMarkers();renderStats();fillHistory();
+    $("refreshed").textContent="Updated "+new Date().toLocaleTimeString();
+    if(selected)showDetail(selected,false);
+  }catch(e){if(e.message!=="Unauthorized")$("refreshed").textContent="Connection issue"}
+}
+function renderStats(){
+  $("sTotal").textContent=employees.length;
+  $("sOnline").textContent=employees.filter(online).length;
+  $("sShift").textContent=employees.filter(e=>e.shift_start).length;
+}
+function renderList(){
+  const q=$("search").value.trim().toLowerCase();
+  const rows=employees.filter(e=>!q||e.name.toLowerCase().includes(q)||e.id.toLowerCase().includes(q));
+  $("list").innerHTML=rows.map(e=>{
+    const cls=online(e)?"online":stale(e)?"stale":"";
+    const state=online(e)?(moving(e)?"Moving":"Online"):(e.received_at?"Last "+ago(e.received_at):"Registered • no GPS yet");
+    return '<div class="emp '+(selected===e.id?"active":"")+'" data-id="'+esc(e.id)+'"><span class="dot '+cls+'"></span><div><b>'+esc(e.name)+'</b><small>'+esc(e.id)+' • '+state+'</small></div><div class="speed">'+Math.round(e.speed||0)+'<br>km/h</div></div>';
+  }).join("")||'<div class="muted" style="font-size:12px;padding:20px 6px">No employees registered yet.</div>';
+  document.querySelectorAll(".emp").forEach(el=>el.onclick=()=>selectEmployee(el.dataset.id));
+}
+const icon=e=>L.divIcon({className:"",html:'<div class="marker '+(online(e)?"":"off")+'"></div>',iconSize:[20,20],iconAnchor:[10,10]});
+function renderMarkers(){
+  const seen=new Set();
+  for(const e of employees){
+    if(e.lat==null||e.lng==null)continue;
+    seen.add(e.id);
+    let m=markers.get(e.id);
+    if(!m){m=L.marker([e.lat,e.lng],{icon:icon(e)}).addTo(map);markers.set(e.id,m);m.on("click",()=>selectEmployee(e.id))}
+    else{m.setLatLng([e.lat,e.lng]);m.setIcon(icon(e))}
+    m.bindPopup("<b>"+esc(e.name)+"</b><br><span>"+(online(e)?"LIVE • ":"")+Math.round(e.speed||0)+" km/h • "+(e.battery>=0?e.battery+"% battery":"battery —")+"<br>"+ago(e.received_at)+"</span>");
+  }
+  for(const[id,m]of markers){if(!seen.has(id)){map.removeLayer(m);markers.delete(id)}}
+}
+function selectEmployee(id){selected=id;renderList();showDetail(id,true)}
+function showDetail(id,fly){
+  const e=employees.find(x=>x.id===id);if(!e)return;
+  $("panel").classList.remove("hidden");$("pName").textContent=e.name+" • "+e.id;$("title").textContent=e.name;
+  $("pStatus").textContent=online(e)?(moving(e)?"🟢 MOVING":"🟢 ONLINE"):(stale(e)?"🟠 STALE":"⚫ OFFLINE");
+  $("pSpeed").textContent=Math.round(e.speed||0)+" km/h";$("pBattery").textContent=e.battery>=0?e.battery+"%":"—";
+  $("pGps").textContent=e.accuracy?"±"+Math.round(e.accuracy)+" m":"—";$("pSeen").textContent=ago(e.received_at);$("pShift").textContent=e.shift_start?fmtTime(e.shift_start):"Off shift";
+  if(fly&&e.lat!=null)map.flyTo([e.lat,e.lng],Math.max(map.getZoom(),15),{duration:.7});
+}
+function closeDetail(){selected=null;$("panel").classList.add("hidden");$("title").textContent="All field representatives";renderList()}
+function fitAll(){
+  const pts=employees.filter(e=>e.lat!=null&&e.lng!=null).map(e=>[e.lat,e.lng]);
+  if(pts.length===1)map.flyTo(pts[0],15);else if(pts.length>1)map.fitBounds(pts,{padding:[70,70]});
+}
+async function loadRegistration(){
+  try{
+    const d=await api("/api/admin/registration");
+    $("regSwitch").classList.toggle("on",!!d.enabled);$("regText").textContent=d.enabled?"OPEN — employees can join":"CLOSED — no new devices";
+  }catch{$("regText").textContent="Unavailable"}
+}
+async function toggleRegistration(){
+  const enabled=!$("regSwitch").classList.contains("on");
+  try{await api("/api/admin/registration",{method:"POST",body:JSON.stringify({enabled})});await loadRegistration()}catch(e){alert(e.message)}
+}
+function openHistory(){
+  $("historyModal").classList.add("show");
+  if(selected)$("hEmployee").value=selected;
+  if(!$("hDate").value){const d=new Date();$("hDate").value=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+}
+function fillHistory(){
+  const prev=$("hEmployee").value;
+  $("hEmployee").innerHTML=employees.map(e=>'<option value="'+esc(e.id)+'">'+esc(e.name)+" • "+esc(e.id)+"</option>").join("");
+  if(employees.some(e=>e.id===prev))$("hEmployee").value=prev;else if(selected)$("hEmployee").value=selected;
+}
+function hav(a,b){const R=6371,dLat=(b.lat-a.lat)*Math.PI/180,dLon=(b.lng-a.lng)*Math.PI/180,la1=a.lat*Math.PI/180,la2=b.lat*Math.PI/180,x=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
+async function loadHistory(){
+  const id=$("hEmployee").value,date=$("hDate").value;if(!id||!date)return;
+  const from=new Date(date+"T00:00:00").getTime(),to=new Date(date+"T23:59:59.999").getTime();$("hInfo").textContent="Loading…";
+  try{
+    const d=await api("/api/admin/history?id="+encodeURIComponent(id)+"&from="+from+"&to="+to);lastHistory=d.points||[];drawRoute(lastHistory);
+    let dist=0;for(let i=1;i<lastHistory.length;i++)dist+=hav(lastHistory[i-1],lastHistory[i]);
+    $("hPoints").textContent=lastHistory.length;$("hDistance").textContent=dist.toFixed(dist<10?2:1)+" km";$("hSpeed").textContent=Math.round(Math.max(0,...lastHistory.map(p=>p.speed||0)))+" km/h";
+    $("hInfo").textContent=lastHistory.length?((d.shifts||[]).length+" recorded shift(s) on this date."):"No location points recorded for this date.";
+    $("replayBtn").disabled=lastHistory.length<2;
+  }catch(e){$("hInfo").textContent=e.message}
+}
+function drawRoute(points){
+  if(routeLayer){map.removeLayer(routeLayer);routeLayer=null}
+  if(replayMarker){map.removeLayer(replayMarker);replayMarker=null}
+  if(!points.length)return;
+  routeLayer=L.polyline(points.map(p=>[p.lat,p.lng]),{color:"#59a8ff",weight:4,opacity:.85}).addTo(map);map.fitBounds(routeLayer.getBounds(),{padding:[80,80]});
+}
+function replay(){
+  if(lastHistory.length<2)return;clearInterval(replayTimer);let i=0;
+  if(replayMarker)map.removeLayer(replayMarker);
+  replayMarker=L.marker([lastHistory[0].lat,lastHistory[0].lng],{icon:L.divIcon({className:"",html:'<div class="replay"></div>',iconSize:[16,16],iconAnchor:[8,8]})}).addTo(map);
+  $("historyModal").classList.remove("show");
+  replayTimer=setInterval(()=>{i++;if(i>=lastHistory.length){clearInterval(replayTimer);return}replayMarker.setLatLng([lastHistory[i].lat,lastHistory[i].lng]);if(i%8===0)map.panTo([lastHistory[i].lat,lastHistory[i].lng])},180);
+}
+$("unlock").onclick=login;$("adminKey").addEventListener("keydown",e=>{if(e.key==="Enter")login()});$("lockBtn").onclick=lock;$("search").oninput=renderList;$("fitBtn").onclick=fitAll;$("closePanel").onclick=closeDetail;$("historyBtn").onclick=openHistory;$("closeHistory").onclick=()=>$("historyModal").classList.remove("show");$("loadHistory").onclick=loadHistory;$("replayBtn").onclick=replay;$("regSwitch").onclick=toggleRegistration;
+if(adminKey){$("loginModal").classList.remove("show");Promise.all([refresh(),loadRegistration()])}
+setInterval(refresh,5000);
 </script>
 </body>
 </html>
