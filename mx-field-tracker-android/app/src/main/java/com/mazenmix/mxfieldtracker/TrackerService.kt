@@ -41,6 +41,7 @@ class TrackerService : Service(), LocationListener {
         if (intent?.action == ACTION_STOP) {
             prefs.edit().putBoolean("tracking", false).apply()
             try { locationManager.removeUpdates(this) } catch (_: Exception) {}
+
             executor.execute {
                 sendShiftEventBlocking("end")
                 stopForeground(STOP_FOREGROUND_REMOVE)
@@ -56,7 +57,16 @@ class TrackerService : Service(), LocationListener {
         prefs.edit().putBoolean("tracking", true).apply()
         startForeground(NOTIFICATION_ID, buildNotification())
         startLocationUpdates()
-        sendShiftEvent("start")
+
+        val resumeExisting =
+            intent?.getBooleanExtra("resume_existing", false) == true
+        val manualStart =
+            intent?.action == ACTION_START && !resumeExisting
+
+        if (manualStart) {
+            sendShiftEvent("start")
+        }
+
         flushQueue()
         return START_STICKY
     }
@@ -68,8 +78,10 @@ class TrackerService : Service(), LocationListener {
                 "Work location tracking",
                 NotificationManager.IMPORTANCE_LOW
             )
-            channel.description = "Shown while your work shift location is being shared."
-            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+            channel.description =
+                "Shown while your work shift location is being shared."
+            getSystemService(NotificationManager::class.java)
+                .createNotificationChannel(channel)
         }
     }
 
@@ -80,6 +92,7 @@ class TrackerService : Service(), LocationListener {
             Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
+
         val stop = PendingIntent.getService(
             this,
             2,
@@ -90,16 +103,22 @@ class TrackerService : Service(), LocationListener {
         return Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher)
             .setContentTitle("MX Field Tracker • LIVE")
-            .setContentText("Work-shift location sharing is active")
+            .setContentText("Work-shift background location tracking is active")
             .setContentIntent(open)
             .setOngoing(true)
-            .addAction(android.R.drawable.ic_media_pause, "END SHIFT", stop)
+            .addAction(
+                android.R.drawable.ic_media_pause,
+                "END SHIFT",
+                stop
+            )
             .build()
     }
 
     private fun startLocationUpdates() {
-        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) !=
-            PackageManager.PERMISSION_GRANTED) return
+        if (
+            checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) !=
+            PackageManager.PERMISSION_GRANTED
+        ) return
 
         try {
             if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
@@ -110,6 +129,7 @@ class TrackerService : Service(), LocationListener {
                     this
                 )
             }
+
             if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
                 locationManager.requestLocationUpdates(
                     LocationManager.NETWORK_PROVIDER,
@@ -126,22 +146,87 @@ class TrackerService : Service(), LocationListener {
         if (now - lastAcceptedAt < 4500L) return
         lastAcceptedAt = now
 
+        updateLocalShiftStats(location)
         queue.add(locationPayload(location).toString())
         flushQueue()
     }
 
+    private fun updateLocalShiftStats(location: Location) {
+        val points = prefs.getInt("shift_points", 0)
+        var distance = prefs.getFloat("shift_distance_m", 0f)
+
+        if (prefs.contains("last_lat") && prefs.contains("last_lng")) {
+            val lastLat = java.lang.Double.longBitsToDouble(
+                prefs.getLong("last_lat", 0L)
+            )
+            val lastLng = java.lang.Double.longBitsToDouble(
+                prefs.getLong("last_lng", 0L)
+            )
+
+            val result = FloatArray(1)
+            Location.distanceBetween(
+                lastLat,
+                lastLng,
+                location.latitude,
+                location.longitude,
+                result
+            )
+
+            val segment = result[0]
+            if (segment in 1f..5000f) {
+                distance += segment
+            }
+        }
+
+        val batteryManager =
+            getSystemService(BATTERY_SERVICE) as BatteryManager
+
+        prefs.edit()
+            .putInt("shift_points", points + 1)
+            .putFloat("shift_distance_m", distance)
+            .putLong(
+                "last_lat",
+                java.lang.Double.doubleToRawLongBits(location.latitude)
+            )
+            .putLong(
+                "last_lng",
+                java.lang.Double.doubleToRawLongBits(location.longitude)
+            )
+            .putFloat("last_accuracy", location.accuracy)
+            .putFloat(
+                "last_speed",
+                if (location.hasSpeed()) location.speed * 3.6f else 0f
+            )
+            .putInt(
+                "last_battery",
+                batteryManager.getIntProperty(
+                    BatteryManager.BATTERY_PROPERTY_CAPACITY
+                )
+            )
+            .apply()
+    }
+
     private fun locationPayload(location: Location): JSONObject {
-        val batteryManager = getSystemService(BATTERY_SERVICE) as BatteryManager
+        val batteryManager =
+            getSystemService(BATTERY_SERVICE) as BatteryManager
 
         return JSONObject().apply {
             put("lat", location.latitude)
             put("lng", location.longitude)
             put("accuracy", location.accuracy.toDouble())
-            put("speed", if (location.hasSpeed()) location.speed * 3.6 else 0.0)
-            put("bearing", if (location.hasBearing()) location.bearing.toDouble() else 0.0)
+            put(
+                "speed",
+                if (location.hasSpeed()) location.speed * 3.6 else 0.0
+            )
+            put(
+                "bearing",
+                if (location.hasBearing()) location.bearing.toDouble() else 0.0
+            )
             put(
                 "battery",
-                batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+                batteryManager.getIntProperty(
+                    BatteryManager.BATTERY_PROPERTY_CAPACITY
+                )
             )
             put("capturedAt", location.time)
         }
@@ -152,7 +237,9 @@ class TrackerService : Service(), LocationListener {
             for ((id, payload) in queue.peek()) {
                 if (postJson("/api/track", payload)) {
                     queue.remove(id)
-                    prefs.edit().putLong("last_sent", System.currentTimeMillis()).apply()
+                    prefs.edit()
+                        .putLong("last_sent", System.currentTimeMillis())
+                        .apply()
                 } else {
                     break
                 }
@@ -173,25 +260,31 @@ class TrackerService : Service(), LocationListener {
     }
 
     private fun postJson(path: String, body: String): Boolean {
-        val employeeId = prefs.getString("employee_id", "") ?: return false
-        val token = prefs.getString("device_token", "") ?: return false
+        val employeeId =
+            prefs.getString("employee_id", "") ?: return false
+        val token =
+            prefs.getString("device_token", "") ?: return false
+
         if (employeeId.isBlank() || token.isBlank()) return false
 
         return try {
-            val conn = (URL(MainActivity.BASE_URL + path).openConnection() as HttpURLConnection).apply {
-                requestMethod = "POST"
-                connectTimeout = 8000
-                readTimeout = 8000
-                doOutput = true
-                setRequestProperty("Content-Type", "application/json")
-                setRequestProperty("User-Agent", "MXFieldTracker/1.0")
-                setRequestProperty("x-employee-id", employeeId)
-                setRequestProperty("x-device-token", token)
-            }
+            val conn =
+                (URL(MainActivity.BASE_URL + path).openConnection()
+                    as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 8000
+                    readTimeout = 8000
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/json")
+                    setRequestProperty("User-Agent", "MXFieldTracker/1.1")
+                    setRequestProperty("x-employee-id", employeeId)
+                    setRequestProperty("x-device-token", token)
+                }
 
             conn.outputStream.use {
                 it.write(body.toByteArray(Charsets.UTF_8))
             }
+
             val ok = conn.responseCode in 200..299
             conn.disconnect()
             ok
@@ -209,7 +302,11 @@ class TrackerService : Service(), LocationListener {
     override fun onBind(intent: Intent?): IBinder? = null
 
     @Deprecated("Deprecated in Java")
-    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
+    override fun onStatusChanged(
+        provider: String?,
+        status: Int,
+        extras: Bundle?
+    ) = Unit
 
     override fun onProviderEnabled(provider: String) = Unit
     override fun onProviderDisabled(provider: String) = Unit
