@@ -217,6 +217,26 @@
             android:textColor="@color/text"
             android:textStyle="bold" />
 
+        <Button
+            android:id="@+id/updateButton"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_secondary"
+            android:text="CHECK FOR UPDATE"
+            android:textColor="@color/text"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/updateState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="App version 1.2.0 • Update status not checked yet"
+            android:textColor="@color/muted"
+            android:textSize="11sp" />
+
         <TextView
             android:id="@+id/lastSent"
             android:layout_width="match_parent"
