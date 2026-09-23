@@ -7,6 +7,8 @@ on:
       - "mx-field-tracker-android/**"
       - ".github/workflows/mx-field-tracker-android.yml"
   workflow_dispatch:
+  schedule:
+    - cron: "17 4 * * 1,4"
 
 concurrency:
   group: mx-field-tracker-stable-build
@@ -31,6 +33,7 @@ jobs:
           java-version: "17"
 
       - name: Configure Android SDK
+        if: github.event_name != 'schedule'
         run: |
           echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
           echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
@@ -43,45 +46,45 @@ jobs:
           path: ~/.mxtracker-signing
           key: mxtracker-stable-signing-v1
 
-      - name: Prepare stable signing key
+      - name: Verify stable signing key
         shell: bash
         run: |
           set -euo pipefail
           SIGN_DIR="$HOME/.mxtracker-signing"
           KEYSTORE="$SIGN_DIR/mxtracker.jks"
           PASSFILE="$SIGN_DIR/password.txt"
-          mkdir -p "$SIGN_DIR"
+          EXPECTED="4824e833b986fc8ec21ef79424811323ca6f55cc58277a28362c1b71c6d64204"
 
           if [ ! -f "$KEYSTORE" ] || [ ! -f "$PASSFILE" ]; then
-            PASSWORD="$(openssl rand -hex 24)"
-            printf "%s" "$PASSWORD" > "$PASSFILE"
-            chmod 600 "$PASSFILE"
-            keytool -genkeypair \
-              -keystore "$KEYSTORE" \
-              -storepass "$PASSWORD" \
-              -keypass "$PASSWORD" \
-              -alias mxtracker \
-              -keyalg RSA \
-              -keysize 4096 \
-              -validity 10000 \
-              -dname "CN=MX Field Tracker, O=Forbes Financial Consultancy Corp., C=IQ"
+            echo "Stable MX signing key is unavailable. Refusing to create a new key because that would break app updates."
+            exit 1
           fi
 
           PASSWORD="$(cat "$PASSFILE")"
+          ACTUAL="$(keytool -list -v -keystore "$KEYSTORE" -storepass "$PASSWORD" -alias mxtracker 2>/dev/null | grep -m1 'SHA256:' | sed 's/.*SHA256: //' | tr -d ':' | tr '[:upper:]' '[:lower:]')"
+
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "Signing certificate fingerprint mismatch. Build stopped to protect update compatibility."
+            exit 1
+          fi
+
           echo "MX_KEYSTORE_PATH=$KEYSTORE" >> "$GITHUB_ENV"
           echo "MX_KEYSTORE_PASSWORD=$PASSWORD" >> "$GITHUB_ENV"
           echo "MX_KEY_ALIAS=mxtracker" >> "$GITHUB_ENV"
           echo "MX_KEY_PASSWORD=$PASSWORD" >> "$GITHUB_ENV"
 
       - uses: gradle/actions/setup-gradle@v4
+        if: github.event_name != 'schedule'
         with:
           gradle-version: "8.2"
 
       - name: Build stable signed APK
+        if: github.event_name != 'schedule'
         working-directory: mx-field-tracker-android
         run: gradle assembleRelease --stacktrace
 
       - name: Publish APK and update manifest
+        if: github.event_name != 'schedule'
         shell: bash
         run: |
           set -e
@@ -119,6 +122,7 @@ jobs:
           fi
 
       - uses: actions/upload-artifact@v4
+        if: github.event_name != 'schedule'
         with:
           name: MX-Field-Tracker-APK
           path: mx-field-tracker-android/app/build/outputs/apk/release/app-release.apk
