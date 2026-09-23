@@ -432,7 +432,7 @@
 <div class="navright">
 <a class="weather-now-btn" href="./weather-now.html">Weather Now <span>☁</span></a>
 <a class="daily-cost-btn" href="./daily-cost-watch.html">Daily Cost <span>→</span></a>
-<div class="livebadge"><span class="livedot"></span><span class="livecopy"><b id="liveLabel">Live Prices</b><span id="updatedLabel">Loading source…</span></span></div>
+<div class="livebadge"><span class="livedot"></span><span class="livecopy"><b id="liveLabel">Live Prices</b><span id="updatedLabel">Updated September 22, 2026</span></span></div>
 
 <button class="iconbtn alert-btn" id="alertButton" aria-label="Price alerts">
 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 9a6 6 0 1 0-12 0c0 7-3 7-3 8.5h18C21 16 18 16 18 9Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 20h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
@@ -686,19 +686,19 @@
 (function(){
 const brandColors={Shell:'#ffce1e',Petron:'#1577d5',Caltex:'#ff334b',Phoenix:'#ff7417',Seaoil:'#16d887',Unioil:'#9b4de8',Jetti:'#1cc9e8','Flying V':'#ff4f9b',Cleanfuel:'#a4ee38',Total:'#9d50ff',PTT:'#19a9e5'};
 let fuelData=[
-{name:'Shell',stations:204,diesel:[97.93,4.40],premDiesel:[105.14,4.40],unleaded91:[88.88,5.70],eGas:null,prem95:[96.13,5.70],prem97:[102.41,5.70],kerosene:[148.18,4.60]},
-{name:'Petron',stations:240,diesel:[96.42,4.40],premDiesel:[99.42,4.40],unleaded91:[86.98,5.70],eGas:null,prem95:[87.98,5.70],prem97:[97.03,5.70],kerosene:[144.91,4.60]},
-{name:'Caltex',stations:131,diesel:[99.61,4.31],premDiesel:[103.87,4.31],unleaded91:[89.75,5.68],eGas:null,prem95:[96.95,5.68],prem97:[99.56,6.58],kerosene:[143.69,4.62]},
-{name:'Phoenix',stations:70,diesel:[100.53,4.30],premDiesel:null,unleaded91:[94.56,5.70],eGas:[100.50,5.70],prem95:[96.57,5.70],prem97:[99.81,6.59],kerosene:null},
-{name:'Seaoil',stations:71,diesel:[96.38,4.31],premDiesel:[102.43,4.57],unleaded91:[86.33,5.68],eGas:[112.18,5.68],prem95:[89.35,5.68],prem97:[89.90,7.17],kerosene:[149.82,4.62]},
-{name:'Unioil',stations:83,diesel:[95.66,4.30],premDiesel:null,unleaded91:[85.62,5.70],eGas:[109.48,5.70],prem95:[88.62,5.70],prem97:[104.19,5.70],kerosene:null},
-{name:'Jetti',stations:10,diesel:[97.11,4.30],premDiesel:null,unleaded91:[87.77,5.60],eGas:null,prem95:[91.70,5.60],prem97:[98.66,5.60],kerosene:null},
-{name:'Flying V',stations:38,diesel:[92.93,4.31],premDiesel:null,unleaded91:[82.04,5.68],eGas:null,prem95:[82.99,5.68],prem97:null,kerosene:null},
-{name:'Cleanfuel',stations:54,diesel:[97.11,4.00],premDiesel:null,unleaded91:[87.77,5.00],eGas:null,prem95:[91.70,5.00],prem97:null,kerosene:null},
-{name:'Total',stations:41,diesel:[96.72,4.31],premDiesel:[104.06,4.31],unleaded91:[89.20,5.68],eGas:null,prem95:[90.52,5.68],prem97:[98.66,5.68],kerosene:null},
-{name:'PTT',stations:22,diesel:[92.31,4.31],premDiesel:[95.69,4.31],unleaded91:[84.71,5.68],eGas:null,prem95:[85.56,5.68],prem97:null,kerosene:null}
+{name:'Shell',stations:204,diesel:[105.73,7.80],premDiesel:[112.94,7.80],unleaded91:[93.68,4.80],eGas:null,prem95:[100.93,4.80],prem97:[107.21,4.80],kerosene:[132.85,6.40]},
+{name:'Petron',stations:240,diesel:[104.22,7.80],premDiesel:[107.22,7.80],unleaded91:[91.78,4.80],eGas:null,prem95:[92.78,4.80],prem97:[101.83,4.80],kerosene:[129.58,6.40]},
+{name:'Caltex',stations:131,diesel:[107.43,7.82],premDiesel:[111.69,7.82],unleaded91:[94.63,4.88],eGas:null,prem95:[101.83,4.88],prem97:[104.60,4.88],kerosene:[128.43,6.47]},
+{name:'Phoenix',stations:70,diesel:[108.35,7.82],premDiesel:null,unleaded91:[99.44,4.88],eGas:[105.38,4.88],prem95:[101.45,4.88],prem97:[104.85,4.88],kerosene:null},
+{name:'Seaoil',stations:71,diesel:[104.20,7.82],premDiesel:[110.23,7.82],unleaded91:[91.21,4.88],eGas:[117.06,4.88],prem95:[94.22,4.88],prem97:[94.78,4.88],kerosene:[134.56,6.47]},
+{name:'Unioil',stations:83,diesel:[103.46,7.80],premDiesel:null,unleaded91:[90.42,4.80],eGas:[114.28,4.80],prem95:[93.42,4.80],prem97:[108.99,4.80],kerosene:null},
+{name:'Jetti',stations:10,diesel:[104.91,6.80],premDiesel:null,unleaded91:[92.59,4.80],eGas:null,prem95:[96.51,4.80],prem97:[103.70,4.80],kerosene:null},
+{name:'Flying V',stations:38,diesel:[100.73,7.80],premDiesel:null,unleaded91:[86.84,4.80],eGas:null,prem95:[87.79,4.80],prem97:null,kerosene:null},
+{name:'Cleanfuel',stations:54,diesel:[104.82,7.82],premDiesel:null,unleaded91:[92.49,4.88],eGas:null,prem95:[96.51,4.88],prem97:null,kerosene:null},
+{name:'Total',stations:41,diesel:[104.54,7.82],premDiesel:[111.88,7.82],unleaded91:[94.08,4.88],eGas:null,prem95:[95.40,4.88],prem97:[103.70,4.88],kerosene:null},
+{name:'PTT',stations:22,diesel:[100.13,7.82],premDiesel:[103.51,7.82],unleaded91:[89.59,4.88],eGas:null,prem95:[90.44,4.88],prem97:null,kerosene:null}
 ];
-let lpgData=[{name:'Regasco',price:1229,color:'#16da6d',change:-10},{name:'Solane',price:1574,color:'#ff3847',change:6},{name:'Petron Gasul',price:1498,color:'#2489ff',change:5},{name:'SL Gas',price:1319,color:'#18e7a1',change:6},{name:'Phoenix LPG',price:1334,color:'#ff7517',change:8},{name:'Total Gas',price:1636,color:'#9f53ff',change:10}];
+let lpgData=[{name:'Regasco',price:1229,color:'#16da6d',change:null},{name:'Solane',price:1266,color:'#ff3847',change:null},{name:'Petron Gasul',price:1291,color:'#2489ff',change:null},{name:'SL Gas',price:1319,color:'#18e7a1',change:null},{name:'Phoenix LPG',price:1334,color:'#ff7517',change:null},{name:'Total Gas',price:1636,color:'#9f53ff',change:null}];
 let selectedKg=11;const cols=['diesel','premDiesel','unleaded91','eGas','prem95','prem97','kerosene'];const $=id=>document.getElementById(id);
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove('show'),1700)}
 function getRanks(key){return fuelData.filter(r=>r[key]&&Number.isFinite(r[key][0])).map(r=>r[key][0]).sort((a,b)=>a-b)}
@@ -774,10 +774,32 @@ function renderFuel(){
  $('brandCountText').textContent='Showing '+rows.length+' brands';
  renderSummary();renderMobileFuel();checkPriceAlerts();
 }
-function renderLpg(){const factor=selectedKg/11;const sorted=lpgData.slice().sort((a,b)=>a.price-b.price),cheapest=sorted[0]&&sorted[0].name;$('lpgGrid').innerHTML=lpgData.map(x=>{const p=Math.round(x.price*factor),isCheap=x.name===cheapest,chg=Math.round(x.change*factor);return '<article class="lpg-card '+(isCheap?'cheapest':'')+'"><div class="lpg-name"><span class="lpg-dot" style="background:'+x.color+'"></span>'+x.name+'</div>'+(isCheap?'<span class="cheapest-badge">Cheapest</span>':'')+'<div class="lpg-price"><small>PHP</small>'+p.toLocaleString('en-PH')+'</div><div class="lpg-bottom"><span>'+selectedKg+'kg tank</span><span class="lpg-change '+(chg<0?'down':'up')+'">'+(chg<0?'▼ ':'▲ +')+chg+'</span></div></article>'}).join('');renderSummary();checkPriceAlerts();}
+function renderLpg(){const factor=selectedKg/11;const sorted=lpgData.slice().sort((a,b)=>a.price-b.price),cheapest=sorted[0]&&sorted[0].name;$('lpgGrid').innerHTML=lpgData.map(x=>{const p=Math.round(x.price*factor),isCheap=x.name===cheapest,hasChg=Number.isFinite(x.change),chg=hasChg?Math.round(x.change*factor):null;return '<article class="lpg-card '+(isCheap?'cheapest':'')+'"><div class="lpg-name"><span class="lpg-dot" style="background:'+x.color+'"></span>'+x.name+'</div>'+(isCheap?'<span class="cheapest-badge">Cheapest</span>':'')+'<div class="lpg-price"><small>PHP</small>'+p.toLocaleString('en-PH')+'</div><div class="lpg-bottom"><span>'+selectedKg+'kg tank</span>'+(hasChg?'<span class="lpg-change '+(chg<0?'down':'up')+'">'+(chg<0?'▼ ':'▲ +')+chg+'</span>':'<span></span>')+'</div></article>'}).join('');renderSummary();checkPriceAlerts();}
 function parsePriceCell(txt){txt=String(txt||'').trim();if(!txt||/N\/A/i.test(txt))return null;const m=txt.match(/([0-9]+(?:\.[0-9]+)?)\s*([↑↓])?\s*([+-]?[0-9]+(?:\.[0-9]+)?)?/);if(!m)return null;let d=m[3]?parseFloat(m[3]):0;if(m[2]==='↓'&&d>0)d=-d;return[parseFloat(m[1]),d]}
 function parseGasWatch(text){const lines=text.split(/\r?\n/);const newRows=[];for(const line of lines){if(!line.includes('|'))continue;const parts=line.split('|').map(s=>s.trim()).filter((s,i,a)=>!(i===0&&s==='')&&!(i===a.length-1&&s===''));if(parts.length<9)continue;if(!Object.prototype.hasOwnProperty.call(brandColors,parts[0]))continue;newRows.push({name:parts[0],stations:parseInt(parts[1],10)||0,diesel:parsePriceCell(parts[2]),premDiesel:parsePriceCell(parts[3]),unleaded91:parsePriceCell(parts[4]),eGas:parsePriceCell(parts[5]),prem95:parsePriceCell(parts[6]),prem97:parsePriceCell(parts[7]),kerosene:parsePriceCell(parts[8])})}if(newRows.length>=8)fuelData=newRows;const date=(text.match(/Prices updated\s+([^\n]+)/i)||[])[1]||(text.match(/As of\s+([A-Z][a-z]+\s+\d{1,2},\s+\d{4})/i)||[])[1];if(date)$('updatedLabel').textContent='Updated '+date.trim();const section=(text.split('## Gasul / LPG Prices')[1]||'').split('## How We Track Prices')[0]||'';const names=['Regasco','Solane','Petron Gasul','SL Gas','Phoenix LPG','Total Gas'];const found={};names.forEach(name=>{const esc=name.replace(/[.*+?^$()|[\]\\{}]/g,'\\$&');const m=section.match(new RegExp('(?:^|\\n)'+esc+'\\s*\\n\\s*PHP\\s*([0-9,]+)','i'));if(m)found[name]=parseInt(m[1].replace(/,/g,''),10)});if(Object.keys(found).length)lpgData=lpgData.map(x=>found[x.name]?Object.assign({},x,{price:found[x.name]}):x)}
-async function refreshSource(manual){if(manual){$('liveLabel').textContent='Updating…';document.body.classList.add('loading-shimmer')}try{const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),11000);const r=await fetch('https://r.jina.ai/https://gaswatchph.com/',{cache:'no-store',signal:ctrl.signal});clearTimeout(timer);if(!r.ok)throw new Error('HTTP '+r.status);parseGasWatch(await r.text());renderFuel();renderLpg();$('liveLabel').textContent='Live Prices';if(manual)toast('Fuel and LPG prices refreshed')}catch(e){$('liveLabel').textContent='Live Prices';if($('updatedLabel').textContent.indexOf('Loading')===0)$('updatedLabel').textContent='Using latest saved data';if(manual)toast('Source unavailable — latest saved prices kept')}finally{document.body.classList.remove('loading-shimmer')}}
+async function refreshSource(manual){
+ if(manual){$('liveLabel').textContent='Updating…';document.body.classList.add('loading-shimmer')}
+ try{
+  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),12000);
+  const r=await fetch('/api/fuel'+(manual?'?force=1&':'?')+'ts='+Date.now(),{cache:'no-store',signal:ctrl.signal});
+  clearTimeout(timer);
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  if(!j.ok||!Array.isArray(j.fuel)||j.fuel.length<8)throw new Error('Invalid fuel data');
+  fuelData=j.fuel;
+  if(Array.isArray(j.lpg)&&j.lpg.length){
+   const map=new Map(j.lpg.map(x=>[x.name,Number(x.price)]));
+   lpgData=lpgData.map(x=>map.has(x.name)?Object.assign({},x,{price:map.get(x.name)}):x);
+  }
+  $('updatedLabel').textContent='Updated '+(j.updated||'latest source');
+  renderFuel();renderLpg();
+  $('liveLabel').textContent='Live Prices';
+  if(manual)toast(j.fallback?'Latest verified fuel prices loaded':'Fuel and LPG prices refreshed');
+ }catch(e){
+  $('liveLabel').textContent='Live Prices';
+  if(manual)toast('Live source unavailable — latest verified prices kept');
+ }finally{document.body.classList.remove('loading-shimmer')}
+}
 $('refreshAll').addEventListener('click',()=>refreshSource(true));
 
 document.querySelectorAll('.weight').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.weight').forEach(x=>x.classList.remove('active'));b.classList.add('active');selectedKg=Number(b.dataset.kg);renderLpg()}));
