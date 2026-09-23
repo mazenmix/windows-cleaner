@@ -51,9 +51,13 @@ class MainActivity : Activity() {
     private lateinit var gpsState: TextView
     private lateinit var notificationState: TextView
     private lateinit var batteryState: TextView
+    private lateinit var updateButton: Button
+    private lateinit var updateState: TextView
 
     private val executor = Executors.newSingleThreadExecutor()
     private var pendingStart = false
+    private var pendingInstallAfterPermission = false
+    private var availableUpdate: UpdateInfo? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,6 +84,8 @@ class MainActivity : Activity() {
         gpsState = findViewById(R.id.gpsState)
         notificationState = findViewById(R.id.notificationState)
         batteryState = findViewById(R.id.batteryState)
+        updateButton = findViewById(R.id.updateButton)
+        updateState = findViewById(R.id.updateState)
 
         ensureInstallId()
         employeeName.setText(prefs.getString("name", ""))
@@ -88,20 +94,134 @@ class MainActivity : Activity() {
         stopButton.setOnClickListener { stopShift() }
         fixSettingsButton.setOnClickListener { fixNextReadinessIssue() }
         appSettingsButton.setOnClickListener { openAppSettings() }
+        updateButton.setOnClickListener { handleUpdateButton() }
 
         refreshState()
         updateReadiness()
+        checkForUpdates(silent = true)
     }
 
     override fun onResume() {
         super.onResume()
         refreshState()
         updateReadiness()
+
+        if (pendingInstallAfterPermission &&
+            UpdateManager.canInstallPackages(this)
+        ) {
+            pendingInstallAfterPermission = false
+            availableUpdate?.let { downloadUpdate(it) }
+        }
     }
 
     override fun onDestroy() {
         executor.shutdownNow()
         super.onDestroy()
+    }
+
+    private fun checkForUpdates(silent: Boolean) {
+        if (!silent) {
+            updateButton.isEnabled = false
+            updateButton.text = "CHECKING..."
+            updateState.text = "Checking MX update server…"
+        }
+
+        UpdateManager.check(this) { info, error ->
+            runOnUiThread {
+                if (error != null || info == null) {
+                    updateButton.isEnabled = true
+                    updateButton.text = "CHECK FOR UPDATE"
+                    updateState.text =
+                        "Version " + BuildConfig.VERSION_NAME +
+                            " • Could not check right now"
+                    if (!silent) {
+                        Toast.makeText(
+                            this,
+                            "Could not check for updates.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    return@runOnUiThread
+                }
+
+                if (UpdateManager.isNewer(info)) {
+                    availableUpdate = info
+                    updateButton.isEnabled = true
+                    updateButton.text =
+                        "UPDATE AVAILABLE • v" + info.versionName
+                    updateButton.setTextColor(Color.parseColor("#FFD35A"))
+                    updateState.text =
+                        "New version " + info.versionName +
+                            " is ready • Tap to download and install"
+                    updateState.setTextColor(Color.parseColor("#FFD35A"))
+                    UpdateManager.showUpdateAvailableNotification(this, info)
+                } else {
+                    availableUpdate = null
+                    updateButton.isEnabled = true
+                    updateButton.text = "CHECK FOR UPDATE"
+                    updateButton.setTextColor(Color.parseColor("#F5F7FA"))
+                    updateState.text =
+                        "Version " + BuildConfig.VERSION_NAME +
+                            " • You are up to date"
+                    updateState.setTextColor(Color.parseColor("#39F08C"))
+                }
+            }
+        }
+    }
+
+    private fun handleUpdateButton() {
+        val info = availableUpdate
+        if (info == null) {
+            checkForUpdates(silent = false)
+            return
+        }
+
+        if (!UpdateManager.canInstallPackages(this)) {
+            pendingInstallAfterPermission = true
+            Toast.makeText(
+                this,
+                "Allow MX Field Tracker to install updates, then return.",
+                Toast.LENGTH_LONG
+            ).show()
+            UpdateManager.openInstallPermission(this)
+            return
+        }
+
+        downloadUpdate(info)
+    }
+
+    private fun downloadUpdate(info: UpdateInfo) {
+        updateButton.isEnabled = false
+        updateState.setTextColor(Color.parseColor("#59A8FF"))
+        updateState.text = "Preparing update…"
+
+        UpdateManager.downloadAndInstall(
+            this,
+            info,
+            onProgress = { pct ->
+                runOnUiThread {
+                    updateButton.text = "DOWNLOADING • " + pct + "%"
+                    updateState.text =
+                        "Downloading MX Field Tracker v" +
+                            info.versionName + "…"
+                }
+            },
+            onError = { error ->
+                runOnUiThread {
+                    updateButton.isEnabled = true
+                    updateButton.text =
+                        "UPDATE AVAILABLE • v" + info.versionName
+                    updateState.setTextColor(Color.parseColor("#FF6673"))
+                    updateState.text =
+                        "Update download failed • Tap to retry"
+                    Toast.makeText(
+                        this,
+                        error.message ?: "Update failed",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        )
     }
 
     private fun ensureInstallId(): String {
