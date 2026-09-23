@@ -1,108 +1,59 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MX Field Tracker</title>
-  <meta name="theme-color" content="#070a0f" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="/assets/style.css" />
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MX Field Tracker — Preview</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#070a0f;--panel:#0d1219;--line:#202b3a;--text:#f5f7fa;--muted:#7f8b9b;--green:#39f08c;--red:#ff5a67;--blue:#59a8ff}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.shell{height:100%;display:grid;grid-template-columns:360px 1fr}.sidebar{background:linear-gradient(180deg,#0e141d,#090d13);border-right:1px solid var(--line);padding:22px;display:flex;flex-direction:column;min-height:0;z-index:10}
+.brand{display:flex;gap:13px;align-items:center}.logo{width:48px;height:48px;border-radius:15px;background:linear-gradient(145deg,#42ff98,#19b965);display:grid;place-items:center;color:#04130a;font-weight:900;letter-spacing:-2px;box-shadow:0 10px 30px rgba(57,240,140,.18)}
+.brand h1{font-size:20px;margin:0}.brand p{margin:4px 0 0;font-size:10px;color:var(--muted);letter-spacing:1.5px;font-weight:700}
+.preview{margin-top:16px;padding:10px 12px;border:1px solid #4d3b1e;background:#1a1409;border-radius:12px;color:#f6c66e;font-size:11px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}.stat{padding:12px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.018)}.stat span{display:block;color:var(--muted);font-size:9px;font-weight:800;letter-spacing:1px}.stat strong{display:block;margin-top:6px;font-size:21px}
+.search{background:#0c121a;border:1px solid #263244;color:#fff;border-radius:13px;padding:12px 13px;width:100%;outline:none}
+.list{overflow:auto;margin-top:10px}.emp{display:grid;grid-template-columns:12px 1fr auto;gap:10px;align-items:center;padding:14px 8px;border-bottom:1px solid #17202c;border-radius:12px;cursor:pointer}.emp:hover,.emp.active{background:#121a25}.dot{width:9px;height:9px;border-radius:50%;background:#566272}.dot.online{background:var(--green);box-shadow:0 0 0 5px rgba(57,240,140,.08),0 0 14px rgba(57,240,140,.4)}.emp b{display:block;font-size:14px}.emp small{display:block;color:var(--muted);margin-top:4px;font-size:11px}.speed{font-size:11px;color:#aab4c1;text-align:right}
+.main{position:relative;min-width:0;overflow:hidden}.topbar{position:absolute;z-index:500;top:18px;left:18px;right:18px;height:76px;border:1px solid rgba(80,96,118,.36);background:rgba(8,12,18,.86);backdrop-filter:blur(15px);border-radius:18px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 18px 55px rgba(0,0,0,.38)}.eyebrow{font-size:10px;color:#aab4c1;font-weight:800;letter-spacing:1.5px}.pulse{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:7px;box-shadow:0 0 0 rgba(57,240,140,.6);animation:p 1.6s infinite}@keyframes p{0%{box-shadow:0 0 0 0 rgba(57,240,140,.45)}70%{box-shadow:0 0 0 10px rgba(57,240,140,0)}100%{box-shadow:0 0 0 0 rgba(57,240,140,0)}}.topbar h2{font-size:18px;margin:5px 0 0}.badge{padding:8px 11px;border:1px solid #2b3748;background:#141c27;border-radius:12px;font-size:11px}
+#map{height:100%;width:100%;background:#0b1017}.leaflet-control-attribution{background:rgba(8,12,18,.75)!important;color:#687588!important}.leaflet-control-attribution a{color:#8aa4bf!important}
+.mx-marker{width:20px;height:20px;border-radius:50%;background:var(--green);border:3px solid #07110b;box-shadow:0 0 0 4px rgba(57,240,140,.18),0 0 18px rgba(57,240,140,.55)}.mx-marker.off{background:#788493;box-shadow:0 0 0 4px rgba(120,132,147,.13)}
+.panel{position:absolute;z-index:500;left:18px;right:18px;bottom:18px;background:rgba(8,12,18,.92);backdrop-filter:blur(14px);border:1px solid #283549;border-radius:18px;padding:17px 18px;box-shadow:0 18px 55px rgba(0,0,0,.38)}.panel h3{margin:4px 0 0;font-size:18px}.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:14px}.grid>div{border:1px solid var(--line);background:#0d141d;border-radius:13px;padding:11px}.grid span{display:block;color:var(--muted);font-size:9px;font-weight:800;letter-spacing:1px}.grid strong{display:block;font-size:13px;margin-top:6px}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#101722;color:#fff}
+@media(max-width:800px){.shell{grid-template-columns:300px 1fr}.grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:680px){.sidebar{position:absolute;z-index:1000;left:10px;top:106px;width:calc(100% - 20px);max-height:42%;border:1px solid var(--line);border-radius:18px}.shell{display:block}.main{height:100%}.brand,.stats,.preview{display:none}.grid{grid-template-columns:repeat(2,1fr)}}
+</style>
 </head>
 <body>
-  <div class="shell">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="logo">MX</div>
-        <div><h1>Field Tracker</h1><p>LIVE OPERATIONS • MAZENMIX</p></div>
-      </div>
-      <div class="stats-grid">
-        <div class="stat"><span>ONLINE</span><strong id="statOnline">0</strong></div>
-        <div class="stat"><span>ON SHIFT</span><strong id="statShift">0</strong></div>
-        <div class="stat"><span>TOTAL</span><strong id="statTotal">0</strong></div>
-      </div>
-      <div class="toolbar">
-        <input id="search" placeholder="Search employee…" />
-        <button id="addEmployee" class="icon-btn" title="Add employee">＋</button>
-      </div>
-      <div id="employeeList" class="employee-list"></div>
-      <div class="footnote">Live location is displayed only while employees use the visible work-shift tracking service.</div>
-    </aside>
-
-    <main class="main">
-      <header class="topbar">
-        <div>
-          <div class="eyebrow"><span class="pulse"></span> LIVE COMMAND MAP</div>
-          <h2 id="viewTitle">All field representatives</h2>
-        </div>
-        <div class="top-actions">
-          <span id="lastRefresh">Waiting for data…</span>
-          <button id="historyBtn">Route history</button>
-          <button id="logoutBtn" class="ghost">Lock</button>
-        </div>
-      </header>
-      <div id="map"></div>
-      <section id="detailPanel" class="detail-panel hidden">
-        <div class="detail-head">
-          <div><span class="muted">SELECTED EMPLOYEE</span><h3 id="detailName">—</h3></div>
-          <button id="closeDetail" class="ghost">×</button>
-        </div>
-        <div class="detail-grid">
-          <div><span>STATUS</span><strong id="dStatus">—</strong></div>
-          <div><span>SPEED</span><strong id="dSpeed">—</strong></div>
-          <div><span>BATTERY</span><strong id="dBattery">—</strong></div>
-          <div><span>GPS</span><strong id="dAccuracy">—</strong></div>
-          <div><span>LAST SEEN</span><strong id="dSeen">—</strong></div>
-          <div><span>SHIFT START</span><strong id="dShift">—</strong></div>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <div id="loginModal" class="modal show">
-    <div class="modal-card login-card">
-      <div class="logo big">MX</div>
-      <h2>Command Center</h2>
-      <p>Enter your Cloudflare admin key to open the live operations map.</p>
-      <input id="adminKey" type="password" placeholder="Admin key" />
-      <button id="loginBtn" class="primary">UNLOCK DASHBOARD</button>
-      <div id="loginError" class="error"></div>
-    </div>
-  </div>
-
-  <div id="addModal" class="modal">
-    <div class="modal-card">
-      <div class="modal-title"><h2>Add employee</h2><button class="ghost" data-close="addModal">×</button></div>
-      <label>EMPLOYEE NAME</label><input id="newName" placeholder="Ahmed Hassan" />
-      <label>EMPLOYEE ID</label><input id="newId" placeholder="EMP001" />
-      <button id="createEmployee" class="primary">CREATE TRACKER ID</button>
-      <div id="createdBox" class="created-box hidden">
-        <span>TRACKING KEY — SHOW ONCE</span>
-        <code id="createdKey"></code>
-        <button id="copySetup">COPY APP SETUP</button>
-      </div>
-      <div id="addError" class="error"></div>
-    </div>
-  </div>
-
-  <div id="historyModal" class="modal">
-    <div class="modal-card wide">
-      <div class="modal-title"><h2>Route history</h2><button class="ghost" data-close="historyModal">×</button></div>
-      <div class="history-controls">
-        <select id="historyEmployee"></select>
-        <input id="historyDate" type="date" />
-        <button id="loadHistory" class="primary small">LOAD ROUTE</button>
-        <button id="replayRoute" class="small" disabled>▶ REPLAY</button>
-      </div>
-      <div class="history-stats">
-        <div><span>POINTS</span><strong id="hPoints">0</strong></div>
-        <div><span>DISTANCE</span><strong id="hDistance">0 km</strong></div>
-        <div><span>MAX SPEED</span><strong id="hMaxSpeed">0 km/h</strong></div>
-      </div>
-      <p id="historyInfo" class="muted">Choose an employee and date.</p>
-    </div>
-  </div>
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="/assets/app.js"></script>
+<div class="shell">
+<aside class="sidebar">
+<div class="brand"><div class="logo">MX</div><div><h1>Field Tracker</h1><p>LIVE OPERATIONS • MAZENMIX</p></div></div>
+<div class="preview">DEMO PREVIEW • sample employee data only</div>
+<div class="stats"><div class="stat"><span>ONLINE</span><strong>2</strong></div><div class="stat"><span>ON SHIFT</span><strong>2</strong></div><div class="stat"><span>TOTAL</span><strong>3</strong></div></div>
+<input id="search" class="search" placeholder="Search employee…">
+<div id="list" class="list"></div>
+</aside>
+<main class="main">
+<header class="topbar"><div><div class="eyebrow"><span class="pulse"></span> LIVE COMMAND MAP</div><h2 id="title">All field representatives</h2></div><div class="badge">PREVIEW MODE</div></header>
+<div id="map"></div>
+<section class="panel"><div><span style="color:#7f8b9b;font-size:9px;font-weight:800;letter-spacing:1px">SELECTED EMPLOYEE</span><h3 id="name">Ahmed Hassan • EMP001</h3></div>
+<div class="grid"><div><span>STATUS</span><strong id="status">🟢 MOVING</strong></div><div><span>SPEED</span><strong id="speed">34 km/h</strong></div><div><span>BATTERY</span><strong id="battery">81%</strong></div><div><span>GPS</span><strong id="gps">±6 m</strong></div><div><span>LAST SEEN</span><strong id="seen">Now</strong></div><div><span>SHIFT START</span><strong id="shift">08:02 AM</strong></div></div>
+</section>
+</main>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const employees=[
+{id:'EMP001',name:'Ahmed Hassan',lat:33.3159,lng:44.3658,speed:34,battery:81,gps:6,status:'🟢 MOVING',seen:'Now',shift:'08:02 AM',online:true},
+{id:'EMP002',name:'Ali Kareem',lat:33.3052,lng:44.3487,speed:0,battery:67,gps:4,status:'🟢 ONLINE',seen:'8 sec ago',shift:'08:15 AM',online:true},
+{id:'EMP003',name:'Mohammed Saad',lat:33.3398,lng:44.4012,speed:0,battery:52,gps:9,status:'⚫ OFFLINE',seen:'18 min ago',shift:'Off shift',online:false}
+];
+const map=L.map('map').setView([33.3152,44.3661],12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'© OpenStreetMap'}).addTo(map);
+const markers={};let selected='EMP001';
+function icon(e){return L.divIcon({className:'',html:'<div class="mx-marker '+(e.online?'':'off')+'"></div>',iconSize:[20,20],iconAnchor:[10,10]})}
+function select(id){selected=id;const e=employees.find(x=>x.id===id);document.getElementById('name').textContent=e.name+' • '+e.id;document.getElementById('title').textContent=e.name;document.getElementById('status').textContent=e.status;document.getElementById('speed').textContent=e.speed+' km/h';document.getElementById('battery').textContent=e.battery+'%';document.getElementById('gps').textContent='±'+e.gps+' m';document.getElementById('seen').textContent=e.seen;document.getElementById('shift').textContent=e.shift;map.flyTo([e.lat,e.lng],15,{duration:.7});render()}
+function render(){const q=document.getElementById('search').value.toLowerCase();document.getElementById('list').innerHTML=employees.filter(e=>!q||e.name.toLowerCase().includes(q)||e.id.toLowerCase().includes(q)).map(e=>'<div class="emp '+(e.id===selected?'active':'')+'" onclick="select(\''+e.id+'\')"><span class="dot '+(e.online?'online':'')+'"></span><div><b>'+e.name+'</b><small>'+e.id+' • '+(e.online?(e.speed?'Moving':'Online'):'Last '+e.seen)+'</small></div><div class="speed">'+e.speed+'<br>km/h</div></div>').join('')}
+employees.forEach(e=>{const m=L.marker([e.lat,e.lng],{icon:icon(e)}).addTo(map).bindPopup('<b>'+e.name+'</b><br><span>'+e.status+' • '+e.speed+' km/h</span>');m.on('click',()=>select(e.id));markers[e.id]=m});
+document.getElementById('search').oninput=render;render();
+</script>
 </body>
 </html>
