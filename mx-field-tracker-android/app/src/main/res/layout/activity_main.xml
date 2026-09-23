@@ -267,5 +267,25 @@
             android:textColor="#667384"
             android:textSize="10sp" />
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:text="Forbes Financial Consultancy Corp"
+            android:textColor="#8A96A7"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:layout_marginBottom="8dp"
+            android:gravity="center"
+            android:text="MX Field Tracker • By MazenmiX"
+            android:textColor="#566273"
+            android:textSize="9sp" />
+
     </LinearLayout>
 </ScrollView>
