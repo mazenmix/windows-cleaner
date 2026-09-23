@@ -477,9 +477,23 @@ class MainActivity : Activity() {
 
     private fun openBatterySettings() {
         try {
-            startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val request = Intent(
+                    Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                    Uri.parse("package:" + packageName)
+                )
+                startActivity(request)
+            } else {
+                openAppSettings()
+            }
         } catch (_: Exception) {
-            openAppSettings()
+            try {
+                startActivity(
+                    Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                )
+            } catch (_: Exception) {
+                openAppSettings()
+            }
         }
     }
 
