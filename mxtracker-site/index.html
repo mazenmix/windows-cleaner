@@ -86,9 +86,10 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:20,att
 
 const esc=s=>String(s??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
 const ago=ts=>{if(!ts)return"Never";const s=Math.max(0,(Date.now()-ts)/1000);if(s<15)return"Now";if(s<60)return Math.floor(s)+"s ago";if(s<3600)return Math.floor(s/60)+"m ago";if(s<86400)return Math.floor(s/3600)+"h ago";return Math.floor(s/86400)+"d ago"};
-const online=e=>e.received_at&&Date.now()-e.received_at<45000;
-const stale=e=>e.received_at&&Date.now()-e.received_at<180000;
-const moving=e=>Number(e.speed||0)>=3;
+const liveAt=e=>Math.max(Number(e.heartbeat_at||0),Number(e.received_at||0));
+const online=e=>!!e.shift_start&&liveAt(e)>0&&Date.now()-liveAt(e)<75000;
+const stale=e=>!!e.shift_start&&liveAt(e)>0&&Date.now()-liveAt(e)<180000;
+const moving=e=>online(e)&&e.received_at&&Date.now()-e.received_at<60000&&Number(e.speed||0)>=3;
 const fmtTime=ts=>ts?new Date(ts).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"—";
 
 async function api(path,options={}){
@@ -148,7 +149,7 @@ function renderMarkers(){
     let m=markers.get(e.id);
     if(!m){m=L.marker([e.lat,e.lng],{icon:icon(e)}).addTo(map);markers.set(e.id,m);m.on("click",()=>selectEmployee(e.id))}
     else{m.setLatLng([e.lat,e.lng]);m.setIcon(icon(e))}
-    m.bindPopup("<b>"+esc(e.name)+"</b><br><span>"+(online(e)?"LIVE • ":"")+Math.round(e.speed||0)+" km/h • "+(e.battery>=0?e.battery+"% battery":"battery —")+"<br>"+ago(e.received_at)+"</span>");
+    m.bindPopup("<b>"+esc(e.name)+"</b><br><span>"+(online(e)?"LIVE • ":"")+Math.round(e.speed||0)+" km/h • "+(e.battery>=0?e.battery+"% battery":"battery —")+"<br>Service "+ago(liveAt(e))+" • GPS "+ago(e.received_at)+"</span>");
   }
   for(const[id,m]of markers){if(!seen.has(id)){map.removeLayer(m);markers.delete(id)}}
 }
@@ -175,7 +176,7 @@ function showDetail(id,fly){
   $("panel").classList.remove("hidden");$("pName").textContent=e.name+" • "+e.id;$("title").textContent=e.name;
   $("pStatus").textContent=online(e)?(moving(e)?"🟢 MOVING":"🟢 ONLINE"):(stale(e)?"🟠 STALE":"⚫ OFFLINE");
   $("pSpeed").textContent=Math.round(e.speed||0)+" km/h";$("pBattery").textContent=e.battery>=0?e.battery+"%":"—";
-  $("pGps").textContent=e.accuracy?"±"+Math.round(e.accuracy)+" m":"—";$("pSeen").textContent=ago(e.received_at);$("pShift").textContent=e.shift_start?fmtTime(e.shift_start):"Off shift";
+  $("pGps").textContent=e.accuracy?"±"+Math.round(e.accuracy)+" m":"—";$("pSeen").textContent=ago(liveAt(e));$("pShift").textContent=e.shift_start?fmtTime(e.shift_start):"Off shift";
   if(fly&&e.lat!=null)map.flyTo([e.lat,e.lng],Math.max(map.getZoom(),15),{duration:.7});
 }
 function closeDetail(){selected=null;$("panel").classList.add("hidden");$("title").textContent="All field representatives";renderList()}
