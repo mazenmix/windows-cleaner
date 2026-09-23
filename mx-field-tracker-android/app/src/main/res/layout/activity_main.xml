@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MX FIELD TRACKER"
+            android:textColor="@color/text"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="Live work movement • MazenmiX"
+            android:textColor="@color/muted"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:id="@+id/statusTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="● OFF SHIFT"
+                android:textColor="@color/muted"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/statusDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Enter your name and start your work shift."
+                android:textColor="@color/text"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:text="YOUR NAME"
+            android:textColor="@color/muted"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/employeeName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_input"
+            android:hint="Enter your full name"
+            android:inputType="textPersonName|textCapWords"
+            android:singleLine="true"
+            android:textColor="@color/text"
+            android:textColorHint="#5F6B7A" />
+
+        <TextView
+            android:id="@+id/employeeCode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Device not registered yet"
+            android:textColor="@color/muted"
+            android:textSize="11sp" />
+
+        <Button
+            android:id="@+id/startButton"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_marginTop="28dp"
+            android:background="@drawable/bg_start"
+            android:text="START SHIFT"
+            android:textColor="#04130A"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/stopButton"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_stop"
+            android:text="END SHIFT"
+            android:textColor="#1A0608"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/lastSent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:gravity="center"
+            android:text="Last location upload: —"
+            android:textColor="@color/muted"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:gravity="center"
+            android:text="Location is shared only while your shift is active. Android displays a persistent tracking notification."
+            android:textColor="#667384"
+            android:textSize="11sp" />
+
+    </LinearLayout>
+</ScrollView>
