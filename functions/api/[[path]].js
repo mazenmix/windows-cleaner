@@ -123,6 +123,22 @@ export async function onRequest(context){
         captured,now
       ).run();
 
+      await env.DB.prepare(
+        "UPDATE devices SET updated_at=? WHERE employee_id=?"
+      ).bind(now,auth.employee_id).run();
+
+      return json({ok:true,receivedAt:now});
+    }
+
+    if(route==="heartbeat"&&request.method==="POST"){
+      const auth=await deviceAuth(request,env);
+      if(!auth)return json({error:"Unauthorized device"},401);
+
+      const now=Date.now();
+      await env.DB.prepare(
+        "UPDATE devices SET updated_at=? WHERE employee_id=?"
+      ).bind(now,auth.employee_id).run();
+
       return json({ok:true,receivedAt:now});
     }
 
@@ -132,6 +148,10 @@ export async function onRequest(context){
       const body=await bodyJson(request);
       if(!body)return json({error:"Invalid JSON"},400);
       const at=Number(body.at)||Date.now();
+
+      await env.DB.prepare(
+        "UPDATE devices SET updated_at=? WHERE employee_id=?"
+      ).bind(Date.now(),auth.employee_id).run();
 
       if(body.type==="start"){
         await env.DB.prepare(
@@ -158,6 +178,7 @@ export async function onRequest(context){
       const rs=await env.DB.prepare(`
         SELECT
           d.employee_id AS id,d.name,d.enabled,d.device,d.android,d.created_at,
+          d.updated_at AS heartbeat_at,
           l.lat,l.lng,l.accuracy,l.speed,l.bearing,l.battery,l.captured_at,l.received_at,
           (SELECT start_at FROM shifts s
             WHERE s.employee_id=d.employee_id AND s.end_at IS NULL
