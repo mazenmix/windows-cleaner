@@ -9,28 +9,46 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="MX FIELD TRACKER"
-            android:textColor="@color/text"
-            android:textSize="26sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:text="Live work movement • MazenmiX"
-            android:textColor="@color/muted"
-            android:textSize="13sp" />
+        android:padding="22dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="MX FIELD TRACKER"
+                android:textColor="@color/text"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/topState"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="OFF SHIFT"
+                android:textColor="@color/muted"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Track • Work • Secure  |  By MazenmiX"
+            android:textColor="#59A8FF"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:id="@+id/liveCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
             android:background="@drawable/bg_card"
             android:orientation="vertical"
             android:padding="20dp">
@@ -41,24 +59,106 @@
                 android:layout_height="wrap_content"
                 android:text="● OFF SHIFT"
                 android:textColor="@color/muted"
-                android:textSize="15sp"
+                android:textSize="16sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/statusDetail"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Enter your name and start your work shift."
+                android:text="Enter your name, complete the readiness check, then start your shift."
                 android:textColor="@color/text"
                 android:textSize="14sp" />
 
+            <TextView
+                android:id="@+id/shiftMetrics"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="Shift time —   •   Locations 0   •   Distance 0.00 km"
+                android:textColor="#9FB0C4"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/readinessCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_warning"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                android:id="@+id/readinessTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="⚠ TRACKING READINESS"
+                android:textColor="#FFD35A"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/locationState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="○ Location permission"
+                android:textColor="@color/text"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/backgroundState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="9dp"
+                android:text="○ Background location"
+                android:textColor="@color/text"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/gpsState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="9dp"
+                android:text="○ GPS / Location service"
+                android:textColor="@color/text"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/notificationState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="9dp"
+                android:text="○ Notifications"
+                android:textColor="@color/text"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/batteryState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="9dp"
+                android:text="○ Battery / background protection"
+                android:textColor="@color/text"
+                android:textSize="13sp" />
+
+            <Button
+                android:id="@+id/fixSettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="15dp"
+                android:background="@drawable/bg_warning_button"
+                android:text="FIX / OPEN REQUIRED SETTINGS"
+                android:textColor="#191200"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
+            android:layout_marginTop="22dp"
             android:text="YOUR NAME"
             android:textColor="@color/muted"
             android:textSize="11sp"
@@ -88,8 +188,8 @@
         <Button
             android:id="@+id/startButton"
             android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:layout_marginTop="28dp"
+            android:layout_height="62dp"
+            android:layout_marginTop="24dp"
             android:background="@drawable/bg_start"
             android:text="START SHIFT"
             android:textColor="#04130A"
@@ -99,12 +199,22 @@
         <Button
             android:id="@+id/stopButton"
             android:layout_width="match_parent"
-            android:layout_height="64dp"
+            android:layout_height="62dp"
             android:layout_marginTop="10dp"
             android:background="@drawable/bg_stop"
             android:text="END SHIFT"
             android:textColor="#1A0608"
             android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/appSettingsButton"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_secondary"
+            android:text="APP / BATTERY SETTINGS"
+            android:textColor="@color/text"
             android:textStyle="bold" />
 
         <TextView
@@ -118,13 +228,24 @@
             android:textSize="12sp" />
 
         <TextView
+            android:id="@+id/summaryText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_card"
+            android:padding="16dp"
+            android:text="Latest shift summary will appear here after End Shift."
+            android:textColor="#9FB0C4"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="25dp"
             android:gravity="center"
-            android:text="Location is shared only while your shift is active. Android displays a persistent tracking notification."
+            android:text="Location is shared only during an active work shift. Android displays a persistent tracking notification."
             android:textColor="#667384"
-            android:textSize="11sp" />
+            android:textSize="10sp" />
 
     </LinearLayout>
 </ScrollView>
