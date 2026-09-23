@@ -26,8 +26,19 @@ async function deviceAuth(request,env){
   const row=await env.DB.prepare(
     "SELECT employee_id,name,token_hash,enabled FROM devices WHERE employee_id=?"
   ).bind(employeeId).first();
-  if(!row||!row.enabled)return null;
-  return (await sha256(token))===row.token_hash?row:null;
+  if(!row)return null;
+
+  const valid=(await sha256(token))===row.token_hash;
+  if(!valid)return null;
+
+  if(!row.enabled){
+    await env.DB.prepare(
+      "UPDATE devices SET enabled=1,updated_at=? WHERE employee_id=?"
+    ).bind(Date.now(),employeeId).run();
+    row.enabled=1;
+  }
+
+  return row;
 }
 
 export async function onRequest(context){
@@ -57,13 +68,18 @@ export async function onRequest(context){
       ).bind(installId).first();
 
       if(existing){
-        if(!existing.enabled)return json({error:"This device is disabled"},403);
         const token=randomHex(32);
         const hash=await sha256(token);
         await env.DB.prepare(
-          "UPDATE devices SET name=?,token_hash=?,device=?,android=?,updated_at=? WHERE install_id=?"
+          "UPDATE devices SET name=?,token_hash=?,enabled=1,device=?,android=?,updated_at=? WHERE install_id=?"
         ).bind(name,hash,device,android,Date.now(),installId).run();
-        return json({ok:true,employeeId:existing.employee_id,deviceToken:token,existing:true});
+        return json({
+          ok:true,
+          employeeId:existing.employee_id,
+          deviceToken:token,
+          existing:true,
+          restored:!existing.enabled
+        });
       }
 
       const setting=await env.DB.prepare(
@@ -152,6 +168,7 @@ export async function onRequest(context){
           WHERE x.employee_id=d.employee_id
           ORDER BY x.received_at DESC LIMIT 1
         )
+        WHERE d.enabled=1
         ORDER BY d.name COLLATE NOCASE
       `).all();
       return json({employees:rs.results||[],now:Date.now()});
@@ -171,10 +188,16 @@ export async function onRequest(context){
       await env.DB.batch([
         env.DB.prepare("DELETE FROM locations WHERE employee_id=?").bind(id),
         env.DB.prepare("DELETE FROM shifts WHERE employee_id=?").bind(id),
-        env.DB.prepare("DELETE FROM devices WHERE employee_id=?").bind(id)
+        env.DB.prepare(
+          "UPDATE devices SET enabled=0,updated_at=? WHERE employee_id=?"
+        ).bind(Date.now(),id)
       ]);
 
-      return json({ok:true,deleted:{id:employee.employee_id,name:employee.name}});
+      return json({
+        ok:true,
+        removed:{id:employee.employee_id,name:employee.name},
+        canRestore:true
+      });
     }
 
     if(route.startsWith("admin/devices/")&&request.method==="POST"){
