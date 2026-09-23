@@ -260,12 +260,22 @@ class TrackerService : Service(), LocationListener {
     }
 
     private fun postJson(path: String, body: String): Boolean {
-        val employeeId =
-            prefs.getString("employee_id", "") ?: return false
-        val token =
-            prefs.getString("device_token", "") ?: return false
+        var code = postJsonOnce(path, body)
 
-        if (employeeId.isBlank() || token.isBlank()) return false
+        if (code == 401 && recoverRegistration()) {
+            code = postJsonOnce(path, body)
+        }
+
+        return code in 200..299
+    }
+
+    private fun postJsonOnce(path: String, body: String): Int {
+        val employeeId =
+            prefs.getString("employee_id", "") ?: return -1
+        val token =
+            prefs.getString("device_token", "") ?: return -1
+
+        if (employeeId.isBlank() || token.isBlank()) return -1
 
         return try {
             val conn =
@@ -276,7 +286,7 @@ class TrackerService : Service(), LocationListener {
                     readTimeout = 8000
                     doOutput = true
                     setRequestProperty("Content-Type", "application/json")
-                    setRequestProperty("User-Agent", "MXFieldTracker/1.1")
+                    setRequestProperty("User-Agent", "MXFieldTracker/1.2.1")
                     setRequestProperty("x-employee-id", employeeId)
                     setRequestProperty("x-device-token", token)
                 }
@@ -285,9 +295,61 @@ class TrackerService : Service(), LocationListener {
                 it.write(body.toByteArray(Charsets.UTF_8))
             }
 
-            val ok = conn.responseCode in 200..299
+            val code = conn.responseCode
             conn.disconnect()
-            ok
+            code
+        } catch (_: Exception) {
+            -1
+        }
+    }
+
+    private fun recoverRegistration(): Boolean {
+        val name = prefs.getString("name", "") ?: return false
+        val installId = prefs.getString("install_id", "") ?: return false
+        if (name.isBlank() || installId.isBlank()) return false
+
+        return try {
+            val payload = JSONObject().apply {
+                put("name", name)
+                put("installId", installId)
+                put("device", Build.MANUFACTURER + " " + Build.MODEL)
+                put("android", Build.VERSION.RELEASE)
+            }
+
+            val conn =
+                (URL(MainActivity.BASE_URL + "/api/register").openConnection()
+                    as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 10000
+                    readTimeout = 10000
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/json")
+                    setRequestProperty("User-Agent", "MXFieldTracker/1.2.1")
+                }
+
+            conn.outputStream.use {
+                it.write(payload.toString().toByteArray(Charsets.UTF_8))
+            }
+
+            val code = conn.responseCode
+            val responseText = try {
+                val stream =
+                    if (code in 200..299) conn.inputStream
+                    else conn.errorStream
+                stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+            } finally {
+                conn.disconnect()
+            }
+
+            if (code !in 200..299) return false
+
+            val data = JSONObject(responseText)
+            prefs.edit()
+                .putString("employee_id", data.getString("employeeId"))
+                .putString("device_token", data.getString("deviceToken"))
+                .apply()
+
+            true
         } catch (_: Exception) {
             false
         }
