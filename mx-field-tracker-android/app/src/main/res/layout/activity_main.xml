@@ -233,7 +233,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:gravity="center"
-            android:text="App version 1.2.0 • Update status not checked yet"
+            android:text="Checking app version and updates…"
             android:textColor="@color/muted"
             android:textSize="11sp" />
 
