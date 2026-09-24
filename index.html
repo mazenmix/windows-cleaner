@@ -618,8 +618,8 @@
    }).join('');
    if(source)source.textContent=label||"Last Verified";
  }
- function saveCache(j){try{localStorage.setItem('mxFoodGridCache',JSON.stringify(j))}catch(e){}}
- function readCache(){try{const j=JSON.parse(localStorage.getItem('mxFoodGridCache')||'null');if(j&&Array.isArray(j.items)&&j.items.length){renderFood(j.items,"Last Verified");return true}}catch(e){}return false}
+ function saveCache(j){try{localStorage.setItem('mxFoodGridCacheV2',JSON.stringify(j))}catch(e){}}
+ function readCache(){try{const j=JSON.parse(localStorage.getItem('mxFoodGridCacheV2')||'null');if(j&&Array.isArray(j.items)&&j.items.length){renderFood(j.items,"Last Verified");return true}}catch(e){}return false}
  async function refresh(){
    try{
      const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),7000);
@@ -701,7 +701,7 @@ let fuelData=[
 ];
 let lpgData=[{name:'Regasco',price:1229,color:'#16da6d',change:null},{name:'Solane',price:1266,color:'#ff3847',change:null},{name:'Petron Gasul',price:1291,color:'#2489ff',change:null},{name:'SL Gas',price:1319,color:'#18e7a1',change:null},{name:'Phoenix LPG',price:1334,color:'#ff7517',change:null},{name:'Total Gas',price:1636,color:'#9f53ff',change:null}];
 let selectedKg=11;const cols=['diesel','premDiesel','unleaded91','eGas','prem95','prem97','kerosene'];const $=id=>document.getElementById(id);
-const FUEL_CACHE_KEY='mxFuelLastKnownGoodV1';
+const FUEL_CACHE_KEY='mxFuelLastKnownGoodV2';
 function saveFuelCache(updated){
  try{localStorage.setItem(FUEL_CACHE_KEY,JSON.stringify({savedAt:Date.now(),updated:updated||'',fuel:fuelData,lpg:lpgData}))}catch(e){}
 }
