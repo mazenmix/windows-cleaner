@@ -1,15 +1,15 @@
-const FRESH_TTL=300;
+const FRESH_TTL=60;
 const LAST_GOOD_TTL=2592000;
 const SOURCE="https://gaswatchph.com/";
 const JINA=["https://r.jina.ai/https://gaswatchph.com/","https://r.jina.ai/http://gaswatchph.com/"];
 
 const FALLBACK_FUEL=[
 {name:"Shell",stations:204,diesel:[105.73,7.80],premDiesel:[112.94,7.80],unleaded91:[93.68,4.80],eGas:null,prem95:[100.93,4.80],prem97:[107.21,4.80],kerosene:[132.85,6.40]},
-{name:"Petron",stations:240,diesel:[104.22,7.80],premDiesel:[107.22,7.80],unleaded91:[91.78,4.80],eGas:null,prem95:[92.78,4.80],prem97:[101.83,4.80],kerosene:[129.58,6.40]},
+{name:"Petron",stations:240,diesel:[104.19,7.77],premDiesel:[107.22,7.80],unleaded91:[91.73,4.75],eGas:null,prem95:[92.75,4.77],prem97:[101.83,4.80],kerosene:[129.58,6.40]},
 {name:"Caltex",stations:131,diesel:[107.43,7.82],premDiesel:[111.69,7.82],unleaded91:[94.63,4.88],eGas:null,prem95:[101.83,4.88],prem97:[104.60,4.88],kerosene:[128.43,6.47]},
 {name:"Phoenix",stations:70,diesel:[108.35,7.82],premDiesel:null,unleaded91:[99.44,4.88],eGas:[105.38,4.88],prem95:[101.45,4.88],prem97:[104.85,4.88],kerosene:null},
 {name:"Seaoil",stations:71,diesel:[104.20,7.82],premDiesel:[110.23,7.82],unleaded91:[91.21,4.88],eGas:[117.06,4.88],prem95:[94.22,4.88],prem97:[94.78,4.88],kerosene:[134.56,6.47]},
-{name:"Unioil",stations:83,diesel:[103.46,7.80],premDiesel:null,unleaded91:[90.42,4.80],eGas:[114.28,4.80],prem95:[93.42,4.80],prem97:[108.99,4.80],kerosene:null},
+{name:"Unioil",stations:83,diesel:[103.26,7.60],premDiesel:null,unleaded91:[90.28,4.66],eGas:[114.28,4.80],prem95:[93.31,4.69],prem97:[108.99,4.80],kerosene:null},
 {name:"Jetti",stations:10,diesel:[104.91,6.80],premDiesel:null,unleaded91:[92.59,4.80],eGas:null,prem95:[96.51,4.80],prem97:[103.70,4.80],kerosene:null},
 {name:"Flying V",stations:38,diesel:[100.73,7.80],premDiesel:null,unleaded91:[86.84,4.80],eGas:null,prem95:[87.79,4.80],prem97:null,kerosene:null},
 {name:"Cleanfuel",stations:54,diesel:[104.82,7.82],premDiesel:null,unleaded91:[92.49,4.88],eGas:null,prem95:[96.51,4.88],prem97:null,kerosene:null},
@@ -28,30 +28,48 @@ function response(data,status=200,maxAge=FRESH_TTL){
   "access-control-allow-origin":"*"
  }});
 }
-async function fetchText(url,timeout=12000){
+async function fetchText(url,timeout=18000){
  const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);
  try{
-  const r=await fetch(url,{headers:{"user-agent":"Mozilla/5.0 (compatible; MXFuelWatch/2.0)","accept":"text/plain,text/markdown,text/html,*/*"},signal:c.signal});
+  const isJina=/^https:\/\/r\.jina\.ai\//i.test(url);
+  const headers={
+   "user-agent":"Mozilla/5.0 (compatible; MXFuelWatch/3.0)",
+   "accept":"text/plain,text/markdown,text/html,*/*",
+   "cache-control":"no-cache"
+  };
+  if(isJina){
+   headers["x-no-cache"]="true";
+   headers["x-cache-tolerance"]="0";
+   headers["x-timeout"]="20";
+  }
+  const r=await fetch(url,{headers,signal:c.signal,cf:{cacheTtl:0,cacheEverything:false}});
   if(!r.ok)throw new Error("HTTP "+r.status);
   return await r.text();
  }finally{clearTimeout(t)}
 }
 async function sourceTexts(){
- const urls=[...JINA,SOURCE];
+ const stamp=Date.now();
+ const targets=[
+  "https://r.jina.ai/https://gaswatchph.com/?mx_fresh="+stamp,
+  "https://r.jina.ai/http://gaswatchph.com/?mx_fresh="+stamp,
+  ...JINA,
+  SOURCE+"?mx_fresh="+stamp
+ ];
  const out=[];
  let last;
  for(let round=0;round<2;round++){
-  for(const u of urls){
+  for(const u of targets){
    try{
-    const t=await fetchText(u,round===0?10000:14000);
+    const t=await fetchText(u,round===0?18000:22000);
     if(t&&t.length>800)out.push({url:u,text:t});
+    // The full rendered brand table is the preferred source. Stop as soon as it parses.
+    if(parseFuel(t).length>=8)return out;
    }catch(e){last=e}
   }
-  if(out.length)break;
-  await new Promise(r=>setTimeout(r,400*(round+1)));
+  await new Promise(r=>setTimeout(r,650*(round+1)));
  }
- if(!out.length)throw last||new Error("GasWatch source unavailable");
- return out;
+ if(out.length)return out;
+ throw last||new Error("GasWatch source unavailable");
 }
 function priceCell(v){
  const s=String(v||"").trim();
@@ -106,21 +124,16 @@ async function readJsonResponse(r){
 }
 async function buildLiveData(previousFuel){
  const sources=await sourceTexts();
- let partialCandidate=null,lastErr=null;
+ let lastErr=null;
  for(const src of sources){
   try{
    const fuel=parseFuel(src.text);
    if(fuel.length>=8){
     return {fuel,lpg:parseLpg(src.text),updated:parseUpdated(src.text),source_url:src.url,partial:false};
    }
-   const snap=mergeSnapshotFuel(src.text,previousFuel);
-   if(snap.length>=8&&!partialCandidate){
-    partialCandidate={fuel:snap,lpg:parseLpg(src.text),updated:parseUpdated(src.text),source_url:src.url,partial:true};
-   }
   }catch(e){lastErr=e}
  }
- if(partialCandidate)return partialCandidate;
- throw lastErr||new Error("GasWatch data parse incomplete");
+ throw lastErr||new Error("GasWatch dynamic price table not available yet");
 }
 
 function parseLpg(text){
