@@ -1,5 +1,6 @@
 const SOURCE="https://eamc.doh.gov.ph/drugs-and-medicines-price-list/";
-const TTL=21600;
+const TTL=3600;
+const LAST_GOOD_TTL=2592000;
 
 function decode(s){
  return String(s||"")
@@ -15,9 +16,13 @@ function num(s){
  return Number.isFinite(n)?n:null;
 }
 async function getHtml(){
- const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),9000);
+ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),12000);
  try{
-  const r=await fetch(SOURCE,{headers:{"user-agent":"Mozilla/5.0 (compatible; MXCostWatch/1.0)","accept":"text/html,*/*"},signal:ctrl.signal});
+  const r=await fetch(SOURCE+"?mx_fresh="+Date.now(),{headers:{
+   "user-agent":"Mozilla/5.0 (compatible; MXMedicineWatch/3.0)",
+   "accept":"text/html,*/*",
+   "cache-control":"no-cache"
+  },signal:ctrl.signal,cf:{cacheTtl:0,cacheEverything:false}});
   if(!r.ok)throw new Error("HTTP "+r.status);
   return await r.text();
  }finally{clearTimeout(timer)}
@@ -72,10 +77,12 @@ function response(data,status=200){
 }
 export async function onRequestGet(context){
  const cache=caches.default;
- const key=new Request(new URL(context.request.url).origin+"/api/medicines-cache-v2");
- const force=new URL(context.request.url).searchParams.get("force")==="1";
+ const u=new URL(context.request.url);
+ const freshKey=new Request(u.origin+"/api/medicines-cache-v3");
+ const lkgKey=new Request(u.origin+"/api/medicines-last-good-v1");
+ const force=u.searchParams.get("force")==="1";
  if(!force){
-   const hit=await cache.match(key);
+   const hit=await cache.match(freshKey);
    if(hit)return hit;
  }
  try{
@@ -84,13 +91,33 @@ export async function onRequestGet(context){
    if(items.length<100)throw new Error("Medicine table parse returned only "+items.length+" rows");
    const m=html.match(/Updated\s+as\s+of\s+([^<\n]+)/i);
    const updated=m?decode(m[1]).replace(/\s{2,}.*/,"").trim():"Latest published list";
-   const out=response({
-     ok:true,source:"DOH • East Avenue Medical Center",source_url:SOURCE,
+   const data={
+     ok:true,live:true,fallback:false,stale:false,
+     source:"DOH • East Avenue Medical Center",source_url:SOURCE,
      updated,checked_at:new Date().toISOString(),count:items.length,items:rank(items)
-   });
-   context.waitUntil(cache.put(key,out.clone()));
-   return out;
+   };
+   const fresh=response(data);
+   const keep=new Response(JSON.stringify(data),{status:200,headers:{
+    "content-type":"application/json; charset=utf-8",
+    "cache-control":"public, max-age="+LAST_GOOD_TTL+", s-maxage="+LAST_GOOD_TTL,
+    "access-control-allow-origin":"*"
+   }});
+   context.waitUntil(Promise.all([cache.put(freshKey,fresh.clone()),cache.put(lkgKey,keep.clone())]));
+   return fresh;
  }catch(e){
-   return response({ok:false,error:String(e),source:"DOH • East Avenue Medical Center",source_url:SOURCE,checked_at:new Date().toISOString()},502);
+   const last=await cache.match(lkgKey);
+   if(last){
+    try{
+     const j=await last.clone().json();
+     if(j&&Array.isArray(j.items)&&j.items.length){
+      return new Response(JSON.stringify({...j,ok:true,live:false,fallback:true,stale:true,checked_at:new Date().toISOString(),note:"EAMC source temporarily unavailable — last verified medicine list kept.",error:String(e)}),{status:200,headers:{
+       "content-type":"application/json; charset=utf-8",
+       "cache-control":"public, max-age=60, s-maxage=60",
+       "access-control-allow-origin":"*"
+      }});
+     }
+    }catch{}
+   }
+   return response({ok:false,live:false,fallback:false,stale:true,error:String(e),source:"DOH • East Avenue Medical Center",source_url:SOURCE,checked_at:new Date().toISOString()},502);
  }
 }
