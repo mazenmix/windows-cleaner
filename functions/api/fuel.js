@@ -1,4 +1,5 @@
-const TTL=60;
+const FRESH_TTL=300;
+const LAST_GOOD_TTL=2592000;
 const SOURCE="https://gaswatchph.com/";
 const JINA=["https://r.jina.ai/https://gaswatchph.com/","https://r.jina.ai/http://gaswatchph.com/"];
 
@@ -20,7 +21,7 @@ const FALLBACK_LPG=[
 {name:"SL Gas",price:1319},{name:"Phoenix LPG",price:1334},{name:"Total Gas",price:1636}
 ];
 
-function response(data,status=200,maxAge=TTL){
+function response(data,status=200,maxAge=FRESH_TTL){
  return new Response(JSON.stringify(data),{status,headers:{
   "content-type":"application/json; charset=utf-8",
   "cache-control":"public, max-age="+maxAge+", s-maxage="+maxAge,
@@ -35,15 +36,22 @@ async function fetchText(url,timeout=12000){
   return await r.text();
  }finally{clearTimeout(t)}
 }
-async function sourceText(){
+async function sourceTexts(){
+ const urls=[...JINA,SOURCE];
+ const out=[];
  let last;
- for(const u of JINA){
-  try{
-   const t=await fetchText(u);
-   if(t&&t.length>1000)return t;
-  }catch(e){last=e}
+ for(let round=0;round<2;round++){
+  for(const u of urls){
+   try{
+    const t=await fetchText(u,round===0?10000:14000);
+    if(t&&t.length>800)out.push({url:u,text:t});
+   }catch(e){last=e}
+  }
+  if(out.length)break;
+  await new Promise(r=>setTimeout(r,400*(round+1)));
  }
- throw last||new Error("GasWatch source unavailable");
+ if(!out.length)throw last||new Error("GasWatch source unavailable");
+ return out;
 }
 function priceCell(v){
  const s=String(v||"").trim();
@@ -71,6 +79,50 @@ function parseFuel(text){
  const rows=out.filter(x=>!seen.has(x.name)&&seen.add(x.name));
  return rows.length>=8?rows:[];
 }
+function mergeSnapshotFuel(text,baseRows){
+ const src=String(text||"");
+ const section=(src.match(/Metro Manila diesel and unleaded prices by brand[\\s\\S]{0,5000}/i)||[])[0]||src;
+ const names=FALLBACK_FUEL.map(x=>x.name);
+ const rows=[];
+ for(const name of names){
+  const esc=name.replace(/[.*+?^$()|[\\]\\\\{}]/g,"\\\\function parseLpg(text){");
+  const m=section.match(new RegExp("(?:^|\\n)\\s*"+esc+"\\s*\\|\\s*([0-9]+(?:\\.[0-9]+)?)\\s*\\|\\s*([0-9]+(?:\\.[0-9]+)?)","im"));
+  if(m)rows.push({name,diesel:Number(m[1]),unleaded:Number(m[2])});
+ }
+ if(rows.length<8)return [];
+ const base=new Map((baseRows&&baseRows.length?baseRows:FALLBACK_FUEL).map(x=>[x.name,x]));
+ return rows.map(x=>{
+  const old=base.get(x.name)||FALLBACK_FUEL.find(y=>y.name===x.name);
+  const copy=JSON.parse(JSON.stringify(old));
+  const dieselDelta=old&&old.diesel&&Number.isFinite(old.diesel[0])?x.diesel-old.diesel[0]:0;
+  const gasDelta=old&&old.unleaded91&&Number.isFinite(old.unleaded91[0])?x.unleaded-old.unleaded91[0]:0;
+  copy.diesel=[x.diesel,dieselDelta];
+  copy.unleaded91=[x.unleaded,gasDelta];
+  return copy;
+ });
+}
+async function readJsonResponse(r){
+ try{return await r.clone().json()}catch(e){return null}
+}
+async function buildLiveData(previousFuel){
+ const sources=await sourceTexts();
+ let partialCandidate=null,lastErr=null;
+ for(const src of sources){
+  try{
+   const fuel=parseFuel(src.text);
+   if(fuel.length>=8){
+    return {fuel,lpg:parseLpg(src.text),updated:parseUpdated(src.text),source_url:src.url,partial:false};
+   }
+   const snap=mergeSnapshotFuel(src.text,previousFuel);
+   if(snap.length>=8&&!partialCandidate){
+    partialCandidate={fuel:snap,lpg:parseLpg(src.text),updated:parseUpdated(src.text),source_url:src.url,partial:true};
+   }
+  }catch(e){lastErr=e}
+ }
+ if(partialCandidate)return partialCandidate;
+ throw lastErr||new Error("GasWatch data parse incomplete");
+}
+
 function parseLpg(text){
  const section=(String(text||"").split(/## Gasul \/ LPG Prices/i)[1]||"").split(/## How We Track Prices/i)[0]||"";
  return FALLBACK_LPG.map(x=>{
@@ -86,19 +138,76 @@ function parseUpdated(text){
 }
 export async function onRequestGet(context){
  const u=new URL(context.request.url),force=u.searchParams.get("force")==="1";
- const cache=caches.default,key=new Request(u.origin+"/api/fuel-cache-v1");
+ const cache=caches.default;
+ const freshKey=new Request(u.origin+"/api/fuel-cache-v3");
+ const lkgKey=new Request(u.origin+"/api/fuel-last-good-v3");
+
  if(!force){
-  const hit=await cache.match(key);
+  const hit=await cache.match(freshKey);
   if(hit)return hit;
  }
+
+ let previousFuel=FALLBACK_FUEL;
+ const previous=await cache.match(lkgKey);
+ if(previous){
+  const pj=await readJsonResponse(previous);
+  if(pj&&Array.isArray(pj.fuel)&&pj.fuel.length>=8)previousFuel=pj.fuel;
+ }
+
  try{
-  const text=await sourceText(),fuel=parseFuel(text);
-  if(fuel.length<8)throw new Error("GasWatch table parse incomplete");
-  const data={ok:true,fallback:false,source:"GasWatch PH",source_url:SOURCE,updated:parseUpdated(text),checked_at:new Date().toISOString(),fuel,lpg:parseLpg(text)};
-  const out=response(data);
-  context.waitUntil(cache.put(key,out.clone()));
-  return out;
+  const live=await buildLiveData(previousFuel);
+  const data={
+   ok:true,
+   fallback:false,
+   stale:false,
+   partial:!!live.partial,
+   source:"GasWatch PH",
+   source_url:SOURCE,
+   transport:live.source_url,
+   updated:live.updated,
+   checked_at:new Date().toISOString(),
+   fuel:live.fuel,
+   lpg:live.lpg,
+   note:live.partial
+    ?"Live GasWatch snapshot loaded; fields not exposed by the current source layout keep their last verified values."
+    :"Live GasWatch data loaded."
+  };
+  const fresh=response(data,200,FRESH_TTL);
+  const keep=response(data,200,LAST_GOOD_TTL);
+  context.waitUntil(Promise.all([
+   cache.put(freshKey,fresh.clone()),
+   cache.put(lkgKey,keep.clone())
+  ]));
+  return fresh;
  }catch(e){
-  return response({ok:true,fallback:true,source:"GasWatch PH",source_url:SOURCE,updated:"September 22, 2026",checked_at:new Date().toISOString(),fuel:FALLBACK_FUEL,lpg:FALLBACK_LPG,note:"Latest verified GasWatch snapshot shown while live source is retried.",error:String(e)},200,30);
+  const last=await cache.match(lkgKey);
+  if(last){
+   const j=await readJsonResponse(last);
+   if(j&&Array.isArray(j.fuel)&&j.fuel.length>=8){
+    return response({
+     ...j,
+     ok:true,
+     fallback:true,
+     stale:true,
+     checked_at:new Date().toISOString(),
+     note:"Live source temporarily unavailable — last verified prices kept automatically.",
+     error:String(e)
+    },200,60);
+   }
+  }
+  return response({
+   ok:true,
+   fallback:true,
+   stale:true,
+   partial:true,
+   source:"GasWatch PH",
+   source_url:SOURCE,
+   updated:"September 22, 2026",
+   checked_at:new Date().toISOString(),
+   fuel:FALLBACK_FUEL,
+   lpg:FALLBACK_LPG,
+   note:"Live source unavailable and no cached verified copy exists yet; safe built-in snapshot shown.",
+   error:String(e)
+  },200,60);
  }
 }
