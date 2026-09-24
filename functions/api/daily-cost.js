@@ -35,10 +35,10 @@ const SNAP={
   {label:"LRT-2 stored value",value:"₱6.50–₱16.50",detail:"Discounted fare range"},
   {label:"Beep card",value:"₱30 + ₱14 load",detail:"Standard stored-value card"}
  ]},
- exchange:{title:"Peso Exchange Rates",source:"Bangko Sentral ng Pilipinas",source_url:"https://www.bsp.gov.ph/Statistics/sdds/sdds.aspx",as_of:"22 September 2026",items:[
-  {label:"USD",value:"₱62.7990",detail:"PHP per US dollar"},
-  {label:"JPY",value:"₱0.3993",detail:"PHP per Japanese yen"},
-  {label:"GBP",value:"₱83.9497",detail:"PHP per British pound"}
+ exchange:{title:"Peso Exchange Rates",source:"Bangko Sentral ng Pilipinas",source_url:"https://www.bsp.gov.ph/Statistics/sdds/sdds.aspx",as_of:"24 September 2026",items:[
+  {label:"USD",value:"₱62.6190",detail:"PHP per US dollar"},
+  {label:"JPY",value:"₱0.3958",detail:"PHP per Japanese yen"},
+  {label:"GBP",value:"₱82.9451",detail:"PHP per British pound"}
  ]},
  promos:{title:"Internet & Mobile Promos",source:"Globe / Smart / DITO official",source_url:SOURCES.promos,as_of:"Current offers",items:[
   {label:"Globe Go+99",value:"₱99 / 7 days",detail:"20 GB total data"},
