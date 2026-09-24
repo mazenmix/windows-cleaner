@@ -8,8 +8,7 @@ const SOURCES={
  BPI:"https://www.bpi.com.ph/personal/bank/forex/rates",
  METROBANK:"https://www.metrobank.com.ph/foreign-exchange",
  RCBC:"https://www.rcbc.com/",
- CZARINA:"https://www.czarinaforex.com/",
- TIVOLI:"https://www.tivoli.ph/"
+
 };
 
 const SEEDS={
@@ -140,11 +139,6 @@ async function loadAll(previous){
    providers.push(provider(name,"bank",SOURCES[name],{}, "", "unavailable","Online rate table could not be verified."));
   }
  }
- providers.push(
-  provider("Czarina","money_changer",SOURCES.CZARINA,{},"","branch_only","Czarina accepts reservations online but does not publish a public live rate board."),
-  provider("Sanry's","money_changer","",{},"","branch_only","Sanry's branch rates are posted at the counter; no stable public online rate feed is available."),
-  provider("Tivoli","money_changer",SOURCES.TIVOLI,{},"","branch_only","Tivoli says up-to-the-minute rates are provided by phone/branch rather than a public online rate table.")
- );
  return providers;
 }
 
