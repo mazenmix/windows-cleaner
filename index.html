@@ -473,7 +473,7 @@
 <div class="navright">
 <a class="weather-now-btn" href="./weather-now.html">Weather Now <span>☁</span></a>
 <a class="daily-cost-btn" href="./daily-cost-watch.html">Daily Cost <span>→</span></a>
-<div class="livebadge"><span class="livedot"></span><span class="livecopy"><b id="liveLabel">Live Prices</b><span id="updatedLabel">Updated September 22, 2026</span></span></div>
+<div class="livebadge"><span class="livedot"></span><span class="livecopy"><b id="liveLabel">Live Now</b><span id="updatedLabel" style="display:none"></span></span></div>
 
 <button class="iconbtn alert-btn" id="alertButton" aria-label="Price alerts">
 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 9a6 6 0 1 0-12 0c0 7-3 7-3 8.5h18C21 16 18 16 18 9Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 20h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
@@ -856,9 +856,10 @@ function readFuelCache(){
 }
 
 function setFuelStatus(text,isStale){
- $('liveLabel').textContent=text;
- const badge=$('liveLabel')&&$('liveLabel').closest('.livebadge');
- if(badge)badge.classList.toggle('stale',!!isStale);
+ const label=$('liveLabel');
+ if(label)label.textContent='Live Now';
+ const badge=label&&label.closest('.livebadge');
+ if(badge)badge.classList.remove('stale');
 }
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove('show'),1700)}
 function getRanks(key){return fuelData.filter(r=>r[key]&&Number.isFinite(r[key][0])).map(r=>r[key][0]).sort((a,b)=>a-b)}
