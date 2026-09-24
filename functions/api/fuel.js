@@ -150,14 +150,7 @@ function parseLpgLive(text){
  const section=(src.split(/## Gasul \/ LPG Prices/i)[1]||src).split(/## How We Track Prices/i)[0]||"";
  const out=[];
  for(const x of FALLBACK_LPG){
-  const esc=x.name.replace(/[.*+?^$()|[\]\\{}]/g,"\\function parseLpg(text){
- const section=(String(text||"").split(/## Gasul \/ LPG Prices/i)[1]||"").split(/## How We Track Prices/i)[0]||"";
- return FALLBACK_LPG.map(x=>{
   const esc=x.name.replace(/[.*+?^$()|[\]\\{}]/g,"\\$&");
-  const m=section.match(new RegExp("(?:^|\\n)"+esc+"\\s*\\n\\s*(?:PHP|₱)\\s*([0-9,]+)","i"));
-  return m?{name:x.name,price:Number(m[1].replace(/,/g,""))}:x;
- });
-}");
   const patterns=[
    new RegExp("(?:^|\\n)\\s*"+esc+"\\s*\\n\\s*(?:PHP|₱)\\s*([0-9,]+)","i"),
    new RegExp("(?:^|\\n)\\s*"+esc+"\\s*\\|\\s*(?:PHP|₱)?\\s*([0-9,]+)","i"),
