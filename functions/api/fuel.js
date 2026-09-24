@@ -122,27 +122,60 @@ function mergeSnapshotFuel(text,baseRows){
 async function readJsonResponse(r){
  try{return await r.clone().json()}catch(e){return null}
 }
-async function buildLiveData(previousFuel){
+async function buildLiveData(previousFuel,previousLpg){
  const sources=await sourceTexts();
  let lastErr=null;
  for(const src of sources){
   try{
    const fuel=parseFuel(src.text);
    if(fuel.length>=8){
-    return {fuel,lpg:parseLpg(src.text),updated:parseUpdated(src.text),source_url:src.url,partial:false};
+    const liveLpg=parseLpgLive(src.text);
+    return {
+     fuel,
+     lpg:mergeLpg(liveLpg,previousLpg),
+     lpg_live:liveLpg.length>=4,
+     lpg_live_count:liveLpg.length,
+     updated:parseUpdated(src.text),
+     source_url:src.url,
+     partial:false
+    };
    }
   }catch(e){lastErr=e}
  }
  throw lastErr||new Error("GasWatch dynamic price table not available yet");
 }
 
-function parseLpg(text){
+function parseLpgLive(text){
+ const src=String(text||"");
+ const section=(src.split(/## Gasul \/ LPG Prices/i)[1]||src).split(/## How We Track Prices/i)[0]||"";
+ const out=[];
+ for(const x of FALLBACK_LPG){
+  const esc=x.name.replace(/[.*+?^$()|[\]\\{}]/g,"\\function parseLpg(text){
  const section=(String(text||"").split(/## Gasul \/ LPG Prices/i)[1]||"").split(/## How We Track Prices/i)[0]||"";
  return FALLBACK_LPG.map(x=>{
   const esc=x.name.replace(/[.*+?^$()|[\]\\{}]/g,"\\$&");
   const m=section.match(new RegExp("(?:^|\\n)"+esc+"\\s*\\n\\s*(?:PHP|₱)\\s*([0-9,]+)","i"));
   return m?{name:x.name,price:Number(m[1].replace(/,/g,""))}:x;
  });
+}");
+  const patterns=[
+   new RegExp("(?:^|\\n)\\s*"+esc+"\\s*\\n\\s*(?:PHP|₱)\\s*([0-9,]+)","i"),
+   new RegExp("(?:^|\\n)\\s*"+esc+"\\s*\\|\\s*(?:PHP|₱)?\\s*([0-9,]+)","i"),
+   new RegExp(esc+"[^0-9]{0,80}(?:PHP|₱)?\\s*([0-9]{3,5})","i")
+  ];
+  let m=null;
+  for(const re of patterns){m=section.match(re);if(m)break}
+  if(m){
+   const price=Number(m[1].replace(/,/g,""));
+   if(Number.isFinite(price)&&price>100&&price<10000)out.push({name:x.name,price});
+  }
+ }
+ return out;
+}
+function mergeLpg(live,previous){
+ const base=new Map((Array.isArray(previous)&&previous.length?previous:FALLBACK_LPG).map(x=>[x.name,{name:x.name,price:Number(x.price)}]));
+ for(const x of live||[])if(Number.isFinite(Number(x.price)))base.set(x.name,{name:x.name,price:Number(x.price)});
+ return FALLBACK_LPG.map(x=>base.get(x.name)||x);
 }
 function parseUpdated(text){
  const m=String(text||"").match(/Prices updated\s+([^\n]+)/i)
@@ -161,19 +194,24 @@ export async function onRequestGet(context){
  }
 
  let previousFuel=FALLBACK_FUEL;
+ let previousLpg=FALLBACK_LPG;
  const previous=await cache.match(lkgKey);
  if(previous){
   const pj=await readJsonResponse(previous);
   if(pj&&Array.isArray(pj.fuel)&&pj.fuel.length>=8)previousFuel=pj.fuel;
+  if(pj&&Array.isArray(pj.lpg)&&pj.lpg.length)previousLpg=pj.lpg;
  }
 
  try{
-  const live=await buildLiveData(previousFuel);
+  const live=await buildLiveData(previousFuel,previousLpg);
   const data={
    ok:true,
    fallback:false,
    stale:false,
    partial:!!live.partial,
+   lpg_live:!!live.lpg_live,
+   lpg_stale:!live.lpg_live,
+   lpg_live_count:live.lpg_live_count||0,
    source:"GasWatch PH",
    source_url:SOURCE,
    transport:live.source_url,
@@ -181,9 +219,9 @@ export async function onRequestGet(context){
    checked_at:new Date().toISOString(),
    fuel:live.fuel,
    lpg:live.lpg,
-   note:live.partial
-    ?"Live GasWatch snapshot loaded; fields not exposed by the current source layout keep their last verified values."
-    :"Live GasWatch data loaded."
+   note:!live.lpg_live
+    ?"Fuel table is live. Gasul/LPG could not be verified from the current GasWatch render, so the last verified LPG values were kept."
+    :"Live GasWatch fuel and LPG data loaded."
   };
   const fresh=response(data,200,FRESH_TTL);
   const keep=response(data,200,LAST_GOOD_TTL);
