@@ -1,3 +1,5 @@
+const FRESH_TTL=900;
+const LAST_GOOD_TTL=2592000;
 const DA_PAGE="https://www.da.gov.ph/price-monitoring/";
 const BANTAY_BASE="https://www.bantaypresyo.da.gov.ph/";
 
@@ -139,13 +141,18 @@ async function fetchText(url,timeout=12000){
   const ctrl=new AbortController();
   const timer=setTimeout(()=>ctrl.abort(),timeout);
   try{
-    const r=await fetch(url,{
-      headers:{
-        "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153 Safari/537.36",
-        "accept":"text/html,text/plain,application/xhtml+xml,*/*"
-      },
-      signal:ctrl.signal
-    });
+    const isJina=/^https:\/\/r\.jina\.ai\//i.test(url);
+    const headers={
+      "user-agent":"Mozilla/5.0 (compatible; MXFoodWatch/3.0)",
+      "accept":"text/html,text/plain,application/xhtml+xml,*/*",
+      "cache-control":"no-cache"
+    };
+    if(isJina){
+      headers["x-no-cache"]="true";
+      headers["x-cache-tolerance"]="0";
+      headers["x-timeout"]="20";
+    }
+    const r=await fetch(url,{headers,signal:ctrl.signal,cf:{cacheTtl:0,cacheEverything:false}});
     if(!r.ok)throw new Error("HTTP "+r.status+" "+url);
     return await r.text();
   }finally{clearTimeout(timer)}
@@ -317,61 +324,84 @@ async function loadDpi(){
 export async function onRequestGet(context){
   const errors=[];
   const req=context && context.request ? context.request : new Request("https://local/api/food");
+  const u=new URL(req.url);
+  const force=u.searchParams.get("force")==="1";
   const cache=typeof caches!=="undefined" ? caches.default : null;
-  const cacheKey=new Request(new URL("/api/food-cache-v3",req.url).toString(),{method:"GET"});
+  const freshKey=new Request(new URL("/api/food-cache-v4",req.url).toString(),{method:"GET"});
+  const lkgKey=new Request(new URL("/api/food-last-good-v1",req.url).toString(),{method:"GET"});
 
-  if(cache){
+  if(cache&&!force){
     try{
-      const hit=await cache.match(cacheKey);
-      if(hit) return hit;
+      const hit=await cache.match(freshKey);
+      if(hit)return hit;
     }catch{}
   }
 
-  const makeSuccess=(payload,maxAge)=>{
-    const response=new Response(JSON.stringify(payload),{
-      headers:{
-        "content-type":"application/json; charset=utf-8",
-        "cache-control":"public, max-age="+maxAge+", s-maxage="+maxAge,
-        "access-control-allow-origin":"*"
-      }
-    });
-    if(cache && context && typeof context.waitUntil==="function"){
-      context.waitUntil(cache.put(cacheKey,response.clone()).catch(()=>{}));
+  const makeResponse=(payload,maxAge=FRESH_TTL)=>new Response(JSON.stringify(payload),{
+    headers:{
+      "content-type":"application/json; charset=utf-8",
+      "cache-control":"public, max-age="+maxAge+", s-maxage="+maxAge,
+      "access-control-allow-origin":"*"
     }
-    return response;
+  });
+
+  const saveLive=(payload)=>{
+    const fresh=makeResponse(payload,FRESH_TTL);
+    if(cache&&context&&typeof context.waitUntil==="function"){
+      const keep=makeResponse(payload,LAST_GOOD_TTL);
+      context.waitUntil(Promise.all([
+        cache.put(freshKey,fresh.clone()).catch(()=>{}),
+        cache.put(lkgKey,keep.clone()).catch(()=>{})
+      ]));
+    }
+    return fresh;
   };
 
-  try{
-    const data=await loadBantay();
-    return makeSuccess({
-      ok:true,
-      source:data.source,
-      scope:"Philippine agricultural and basic commodity monitoring",
-      source_url:data.source_url,
-      date:data.date,
-      updated_at:new Date().toISOString(),
-      count:data.items.length,
-      items:data.items
-    },21600);
-  }catch(e){errors.push("Bantay Presyo: "+String(e))}
-
+  // Prefer the DA Daily Price Index because DA publishes a new dated file almost every day.
   try{
     const data=await loadDpi();
-    return makeSuccess({
-      ok:true,
+    return saveLive({
+      ok:true,live:true,fallback:false,stale:false,
       source:data.source,
       scope:"Selected wet markets in the National Capital Region",
       source_url:data.source_url,
       date:data.date,
       updated_at:new Date().toISOString(),
       count:data.items.length,
-      items:data.items,
-      fallback_used:true
-    },21600);
+      items:data.items
+    });
   }catch(e){errors.push("DA DPI: "+String(e))}
 
+  // Bantay Presyo is the secondary official source.
+  try{
+    const data=await loadBantay();
+    return saveLive({
+      ok:true,live:true,fallback:false,stale:false,
+      source:data.source,
+      scope:"Philippine agricultural and basic commodity monitoring",
+      source_url:data.source_url,
+      date:data.date,
+      updated_at:new Date().toISOString(),
+      count:data.items.length,
+      items:data.items,
+      fallback_used:true
+    });
+  }catch(e){errors.push("Bantay Presyo: "+String(e))}
+
+  if(cache){
+    try{
+      const last=await cache.match(lkgKey);
+      if(last){
+        const j=await last.clone().json();
+        if(j&&Array.isArray(j.items)&&j.items.length){
+          return makeResponse({...j,ok:true,live:false,fallback:true,stale:true,checked_at:new Date().toISOString(),note:"Live DA source temporarily unavailable — last verified official prices kept.",error:errors.join(" | ")},60);
+        }
+      }
+    }catch{}
+  }
+
   return new Response(JSON.stringify({
-    ok:false,
+    ok:false,live:false,fallback:false,stale:true,
     error:errors.join(" | "),
     updated_at:new Date().toISOString()
   }),{
