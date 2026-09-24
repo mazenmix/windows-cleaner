@@ -135,8 +135,8 @@
 .pse-scroll-mask:before,.pse-scroll-mask:after{content:"";position:absolute;top:0;bottom:0;width:30px;z-index:2;pointer-events:none}
 .pse-scroll-mask:before{left:0;background:linear-gradient(90deg,#071a2d,transparent)}
 .pse-scroll-mask:after{right:0;background:linear-gradient(270deg,#071a2d,transparent)}
-.pse-scroll-track{display:inline-flex;align-items:center;min-width:max-content;height:48px;will-change:transform;animation:pseTickerMove 58s linear infinite}
-.pse-scroll-track:hover{animation-play-state:paused}
+.pse-scroll-track{display:inline-flex;flex-wrap:nowrap;align-items:center;width:max-content;min-width:max-content;height:48px;will-change:transform;transform:translate3d(0,0,0);-webkit-transform:translate3d(0,0,0);backface-visibility:hidden;-webkit-backface-visibility:hidden;animation:pseTickerMove 58s linear infinite;-webkit-animation:pseTickerMove 58s linear infinite;animation-play-state:running;-webkit-animation-play-state:running}
+
 .pse-stock-item{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 17px;border-right:1px solid rgba(56,100,137,.34);font-variant-numeric:tabular-nums}
 .pse-symbol{font-size:11px;font-weight:900;letter-spacing:.25px;color:#f2f8fd}
 .pse-trend{font-size:8px;font-weight:900;line-height:1;transform:translateY(-1px)}
@@ -146,13 +146,13 @@
 .pse-down .pse-trend,.pse-down .pse-change{color:#ff5266}
 .pse-flat .pse-trend,.pse-flat .pse-change{color:#91a9bc}
 .pse-stock-placeholder{height:48px;display:flex;align-items:center;padding:0 18px;color:#718fab;font-size:10px}
-@keyframes pseTickerMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@-webkit-keyframes pseTickerMove{from{-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0)}to{-webkit-transform:translate3d(-50%,0,0);transform:translate3d(-50%,0,0)}}@keyframes pseTickerMove{from{-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0)}to{-webkit-transform:translate3d(-50%,0,0);transform:translate3d(-50%,0,0)}}
 @media(max-width:700px){
- .pse-scroll-track{animation-duration:64s}
+ .pse-scroll-track{animation-duration:64s;-webkit-animation-duration:64s}
  .pse-stock-item{padding:0 13px;gap:6px}
  .pse-symbol,.pse-price{font-size:10px}.pse-change{font-size:9px}
 }
-@media(prefers-reduced-motion:reduce){.pse-scroll-track{animation:none}}
+
 
 
 /* --- Official Philippine food price ticker (DA Daily Price Index) --- */
@@ -196,13 +196,22 @@
 .food-scroll-mask:after{right:0;background:linear-gradient(270deg,#081b2b,transparent)}
 .food-scroll-track{
   display:inline-flex;
+  flex-wrap:nowrap;
   align-items:center;
+  width:max-content;
   min-width:max-content;
   height:46px;
   will-change:transform;
+  transform:translate3d(0,0,0);
+  -webkit-transform:translate3d(0,0,0);
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
   animation:foodTickerMove 180s linear infinite;
+  -webkit-animation:foodTickerMove 180s linear infinite;
+  animation-play-state:running;
+  -webkit-animation-play-state:running;
 }
-.food-scroll-track:hover{animation-play-state:paused}
+
 .food-item{
   display:inline-flex;
   align-items:center;
@@ -232,7 +241,7 @@
   background:#061526;
 }
 .food-placeholder{height:46px;display:flex;align-items:center;padding:0 18px;color:#718fab;font-size:10px}
-@keyframes foodTickerMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@-webkit-keyframes foodTickerMove{from{-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0)}to{-webkit-transform:translate3d(-50%,0,0);transform:translate3d(-50%,0,0)}}@keyframes foodTickerMove{from{-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0)}to{-webkit-transform:translate3d(-50%,0,0);transform:translate3d(-50%,0,0)}}
 @media(max-width:700px){
   .food-ticker-shell{min-height:44px}
   .food-ticker-label{min-width:76px;padding:0 9px;font-size:9px;letter-spacing:.35px}
@@ -241,7 +250,7 @@
   .food-item{padding:0 13px;gap:6px}
   .food-name,.food-price{font-size:9px}.food-change{font-size:8px}
 }
-@media(prefers-reduced-motion:reduce){.food-scroll-track{animation:none}}
+
 
 
 /* --- Categorized food price section --- */
