@@ -141,11 +141,6 @@ linear-gradient(135deg,rgba(10,44,73,.98),rgba(5,25,43,.97) 58%,rgba(8,33,54,.96
 <div class="outlook-grid" id="outlookGrid"></div>
 </section>
 
-<section class="section">
-<div class="section-head"><h2>PAGASA Subseasonal Outlook</h2></div>
-<div class="s2s" id="s2sGrid"></div>
-</section>
-
 </main>
 
 <footer class="footer"><div class="footer-inner">A project by MazenmiX <span class="heart">♥</span></div></footer>
@@ -206,7 +201,7 @@ const state={name:"Metro Manila / NCR",lat:14.5995,lon:120.9842,data:null};
 const LS="mxWeatherNowLocationV1";
 try{const x=JSON.parse(localStorage.getItem(LS)||"null");if(x&&Number.isFinite(x.lat)&&Number.isFinite(x.lon)){state.name=x.name||state.name;state.lat=x.lat;state.lon=x.lon}}catch(e){}
 
-const hero=document.getElementById("weatherHero"),riskGrid=document.getElementById("riskGrid"),alertGrid=document.getElementById("alertGrid"),hourStrip=document.getElementById("hourStrip"),dailyGrid=document.getElementById("dailyGrid"),outlookGrid=document.getElementById("outlookGrid"),s2sGrid=document.getElementById("s2sGrid"),refreshBtn=document.getElementById("refreshWeather"),livebar=document.getElementById("livebar");
+const hero=document.getElementById("weatherHero"),riskGrid=document.getElementById("riskGrid"),alertGrid=document.getElementById("alertGrid"),hourStrip=document.getElementById("hourStrip"),dailyGrid=document.getElementById("dailyGrid"),outlookGrid=document.getElementById("outlookGrid"),refreshBtn=document.getElementById("refreshWeather"),livebar=document.getElementById("livebar");
 
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
 function n(v,d=0){const x=Number(v);return Number.isFinite(x)?x.toFixed(d):"—"}
@@ -301,13 +296,7 @@ function renderOutlook(d){
  const o=d.outlook46||[];
  outlookGrid.innerHTML=o.length?o.map((w,i)=>'<div class="week"><label>'+(i===0?"WEEK 1":("WEEK "+(i+1)))+'</label><div class="range">'+fmtDate(w.start)+' – '+fmtDate(w.end)+'</div><div class="weekly-temp">'+n(w.temp_mean,1)+'°C</div><div class="weekly-rain">🌧 '+n(w.rain_total,1)+' mm ensemble mean</div><div class="weekly-wind">max wind '+n(w.wind_max)+' km/h</div></div>').join(""):'<div class="s2s-card"><h3>ECMWF outlook temporarily unavailable</h3><p>The live 16-day forecast remains available above.</p></div>';
 }
-function renderS2S(d){
- const s=d.pagasa?.s2s||{},acc=d.accuweather||{};
- const list=(s.summaries||[]).slice(0,5);
- s2sGrid.innerHTML='<div class="s2s-card"><h3>🇵🇭 PAGASA S2S • '+esc(s.initial_condition||"Latest run")+'</h3><div class="s2s-list">'+(list.length?list.map(x=>'<div class="s2s-item">'+esc(x)+'</div>').join(""):'<div class="s2s-item">PAGASA subseasonal text is temporarily unavailable.</div>')+'</div></div>'+
- '<div class="s2s-card"><h3>🌐 Cross-Model Confidence</h3><p>Short-range conditions use Open-Meteo Best Match, which automatically selects suitable global weather models. The month-ahead section uses ECMWF EC46 / seasonal ensemble guidance. PAGASA official cyclone, flood and subseasonal products are displayed separately and take priority for Philippine hazards.</p>'+(acc.enabled?'<div class="s2s-item" style="margin-top:10px">AccuWeather cross-check: '+esc(acc.weather_text||"available")+' • '+n(acc.temperature_c,1)+'°C</div>':"")+'</div>';
-}
-function renderAll(d){state.data=d;renderHero(d);renderRisks(d);renderAlerts(d);renderHours(d);renderDaily(d);renderOutlook(d);renderS2S(d);livebar.textContent="Live weather updates powered by the world’s most advanced satellite systems presented by MazenmiX"}
+function renderAll(d){state.data=d;renderHero(d);renderRisks(d);renderAlerts(d);renderHours(d);renderDaily(d);renderOutlook(d);livebar.textContent="Live weather updates powered by the world’s most advanced satellite systems presented by MazenmiX"}
 
 async function loadWeather(force=false){
  refreshBtn.classList.add("loading");
