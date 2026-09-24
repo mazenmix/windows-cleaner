@@ -516,7 +516,7 @@
       <h2>Foreign Exchange Comparison</h2>
       <p>PHP rates per 1 unit of foreign currency • Buy = they buy your foreign cash • Sell = they sell foreign currency to you.</p>
     </div>
-    <div class="fx-status" id="fxStatus">Checking 7 providers…</div>
+    <div class="fx-status" id="fxStatus">Checking 4 providers…</div>
   </div>
   <div class="fx-table-shell">
     <div class="fx-table-scroll">
@@ -767,7 +767,7 @@
 <script>
 (function(){
  const currencies=["USD","EUR","GBP","JPY","AUD","CAD","SGD","HKD"];
- const labels={live:"LIVE",verified:"VERIFIED",last_verified:"LAST VERIFIED",branch_only:"BRANCH RATE",unavailable:"UNAVAILABLE"};
+ const labels={live:"LIVE",verified:"VERIFIED",last_verified:"LAST VERIFIED",unavailable:"UNAVAILABLE"};
  const cacheKey="mxForexComparisonV1";
  const rowsEl=document.getElementById("fxRows"),mobileEl=document.getElementById("fxMobile"),statusEl=document.getElementById("fxStatus"),checkedEl=document.getElementById("fxChecked");
  if(!rowsEl||!mobileEl)return;
@@ -799,9 +799,9 @@
   const providers=Array.isArray(j.providers)?j.providers:[],best=bests(providers);
   rowsEl.innerHTML=providers.map(p=>'<tr><td>'+providerName(p)+'</td>'+currencies.map(c=>'<td>'+pairHtml(p.rates&&p.rates[c],c,best[c])+'</td>').join('')+'</tr>').join('');
   mobileEl.innerHTML=providers.map(p=>'<article class="fx-mobile-card"><div class="fx-mobile-head"><b>'+esc(p.name)+'</b><span class="fx-mobile-status">'+esc(labels[p.status]||p.status||"")+'</span></div><div class="fx-mobile-grid">'+currencies.map(c=>'<div class="fx-mobile-currency"><strong>'+c+'</strong>'+pairHtml(p.rates&&p.rates[c],c,best[c])+'</div>').join('')+'</div></article>').join('');
-  const live=providers.filter(p=>p.status==="live").length,verified=providers.filter(p=>p.status==="verified").length,last=providers.filter(p=>p.status==="last_verified").length,branch=providers.filter(p=>p.status==="branch_only").length;
+  const live=providers.filter(p=>p.status==="live").length,verified=providers.filter(p=>p.status==="verified").length,last=providers.filter(p=>p.status==="last_verified").length;
   statusEl.className="fx-status "+(live?"live":"mixed");
-  statusEl.textContent=(fromCache?"CACHED • ":"")+"LIVE "+live+" • VERIFIED "+verified+(last?" • LAST "+last:"")+(branch?" • BRANCH "+branch:"");
+  statusEl.textContent=(fromCache?"CACHED • ":"")+"LIVE "+live+" • VERIFIED "+verified+(last?" • LAST "+last:"");
   checkedEl.textContent=j.checked_at?"Checked "+new Date(j.checked_at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"Latest available";
  }
  function save(j){try{localStorage.setItem(cacheKey,JSON.stringify(j))}catch(e){}}
