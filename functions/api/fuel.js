@@ -62,8 +62,8 @@ async function sourceTexts(){
    try{
     const t=await fetchText(u,round===0?18000:22000);
     if(t&&t.length>800)out.push({url:u,text:t});
-    // The full rendered brand table is the preferred source. Stop as soon as it parses.
-    if(parseFuel(t).length>=8)return out;
+    // Prefer a render that contains both the full fuel table and the LPG section.
+    if(parseFuel(t).length>=8&&parseLpgLive(t).length>=4)return out;
    }catch(e){last=e}
   }
   await new Promise(r=>setTimeout(r,650*(round+1)));
@@ -124,13 +124,13 @@ async function readJsonResponse(r){
 }
 async function buildLiveData(previousFuel,previousLpg){
  const sources=await sourceTexts();
- let lastErr=null;
+ let lastErr=null,bestFuelOnly=null;
  for(const src of sources){
   try{
    const fuel=parseFuel(src.text);
    if(fuel.length>=8){
     const liveLpg=parseLpgLive(src.text);
-    return {
+    const candidate={
      fuel,
      lpg:mergeLpg(liveLpg,previousLpg),
      lpg_live:liveLpg.length>=4,
@@ -139,9 +139,12 @@ async function buildLiveData(previousFuel,previousLpg){
      source_url:src.url,
      partial:false
     };
+    if(candidate.lpg_live)return candidate;
+    if(!bestFuelOnly)bestFuelOnly=candidate;
    }
   }catch(e){lastErr=e}
  }
+ if(bestFuelOnly)return bestFuelOnly;
  throw lastErr||new Error("GasWatch dynamic price table not available yet");
 }
 
