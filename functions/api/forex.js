@@ -6,7 +6,6 @@ const SOURCES={
  BDO:"https://www.bdo.com.ph/forex?wmode=full",
  BDO_MIRROR:"https://cashloanph.com/bdo-exchange-rate-today/",
  BPI:"https://www.bpi.com.ph/personal/bank/forex/rates",
- METROBANK:"https://www.metrobank.com.ph/foreign-exchange",
  RCBC:"https://www.rcbc.com/",
 
 };
@@ -121,10 +120,9 @@ async function loadAll(previous){
  const results=await Promise.allSettled([
   loadBDO(),
   loadPublished("BPI",SOURCES.BPI),
-  loadPublished("Metrobank",SOURCES.METROBANK),
   loadPublished("RCBC",SOURCES.RCBC)
  ]);
- const names=["BDO","BPI","Metrobank","RCBC"];
+ const names=["BDO","BPI","RCBC"];
  const providers=[];
  for(let i=0;i<results.length;i++){
   const r=results[i],name=names[i];
