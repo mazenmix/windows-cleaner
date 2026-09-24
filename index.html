@@ -524,14 +524,13 @@
           <th>PROVIDER</th>
           <th>USD<small>BUY / SELL</small></th>
           <th>EUR<small>BUY / SELL</small></th>
-          <th>GBP<small>BUY / SELL</small></th>
           <th>JPY<small>BUY / SELL</small></th>
           <th>AUD<small>BUY / SELL</small></th>
           <th>CAD<small>BUY / SELL</small></th>
           <th>SGD<small>BUY / SELL</small></th>
           <th>HKD<small>BUY / SELL</small></th>
         </tr></thead>
-        <tbody id="fxRows"><tr><td colspan="9" class="fx-na">Checking published exchange-rate sources…</td></tr></tbody>
+        <tbody id="fxRows"><tr><td colspan="8" class="fx-na">Checking published exchange-rate sources…</td></tr></tbody>
       </table>
     </div>
     <div class="fx-foot">
@@ -765,7 +764,7 @@
 
 <script>
 (function(){
- const currencies=["USD","EUR","GBP","JPY","AUD","CAD","SGD","HKD"];
+ const currencies=["USD","EUR","JPY","AUD","CAD","SGD","HKD"];
  const labels={live:"LIVE",verified:"VERIFIED",last_verified:"LAST VERIFIED",unavailable:"UNAVAILABLE"};
  const cacheKey="mxForexComparisonV1";
  const rowsEl=document.getElementById("fxRows"),mobileEl=document.getElementById("fxMobile"),statusEl=document.getElementById("fxStatus"),checkedEl=document.getElementById("fxChecked");
