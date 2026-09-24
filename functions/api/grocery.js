@@ -114,9 +114,15 @@ function scorePdf(url){
  return score;
 }
 function discoverPdf(text){
- const found=new Set();
- for(const m of String(text||"").matchAll(/https?:\/\/[^\s)"']+\.pdf(?:\?[^\s)"']*)?/gi))found.add(decodeUrl(m[0]));
- for(const m of String(text||"").matchAll(/\((https?:\/\/[^)]+\.pdf[^)]*)\)/gi))found.add(decodeUrl(m[1]));
+ const found=new Set(),src=String(text||"");
+ for(const m of src.matchAll(/https?:\/\/[^\s)"']+\.pdf(?:\?[^\s)"']*)?/gi))found.add(decodeUrl(m[0]));
+ for(const m of src.matchAll(/\((https?:\/\/[^)]+\.pdf[^)]*)\)/gi))found.add(decodeUrl(m[1]));
+ for(const m of src.matchAll(/href=["']([^"']+\.pdf(?:\?[^"']*)?)["']/gi)){
+  try{found.add(new URL(decodeUrl(m[1]),LANDING).href)}catch(e){}
+ }
+ for(const m of src.matchAll(/\(([^)\s]+\.pdf(?:\?[^)]*)?)\)/gi)){
+  try{found.add(new URL(decodeUrl(m[1]),LANDING).href)}catch(e){}
+ }
  const arr=[...found].filter(u=>/dti\.gov\.ph|esigaw\.dti\.gov\.ph/i.test(u));
  arr.sort((a,b)=>scorePdf(b)-scorePdf(a));
  return arr[0]||null;
