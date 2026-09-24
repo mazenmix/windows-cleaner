@@ -1,4 +1,5 @@
 const TTL=900;
+const LAST_GOOD_TTL=2592000;
 
 const SOURCES={
  electricity:"https://company.meralco.com.ph/news-and-advisories/lower-rates-september-2026",
@@ -96,23 +97,35 @@ function response(data,status=200){
   "access-control-allow-origin":"*"
  }});
 }
-async function fetchRaw(url,timeout=6500){
+async function fetchRaw(url,timeout=9000){
  const ctrl=new AbortController();const timer=setTimeout(()=>ctrl.abort(),timeout);
  try{
-  const r=await fetch(url,{headers:{"user-agent":"Mozilla/5.0 (compatible; MXCostWatch/1.0)","accept":"text/html,application/xhtml+xml,text/plain,*/*"},signal:ctrl.signal});
+  const isJina=/^https:\/\/r\.jina\.ai\//i.test(url);
+  const headers={
+   "user-agent":"Mozilla/5.0 (compatible; MXCostWatch/3.0)",
+   "accept":"text/html,application/xhtml+xml,text/plain,*/*",
+   "cache-control":"no-cache"
+  };
+  if(isJina){
+   headers["x-no-cache"]="true";
+   headers["x-cache-tolerance"]="0";
+   headers["x-timeout"]="20";
+  }
+  const r=await fetch(url,{headers,signal:ctrl.signal,cf:{cacheTtl:0,cacheEverything:false}});
   if(!r.ok)throw new Error("HTTP "+r.status);
   return await r.text();
  }finally{clearTimeout(timer)}
 }
 async function readable(url){
- try{return await fetchRaw(url)}
- catch(e){return await fetchRaw("https://r.jina.ai/"+url,8000)}
+ const bust=url+(url.includes("?")?"&":"?")+"mx_fresh="+Date.now();
+ try{return await fetchRaw(bust)}
+ catch(e){return await fetchRaw("https://r.jina.ai/"+bust,14000)}
 }
 function liveOut(sec,items,source,source_url,as_of,note){
- return {ok:true,section:sec,title:SNAP[sec].title,live:true,fallback:false,source,source_url,as_of,checked_at:new Date().toISOString(),items,note:note||""};
+ return {ok:true,section:sec,title:SNAP[sec].title,live:true,fallback:false,stale:false,source,source_url,as_of,checked_at:new Date().toISOString(),items,note:note||""};
 }
 function fallback(sec,error){
- return {ok:true,section:sec,...SNAP[sec],live:false,fallback:true,checked_at:new Date().toISOString(),note:"Latest verified snapshot shown while the source is being rechecked.",error:String(error||"source parse unavailable")};
+ return {ok:true,section:sec,...SNAP[sec],live:false,fallback:true,stale:true,checked_at:new Date().toISOString(),note:"Static emergency snapshot only — live source could not be verified.",error:String(error||"source parse unavailable")};
 }
 function findNum(text,re){const m=String(text).match(re);return m?Number(String(m[1]).replace(/,/g,"")):null}
 
@@ -146,7 +159,7 @@ async function tolls(){
   ["Balintawak → Subic/Tipo",routeValue(N,"Balintawak to Subic / Tipo"),"NLEX/SCTEX • Class 1"],
   ["Balintawak → Alabang",routeValue(S,"Full Skyway: Balintawak to Alabang"),"Skyway • Class 1"],
   ["Alabang → Sto. Tomas",routeValue(L,"Alabang to Sto. Tomas"),"SLEX • Class 1"],
-  ["Greenfield → Sta. Rosa-Tagaytay",routeValue(C,"Santa Rosa-Tagaytay")||44,"CALAX • Class 1"]
+  ["Greenfield → Sta. Rosa-Tagaytay",routeValue(C,"Santa Rosa-Tagaytay"),"CALAX • Class 1"]
  ];
  const items=vals.filter(x=>x[1]).map(x=>({label:x[0],value:"₱"+Number(x[1]).toLocaleString("en-PH"),detail:x[2]}));
  if(items.length<3)throw new Error("Toll matrix parse incomplete");
@@ -258,16 +271,39 @@ export async function onRequestGet(context){
  if(!HANDLERS[sec])return response({ok:false,error:"Unknown section"},400);
 
  const cache=caches.default;
- const key=new Request(url.origin+"/api/daily-cost-cache-v4?section="+encodeURIComponent(sec));
- if(url.searchParams.get("force")!=="1"){
-   const hit=await cache.match(key);
+ const freshKey=new Request(url.origin+"/api/daily-cost-cache-v5?section="+encodeURIComponent(sec));
+ const lkgKey=new Request(url.origin+"/api/daily-cost-last-good-v1?section="+encodeURIComponent(sec));
+ const force=url.searchParams.get("force")==="1";
+
+ if(!force){
+   const hit=await cache.match(freshKey);
    if(hit)return hit;
  }
 
- let data;
- try{data=await HANDLERS[sec]()}
- catch(e){data=fallback(sec,e)}
- const out=response(data,200);
- context.waitUntil(cache.put(key,out.clone()));
- return out;
+ try{
+   const data=await HANDLERS[sec]();
+   const out=response(data,200);
+   const keep=new Response(JSON.stringify(data),{status:200,headers:{
+    "content-type":"application/json; charset=utf-8",
+    "cache-control":"public, max-age="+LAST_GOOD_TTL+", s-maxage="+LAST_GOOD_TTL,
+    "access-control-allow-origin":"*"
+   }});
+   context.waitUntil(Promise.all([cache.put(freshKey,out.clone()),cache.put(lkgKey,keep.clone())]));
+   return out;
+ }catch(e){
+   const last=await cache.match(lkgKey);
+   if(last){
+    try{
+     const j=await last.clone().json();
+     if(j&&Array.isArray(j.items)&&j.items.length){
+      return new Response(JSON.stringify({...j,ok:true,live:false,fallback:true,stale:true,checked_at:new Date().toISOString(),note:"Live source temporarily unavailable — last verified values kept.",error:String(e)}),{status:200,headers:{
+       "content-type":"application/json; charset=utf-8",
+       "cache-control":"public, max-age=60, s-maxage=60",
+       "access-control-allow-origin":"*"
+      }});
+     }
+    }catch{}
+   }
+   return response(fallback(sec,e),200);
+ }
 }
