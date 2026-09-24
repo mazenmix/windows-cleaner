@@ -1,4 +1,5 @@
-const TTL=21600;
+const TTL=3600;
+const LAST_GOOD_TTL=2592000;
 const LANDING="https://www.dti.gov.ph/konsyumer/latest-srps-basic-necessities-prime-commodities";
 
 const VERIFIED_FALLBACK=[
@@ -82,13 +83,21 @@ function response(data,status=200){
   "access-control-allow-origin":"*"
  }});
 }
-async function fetchText(url,timeout=9000){
+async function fetchText(url,timeout=12000){
  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),timeout);
  try{
-  const r=await fetch(url,{headers:{
-   "user-agent":"Mozilla/5.0 (compatible; MXCostWatch/1.0)",
-   "accept":"text/plain,text/html,application/xhtml+xml,*/*"
-  },signal:ctrl.signal});
+  const isJina=/^https:\/\/r\.jina\.ai\//i.test(url);
+  const headers={
+   "user-agent":"Mozilla/5.0 (compatible; MXGroceryWatch/3.0)",
+   "accept":"text/plain,text/html,application/xhtml+xml,*/*",
+   "cache-control":"no-cache"
+  };
+  if(isJina){
+   headers["x-no-cache"]="true";
+   headers["x-cache-tolerance"]="0";
+   headers["x-timeout"]="20";
+  }
+  const r=await fetch(url,{headers,signal:ctrl.signal,cf:{cacheTtl:0,cacheEverything:false}});
   if(!r.ok)throw new Error("HTTP "+r.status+" "+url);
   return await r.text();
  }finally{clearTimeout(timer)}
@@ -110,7 +119,7 @@ function discoverPdf(text){
  for(const m of String(text||"").matchAll(/\((https?:\/\/[^)]+\.pdf[^)]*)\)/gi))found.add(decodeUrl(m[1]));
  const arr=[...found].filter(u=>/dti\.gov\.ph|esigaw\.dti\.gov\.ph/i.test(u));
  arr.sort((a,b)=>scorePdf(b)-scorePdf(a));
- return arr[0]||FALLBACK_PDF;
+ return arr[0]||null;
 }
 function classify(name){
  const n=String(name||"").toLowerCase();
@@ -194,42 +203,71 @@ function rank(items){
 export async function onRequestGet(context){
  const url=new URL(context.request.url),force=url.searchParams.get("force")==="1";
  const cache=caches.default;
- const key=new Request(url.origin+"/api/grocery-cache-v4");
+ const freshKey=new Request(url.origin+"/api/grocery-cache-v5");
+ const lkgKey=new Request(url.origin+"/api/grocery-last-good-v1");
+
  if(!force){
-  const hit=await cache.match(key);
+  const hit=await cache.match(freshKey);
   if(hit)return hit;
  }
+
  try{
   let landing="";
   try{landing=await readable(LANDING)}catch(e){}
   const pdf=discoverPdf(landing);
+  if(!pdf)throw new Error("No current DTI SRP bulletin PDF discovered");
   const md=await readable(pdf);
   let items=parseMarkdown(md);
   if(items.length<40)items=parseLoose(md);
   if(items.length<40)throw new Error("DTI SRP parser returned only "+items.length+" products");
-  const out=response({
-   ok:true,
+
+  const updated=dateLabel(md);
+  const yearMatch=(updated+" "+pdf).match(/20\d{2}/g);
+  const newestYear=yearMatch?Math.max(...yearMatch.map(Number)):0;
+  if(newestYear && newestYear<2026)throw new Error("Discovered DTI bulletin is older than 2026");
+
+  const data={
+   ok:true,live:true,fallback:false,stale:false,
    source:"Department of Trade and Industry • SRP Bulletin",
    source_url:pdf,
    landing_url:LANDING,
-   updated:dateLabel(md),
+   updated,
    checked_at:new Date().toISOString(),
    count:items.length,
    items:rank(items)
-  });
-  context.waitUntil(cache.put(key,out.clone()));
-  return out;
+  };
+  const fresh=response(data);
+  const keep=new Response(JSON.stringify(data),{status:200,headers:{
+   "content-type":"application/json; charset=utf-8",
+   "cache-control":"public, max-age="+LAST_GOOD_TTL+", s-maxage="+LAST_GOOD_TTL,
+   "access-control-allow-origin":"*"
+  }});
+  context.waitUntil(Promise.all([cache.put(freshKey,fresh.clone()),cache.put(lkgKey,keep.clone())]));
+  return fresh;
  }catch(e){
-  return response({
-   ok:true,
-   fallback:true,
+  const last=await cache.match(lkgKey);
+  if(last){
+   try{
+    const j=await last.clone().json();
+    if(j&&Array.isArray(j.items)&&j.items.length){
+     return new Response(JSON.stringify({...j,ok:true,live:false,fallback:true,stale:true,checked_at:new Date().toISOString(),note:"Current DTI source could not be refreshed — last verified official SRP list kept.",error:String(e)}),{status:200,headers:{
+      "content-type":"application/json; charset=utf-8",
+      "cache-control":"public, max-age=60, s-maxage=60",
+      "access-control-allow-origin":"*"
+     }});
+    }
+   }catch{}
+  }
+  return new Response(JSON.stringify({
+   ok:false,live:false,fallback:false,stale:true,
    source:"Department of Trade and Industry • SRP Bulletin",
-   source_url:FALLBACK_PDF,
-   updated:"01 February 2025 • verified official fallback",
+   landing_url:LANDING,
    checked_at:new Date().toISOString(),
-   count:VERIFIED_FALLBACK.length,
-   items:rank(VERIFIED_FALLBACK),
-   note:"Current DTI source could not be parsed, so the latest verified official SRP fallback is shown."
-  });
+   error:String(e)
+  }),{status:502,headers:{
+   "content-type":"application/json; charset=utf-8",
+   "cache-control":"no-store",
+   "access-control-allow-origin":"*"
+  }});
  }
 }
