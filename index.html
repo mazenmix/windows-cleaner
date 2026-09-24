@@ -616,10 +616,10 @@
      }).join('');
      return '<section class="food-category"><div class="food-category-head"><div class="food-category-title"><span class="food-category-dot" style="background:'+color+';color:'+color+'"></span>'+name+'</div><div class="food-category-count">'+list.length+' items</div></div><div class="food-items-grid">'+rows+'</div></section>';
    }).join('');
-   if(source)source.textContent="Live";
+   if(source)source.textContent=label||"Last Verified";
  }
  function saveCache(j){try{localStorage.setItem('mxFoodGridCache',JSON.stringify(j))}catch(e){}}
- function readCache(){try{const j=JSON.parse(localStorage.getItem('mxFoodGridCache')||'null');if(j&&Array.isArray(j.items)&&j.items.length){renderFood(j.items,"Live");return true}}catch(e){}return false}
+ function readCache(){try{const j=JSON.parse(localStorage.getItem('mxFoodGridCache')||'null');if(j&&Array.isArray(j.items)&&j.items.length){renderFood(j.items,"Last Verified");return true}}catch(e){}return false}
  async function refresh(){
    try{
      const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),7000);
@@ -628,11 +628,12 @@
      if(!r.ok)throw new Error('HTTP '+r.status);
      const j=await r.json();
      if(!j.ok||!Array.isArray(j.items)||!j.items.length)throw new Error('No DA data');
-     renderFood(j.items,"Live");
-     saveCache(j);
+     const isLive=j.live===true&&!j.fallback&&!j.stale;
+     renderFood(j.items,isLive?("Live"+(j.date?" • "+j.date:"")):"Last Verified");
+     if(isLive)saveCache(j);
    }catch(e){}
  }
- renderFood(FOOD_BOOTSTRAP,"Live");
+ renderFood(FOOD_BOOTSTRAP,"Checking");
  readCache();
  refresh();
  setInterval(refresh,900000);
@@ -687,11 +688,11 @@
 const brandColors={Shell:'#ffce1e',Petron:'#1577d5',Caltex:'#ff334b',Phoenix:'#ff7417',Seaoil:'#16d887',Unioil:'#9b4de8',Jetti:'#1cc9e8','Flying V':'#ff4f9b',Cleanfuel:'#a4ee38',Total:'#9d50ff',PTT:'#19a9e5'};
 let fuelData=[
 {name:'Shell',stations:204,diesel:[105.73,7.80],premDiesel:[112.94,7.80],unleaded91:[93.68,4.80],eGas:null,prem95:[100.93,4.80],prem97:[107.21,4.80],kerosene:[132.85,6.40]},
-{name:'Petron',stations:240,diesel:[104.22,7.80],premDiesel:[107.22,7.80],unleaded91:[91.78,4.80],eGas:null,prem95:[92.78,4.80],prem97:[101.83,4.80],kerosene:[129.58,6.40]},
+{name:'Petron',stations:240,diesel:[104.19,7.77],premDiesel:[107.22,7.80],unleaded91:[91.73,4.75],eGas:null,prem95:[92.75,4.77],prem97:[101.83,4.80],kerosene:[129.58,6.40]},
 {name:'Caltex',stations:131,diesel:[107.43,7.82],premDiesel:[111.69,7.82],unleaded91:[94.63,4.88],eGas:null,prem95:[101.83,4.88],prem97:[104.60,4.88],kerosene:[128.43,6.47]},
 {name:'Phoenix',stations:70,diesel:[108.35,7.82],premDiesel:null,unleaded91:[99.44,4.88],eGas:[105.38,4.88],prem95:[101.45,4.88],prem97:[104.85,4.88],kerosene:null},
 {name:'Seaoil',stations:71,diesel:[104.20,7.82],premDiesel:[110.23,7.82],unleaded91:[91.21,4.88],eGas:[117.06,4.88],prem95:[94.22,4.88],prem97:[94.78,4.88],kerosene:[134.56,6.47]},
-{name:'Unioil',stations:83,diesel:[103.46,7.80],premDiesel:null,unleaded91:[90.42,4.80],eGas:[114.28,4.80],prem95:[93.42,4.80],prem97:[108.99,4.80],kerosene:null},
+{name:'Unioil',stations:83,diesel:[103.26,7.60],premDiesel:null,unleaded91:[90.28,4.66],eGas:[114.28,4.80],prem95:[93.31,4.69],prem97:[108.99,4.80],kerosene:null},
 {name:'Jetti',stations:10,diesel:[104.91,6.80],premDiesel:null,unleaded91:[92.59,4.80],eGas:null,prem95:[96.51,4.80],prem97:[103.70,4.80],kerosene:null},
 {name:'Flying V',stations:38,diesel:[100.73,7.80],premDiesel:null,unleaded91:[86.84,4.80],eGas:null,prem95:[87.79,4.80],prem97:null,kerosene:null},
 {name:'Cleanfuel',stations:54,diesel:[104.82,7.82],premDiesel:null,unleaded91:[92.49,4.88],eGas:null,prem95:[96.51,4.88],prem97:null,kerosene:null},
@@ -711,6 +712,7 @@ function readFuelCache(){
   fuelData=j.fuel;
   if(Array.isArray(j.lpg)&&j.lpg.length)lpgData=j.lpg;
   if(j.updated)$('updatedLabel').textContent='Updated '+j.updated;
+  if($('liveLabel'))$('liveLabel').textContent='Last Verified';
   return true;
  }catch(e){return false}
 }
@@ -807,12 +809,13 @@ async function refreshSource(manual){
    lpgData=lpgData.map(x=>map.has(x.name)?Object.assign({},x,{price:map.get(x.name)}):x);
   }
   $('updatedLabel').textContent='Updated '+(j.updated||'latest source');
-  saveFuelCache(j.updated||'latest source');
+  const fuelIsLive=!j.fallback&&!j.stale;
+  if(fuelIsLive)saveFuelCache(j.updated||'latest source');
   renderFuel();renderLpg();
-  $('liveLabel').textContent='Live Prices';
-  if(manual)toast(j.fallback?'Latest verified fuel prices loaded':'Fuel and LPG prices refreshed');
+  $('liveLabel').textContent=fuelIsLive?(j.lpg_stale?'Fuel Live • LPG Last Verified':'Live Prices'):'Last Verified';
+  if(manual)toast(fuelIsLive?(j.lpg_stale?'Fuel refreshed • LPG kept at last verified values':'Fuel and LPG prices refreshed'):'Latest verified prices kept');
  }catch(e){
-  $('liveLabel').textContent='Live Prices';
+  $('liveLabel').textContent='Last Verified';
   if(manual)toast('Live source unavailable — latest verified prices kept');
  }finally{document.body.classList.remove('loading-shimmer')}
 }
