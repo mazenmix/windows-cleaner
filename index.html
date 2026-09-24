@@ -422,6 +422,46 @@
 @media(max-width:900px){.visitor-stats{order:3;width:100%;margin-left:0;justify-content:flex-start}.visitor-chip{height:34px}.visitor-chip .visitor-label{font-size:7.5px}.visitor-chip b{font-size:10.5px}}
 @media(max-width:520px){.visitor-stats{display:grid;grid-template-columns:1fr 1fr}.visitor-chip{justify-content:center;padding:0 9px}}
 
+
+/* --- Philippine Foreign Exchange Comparison --- */
+.fx-section{max-width:1460px;margin:0 auto;padding:20px 34px 22px;border-bottom:1px solid #153957}
+.fx-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:13px}
+.fx-eyebrow{font-size:9px;letter-spacing:1.55px;color:#74b8ff;font-weight:900}
+.fx-head h2{margin:5px 0 4px;font-size:25px;letter-spacing:-.7px}
+.fx-head p{margin:0;color:#7799b3;font-size:10px;line-height:1.5}
+.fx-status{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;border:1px solid #31536f;border-radius:18px;background:#0b2234;color:#8fb0c8;padding:8px 12px;font-size:8px;font-weight:900;letter-spacing:.45px;white-space:nowrap}
+.fx-status:before{content:"";width:7px;height:7px;border-radius:50%;background:#6f96b5;box-shadow:none}
+.fx-status.live{border-color:#245d47;background:#08281d;color:#84e4b2}.fx-status.live:before{background:#12e49b;box-shadow:0 0 10px rgba(18,228,155,.8);animation:mxLivePulse 1.15s ease-in-out infinite}
+.fx-status.mixed{border-color:#315f91;background:#092642;color:#8dcbff}.fx-status.mixed:before{background:#48a2ff;box-shadow:0 0 10px rgba(72,162,255,.75)}
+.fx-table-shell{border:1px solid #173c5c;border-radius:12px;overflow:hidden;background:rgba(7,26,44,.76);box-shadow:var(--shadow)}
+.fx-table-scroll{overflow:auto;scrollbar-color:#1d4c74 #07192b}
+.fx-table{width:100%;border-collapse:collapse;min-width:1500px}
+.fx-table th{height:45px;padding:0 11px;text-align:center;font-size:10px;letter-spacing:.4px;color:#6f9abf;background:#071a2d;border-bottom:1px solid #163a59;font-weight:800}
+.fx-table th:first-child,.fx-table td:first-child{text-align:left;position:sticky;left:0;z-index:2;background:#081c30}
+.fx-table th:first-child{z-index:3;background:#071a2d}
+.fx-table th small{display:block;margin-top:3px;font-size:7px;color:#496f8f;letter-spacing:.25px}
+.fx-table td{height:58px;padding:7px 11px;text-align:center;border-bottom:1px solid rgba(30,75,112,.48);font-size:11px}
+.fx-table tbody tr:hover td{background-color:rgba(28,84,130,.13)}.fx-table tbody tr:hover td:first-child{background:#0a243c}
+.fx-provider{display:flex;align-items:center;gap:9px;min-width:155px}.fx-provider-main{min-width:0}.fx-provider-name{display:block;font-size:11px;font-weight:900;color:#edf6fd;white-space:nowrap}.fx-provider-note{display:block;margin-top:3px;font-size:7.5px;color:#668ba7;white-space:nowrap}
+.fx-provider-dot{width:9px;height:9px;border-radius:50%;flex:0 0 9px}
+.fx-provider-dot.live{background:#12e49b;box-shadow:0 0 10px rgba(18,228,155,.8)}
+.fx-provider-dot.verified{background:#48a2ff;box-shadow:0 0 9px rgba(72,162,255,.65)}
+.fx-provider-dot.last_verified{background:#ffbb24;box-shadow:0 0 9px rgba(255,187,36,.6)}
+.fx-provider-dot.branch_only,.fx-provider-dot.unavailable{background:#5d7890}
+.fx-pair{display:grid;grid-template-columns:1fr 1fr;gap:4px;align-items:center;min-width:112px}
+.fx-rate{border:1px solid #12334f;border-radius:7px;background:#071827;padding:5px 4px;line-height:1.05;font-variant-numeric:tabular-nums}
+.fx-rate small{display:block;font-size:6.5px;color:#587d9a;margin-bottom:3px;font-weight:800;letter-spacing:.35px}.fx-rate b{font-size:10px;color:#dceaf5}
+.fx-rate.best-buy{border-color:#176a4d;background:#073327}.fx-rate.best-buy small,.fx-rate.best-buy b{color:#56efad}
+.fx-rate.best-sell{border-color:#2c6297;background:#092a48}.fx-rate.best-sell small,.fx-rate.best-sell b{color:#78bdff}
+.fx-na{color:#476a85;font-size:9px;font-weight:700}
+.fx-foot{min-height:34px;padding:7px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;color:#648aa6;font-size:8px;background:#071a2d;border-top:1px solid #133650}
+.fx-legend{display:flex;gap:12px;flex-wrap:wrap}.fx-legend span{white-space:nowrap}.fx-legend b{font-weight:900}.fx-legend .buy{color:#56efad}.fx-legend .sell{color:#78bdff}
+.fx-mobile{display:none;gap:10px}.fx-mobile-card{border:1px solid #173e5f;border-radius:13px;background:linear-gradient(145deg,#0a2238,#07192b);padding:13px}
+.fx-mobile-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.fx-mobile-head b{font-size:12px}.fx-mobile-status{font-size:7px;color:#7397b3;text-transform:uppercase;font-weight:900}
+.fx-mobile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.fx-mobile-currency{border:1px solid #133650;border-radius:9px;background:#071827;padding:8px}.fx-mobile-currency>strong{display:block;color:#7da3c0;font-size:8px;margin-bottom:5px}.fx-mobile-currency .fx-pair{min-width:0}
+@media(max-width:700px){.fx-section{padding:16px}.fx-head{align-items:flex-start;flex-direction:column}.fx-table-shell{display:none}.fx-mobile{display:grid}.fx-mobile-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:390px){.fx-mobile-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -467,6 +507,41 @@
 
 
 
+
+
+<section class="fx-section" id="forex">
+  <div class="fx-head">
+    <div>
+      <div class="fx-eyebrow">PHILIPPINES FOREIGN EXCHANGE MONITOR</div>
+      <h2>Foreign Exchange Comparison</h2>
+      <p>PHP rates per 1 unit of foreign currency • Buy = they buy your foreign cash • Sell = they sell foreign currency to you.</p>
+    </div>
+    <div class="fx-status" id="fxStatus">Checking 7 providers…</div>
+  </div>
+  <div class="fx-table-shell">
+    <div class="fx-table-scroll">
+      <table class="fx-table">
+        <thead><tr>
+          <th>PROVIDER</th>
+          <th>USD<small>BUY / SELL</small></th>
+          <th>EUR<small>BUY / SELL</small></th>
+          <th>GBP<small>BUY / SELL</small></th>
+          <th>JPY<small>BUY / SELL</small></th>
+          <th>AUD<small>BUY / SELL</small></th>
+          <th>CAD<small>BUY / SELL</small></th>
+          <th>SGD<small>BUY / SELL</small></th>
+          <th>HKD<small>BUY / SELL</small></th>
+        </tr></thead>
+        <tbody id="fxRows"><tr><td colspan="9" class="fx-na">Checking published exchange-rate sources…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="fx-foot">
+      <div class="fx-legend"><span><b class="buy">Best Buy</b> = highest PHP you receive</span><span><b class="sell">Best Sell</b> = lowest PHP you pay</span></div>
+      <span id="fxChecked">Checking sources…</span>
+    </div>
+  </div>
+  <div class="fx-mobile" id="fxMobile"></div>
+</section>
 
 <section class="hero" id="prices"><div class="hero-inner">
 <div class="hero-copy"><div class="eyebrow"></div><h1>Fuel Prices</h1><p>Latest fuel prices from major brands nationwide. Prices are in PHP per liter. Compare all 11 major brands at a glance.</p></div>
@@ -686,6 +761,64 @@
  }
  loadPSE();
  setInterval(loadPSE,60000);
+})();
+</script>
+
+<script>
+(function(){
+ const currencies=["USD","EUR","GBP","JPY","AUD","CAD","SGD","HKD"];
+ const labels={live:"LIVE",verified:"VERIFIED",last_verified:"LAST VERIFIED",branch_only:"BRANCH RATE",unavailable:"UNAVAILABLE"};
+ const cacheKey="mxForexComparisonV1";
+ const rowsEl=document.getElementById("fxRows"),mobileEl=document.getElementById("fxMobile"),statusEl=document.getElementById("fxStatus"),checkedEl=document.getElementById("fxChecked");
+ if(!rowsEl||!mobileEl)return;
+
+ function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
+ function fmt(v,c){
+  const n=Number(v);if(!Number.isFinite(n))return "—";
+  const d=c==="JPY"?4:(n<10?4:2);
+  return n.toLocaleString("en-PH",{minimumFractionDigits:d,maximumFractionDigits:d});
+ }
+ function bests(providers){
+  const out={};
+  currencies.forEach(c=>{
+   const vals=providers.map(p=>({p,v:p.rates&&p.rates[c]})).filter(x=>Array.isArray(x.v)&&Number.isFinite(Number(x.v[0]))&&Number.isFinite(Number(x.v[1])));
+   out[c]={buy:vals.length?Math.max(...vals.map(x=>Number(x.v[0]))):null,sell:vals.length?Math.min(...vals.map(x=>Number(x.v[1]))):null};
+  });return out;
+ }
+ function pairHtml(pair,c,best){
+  if(!Array.isArray(pair)||pair.length<2)return '<span class="fx-na">—</span>';
+  const buy=Number(pair[0]),sell=Number(pair[1]);
+  return '<div class="fx-pair"><span class="fx-rate '+(buy===best.buy?'best-buy':'')+'"><small>BUY</small><b>₱'+fmt(buy,c)+'</b></span><span class="fx-rate '+(sell===best.sell?'best-sell':'')+'"><small>SELL</small><b>₱'+fmt(sell,c)+'</b></span></div>';
+ }
+ function providerName(p){
+  const name=esc(p.name),tag=labels[p.status]||String(p.status||"").toUpperCase();
+  const label=p.source_url?'<a class="fx-provider-name" href="'+esc(p.source_url)+'" target="_blank" rel="noopener">'+name+' ↗</a>':'<span class="fx-provider-name">'+name+'</span>';
+  return '<div class="fx-provider"><span class="fx-provider-dot '+esc(p.status||"unavailable")+'"></span><span class="fx-provider-main">'+label+'<small class="fx-provider-note">'+esc(tag+(p.updated?" • "+p.updated:""))+'</small></span></div>';
+ }
+ function render(j,fromCache){
+  const providers=Array.isArray(j.providers)?j.providers:[],best=bests(providers);
+  rowsEl.innerHTML=providers.map(p=>'<tr><td>'+providerName(p)+'</td>'+currencies.map(c=>'<td>'+pairHtml(p.rates&&p.rates[c],c,best[c])+'</td>').join('')+'</tr>').join('');
+  mobileEl.innerHTML=providers.map(p=>'<article class="fx-mobile-card"><div class="fx-mobile-head"><b>'+esc(p.name)+'</b><span class="fx-mobile-status">'+esc(labels[p.status]||p.status||"")+'</span></div><div class="fx-mobile-grid">'+currencies.map(c=>'<div class="fx-mobile-currency"><strong>'+c+'</strong>'+pairHtml(p.rates&&p.rates[c],c,best[c])+'</div>').join('')+'</div></article>').join('');
+  const live=providers.filter(p=>p.status==="live").length,verified=providers.filter(p=>p.status==="verified").length,last=providers.filter(p=>p.status==="last_verified").length,branch=providers.filter(p=>p.status==="branch_only").length;
+  statusEl.className="fx-status "+(live?"live":"mixed");
+  statusEl.textContent=(fromCache?"CACHED • ":"")+"LIVE "+live+" • VERIFIED "+verified+(last?" • LAST "+last:"")+(branch?" • BRANCH "+branch:"");
+  checkedEl.textContent=j.checked_at?"Checked "+new Date(j.checked_at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"Latest available";
+ }
+ function save(j){try{localStorage.setItem(cacheKey,JSON.stringify(j))}catch(e){}}
+ function restore(){try{const j=JSON.parse(localStorage.getItem(cacheKey)||"null");if(j&&Array.isArray(j.providers)){render(j,true);return true}}catch(e){}return false}
+ async function load(force){
+  try{
+   const c=new AbortController(),t=setTimeout(()=>c.abort(),22000);
+   const r=await fetch("/api/forex"+(force?"?force=1&":"?")+"ts="+Date.now(),{cache:"no-store",signal:c.signal});
+   clearTimeout(t);if(!r.ok)throw new Error("HTTP "+r.status);
+   const j=await r.json();if(!j.ok||!Array.isArray(j.providers)||!j.providers.length)throw new Error("No forex data");
+   render(j,false);save(j);
+  }catch(e){
+   if(!restore()){statusEl.className="fx-status mixed";statusEl.textContent="Rates temporarily unavailable";checkedEl.textContent="Retrying automatically…"}
+  }
+ }
+ restore();load(false);setInterval(()=>load(false),300000);
+ const refresh=document.getElementById("refreshAll");if(refresh)refresh.addEventListener("click",()=>load(true));
 })();
 </script>
 
