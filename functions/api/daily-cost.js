@@ -124,6 +124,9 @@ async function readable(url){
 function liveOut(sec,items,source,source_url,as_of,note){
  return {ok:true,section:sec,title:SNAP[sec].title,live:true,fallback:false,stale:false,source,source_url,as_of,checked_at:new Date().toISOString(),items,note:note||""};
 }
+function verifiedOut(sec,items,source,source_url,as_of,note){
+ return {ok:true,section:sec,title:SNAP[sec].title,live:false,verified:true,fallback:false,stale:false,source,source_url,as_of,checked_at:new Date().toISOString(),items,note:note||""};
+}
 function fallback(sec,error){
  return {ok:true,section:sec,...SNAP[sec],live:false,fallback:true,stale:true,checked_at:new Date().toISOString(),note:"Static emergency snapshot only — live source could not be verified.",error:String(error||"source parse unavailable")};
 }
@@ -167,14 +170,17 @@ async function tolls(){
 }
 async function transport(){
  const t=clean(await readable(SOURCES.transport));
- if(!/50%|50 percent/i.test(t))throw new Error("LRTA discount not found");
+ const discount=findNum(t,/(\d{1,3})%\s*(?:across-the-board\s+)?fare discount/i)
+   ||findNum(t,/(\d{1,3})\s*percent[^.]{0,100}fare discount/i);
+ const card=t.match(/Sold for\s*(?:Php|PHP|₱)\s*([0-9.]+)\s*each\s*plus\s*(?:Php|PHP|₱)\s*([0-9.]+)\s*minimum load/i);
+ if(discount!==50||!card)throw new Error("Current LRTA discount/card values not parsed");
  const items=[
-  {label:"LRT-2 / MRT-3 discount",value:"50% off",detail:"Effective March 23, 2026"},
-  {label:"LRT-2 single journey",value:"₱8–₱18",detail:"Discounted fare range"},
-  {label:"LRT-2 stored value",value:"₱6.50–₱16.50",detail:"Discounted fare range"},
-  {label:"Beep card",value:"₱30 + ₱14 load",detail:"Standard stored-value card"}
+  {label:"LRT-2 / MRT-3 discount",value:discount+"% off",detail:"Effective March 23, 2026"},
+  {label:"LRT-2 single journey",value:"₱8–₱18",detail:"Current discounted fare-matrix range"},
+  {label:"LRT-2 stored value",value:"₱6.50–₱16.50",detail:"Current discounted fare-matrix range"},
+  {label:"Beep card",value:"₱"+Number(card[1]).toFixed(0)+" + ₱"+Number(card[2]).toFixed(0)+" load",detail:"Parsed from current LRTA page"}
  ];
- return liveOut("transport",items,"LRTA / DOTr",SOURCES.transport,"Current LRTA fare page");
+ return verifiedOut("transport",items,"LRTA / DOTr",SOURCES.transport,"Current LRTA fare page","Official page is rechecked automatically; station-to-station fare ranges come from the current fare matrix poster.");
 }
 async function exchange(){
  const t=clean(await readable("https://www.bsp.gov.ph/SitePages/Default.aspx"));
@@ -207,7 +213,7 @@ async function promos(){
  const d109=D.match(/LEVEL-UP 109[\s\S]{0,350}?DATA ALLOCATION\s*([0-9]+GB)[\s\S]{0,350}?₱109[\s\S]{0,100}?Valid for\s*([0-9]+ days)/i);
  if(d109)items.push({label:"DITO Level-Up 109",value:"₱109 / "+d109[2],detail:d109[1]+" + calls/texts"});
  if(items.length<3)throw new Error("Promo source parse incomplete");
- return liveOut("promos",items,"Globe / Smart / DITO official",SOURCES.promos,"Current official prepaid offers");
+ return verifiedOut("promos",items,"Globe / Smart / DITO official",SOURCES.promos,"Current official prepaid offers","Offer pages are rechecked; only recognized current offers are shown.");
 }
 async function grocery(){
  let t="";
@@ -237,17 +243,17 @@ async function medicine(){
 async function construction(){
  const t=clean(await readable("https://psa.gov.ph/content/construction-materials-retail-price-index-national-capital-region-2012100-august-2026"));
  if(!/2\.0 percent/i.test(t)||!/Electrical materials/i.test(t))throw new Error("PSA CMRPI not parsed");
- return liveOut("construction",SNAP.construction.items,"Philippine Statistics Authority • CMRPI",SOURCES.construction,"August 2026","This is a retail price index / annual growth indicator, not per-item store prices.");
+ return verifiedOut("construction",SNAP.construction.items,"Philippine Statistics Authority • CMRPI",SOURCES.construction,"August 2026","Latest official monthly release verified against the PSA page; this is an index, not per-item store prices.");
 }
 async function vehicle(){
  const t=clean(await readable(SOURCES.vehicle));
  if(!/1,600|1600/.test(t)||!/3,600|3600/.test(t)||!/8,000|8000/.test(t))throw new Error("LTO MVUC schedule not parsed");
- return liveOut("vehicle",SNAP.vehicle.items,"Land Transportation Office",SOURCES.vehicle,"Current LTO MVUC schedule");
+ return verifiedOut("vehicle",SNAP.vehicle.items,"Land Transportation Office",SOURCES.vehicle,"Current LTO MVUC schedule","Current official schedule values verified from the LTO document.");
 }
 async function living(){
  const t=clean(await readable(SOURCES.living));
  if(!/August 2026/i.test(t)||!/6\.1/.test(t)||!/4\.1/.test(t))throw new Error("PSA CPI not parsed");
- return liveOut("living",SNAP.living.items,"Philippine Statistics Authority • CPI",SOURCES.living,"August 2026");
+ return verifiedOut("living",SNAP.living.items,"Philippine Statistics Authority • CPI",SOURCES.living,"August 2026","Latest official monthly CPI release verified against PSA.");
 }
 async function travel(){
  const t=clean(await readable(SOURCES.travel));
