@@ -336,7 +336,7 @@ export async function onRequestGet(context){
    checked_at:checkedAt,
    live_count:liveCount,
    providers,
-   note:"Rates come from each provider's official published online source. No static seed values are used."
+   note:"Official live sources are preferred. If a source is temporarily unavailable, the last verified published rate is retained and labeled accordingly."
   };
 
   const out=json(data);
@@ -366,7 +366,7 @@ export async function onRequestGet(context){
    providers:[],
    checked_at:new Date().toISOString(),
    live_count:0,
-   note:"No static fallback is allowed.",
+   note:"No live or previously verified rate is currently available.",
    error:String(e)
   },502,30);
  }
