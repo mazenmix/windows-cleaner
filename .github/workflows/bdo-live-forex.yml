@@ -5,12 +5,17 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/bdo-live-forex.yml"
+      - ".github/bdo-forex-trigger"
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: bdo-live-forex
+  cancel-in-progress: true
 
 jobs:
   scrape:
