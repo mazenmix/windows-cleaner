@@ -116,8 +116,7 @@ function parseLpgLive(text){
  const section=(src.split(/## Gasul \/ LPG Prices/i)[1]||src).split(/## How We Track Prices/i)[0]||"";
  const out=[];
  for(const name of LPG_BRANDS){
-  const esc=name.replace(/[.*+?^$()|[\]\\{}]/g,"\\ for(const x of FALLBACK_LPG){
-  const esc=x.name.replace(/[.*+?^$()|[\]\\{}]/g,"\\$&");");
+  const esc=name.replace(/[.*+?^$()|[\]\\{}]/g,"\\$&");
   const patterns=[
    new RegExp("(?:^|\\n)\\s*"+esc+"\\s*\\n\\s*(?:PHP|₱)\\s*([0-9,]+)","i"),
    new RegExp("(?:^|\\n)\\s*"+esc+"\\s*\\|\\s*(?:PHP|₱)?\\s*([0-9,]+)","i"),
