@@ -1,4 +1,4 @@
-const TTL=900;
+const TTL=60;
 const LAST_GOOD_TTL=2592000;
 
 const SOURCES={
