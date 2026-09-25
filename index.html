@@ -786,7 +786,7 @@
 (function(){
  const currencies=["USD","EUR","JPY","AUD","CAD","SGD","HKD"];
  const labels={live:"LIVE",verified:"VERIFIED",last_verified:"LAST VERIFIED",unavailable:"UNAVAILABLE"};
- const cacheKey="mxForexComparisonV2";
+ const cacheKey="mxForexComparisonV3";
  const rowsEl=document.getElementById("fxRows"),mobileEl=document.getElementById("fxMobile"),statusEl=document.getElementById("fxStatus"),checkedEl=document.getElementById("fxChecked");
  if(!rowsEl||!mobileEl)return;
 
@@ -836,7 +836,7 @@
    if(!restore()){statusEl.className="fx-status mixed";statusEl.textContent="Rates temporarily unavailable";checkedEl.textContent="Retrying automatically…"}
   }
  }
- restore();load(false);setInterval(()=>load(false),60000);
+ restore();load(true);setInterval(()=>load(false),60000);
  const refresh=document.getElementById("refreshAll");if(refresh)refresh.addEventListener("click",()=>load(true));
 })();
 </script>
