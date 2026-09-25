@@ -176,7 +176,7 @@ function mergeLpg(live,previous){
 function parseUpdated(text){
  const m=String(text||"").match(/Prices updated\s+([^\n]+)/i)
    ||String(text||"").match(/As of\s+([A-Z][a-z]+\s+\d{1,2},\s+20\d{2})/i);
- return m?m[1].trim():"September 22, 2026";
+ return m?m[1].trim():"Latest source data";
 }
 export async function onRequestGet(context){
  const u=new URL(context.request.url),force=u.searchParams.get("force")==="1";
