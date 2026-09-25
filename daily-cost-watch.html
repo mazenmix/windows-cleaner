@@ -158,7 +158,7 @@
  }
  if(!fromCache())renderNews(NEWS_BOOTSTRAP);
  refreshNews();
- setInterval(refreshNews,300000);
+ setInterval(refreshNews,60000);
 })();
 </script>
 
@@ -351,7 +351,13 @@ async function refreshOne(sec,force){
    }else if(j&&j.ok&&Array.isArray(j.items)&&j.items.length){
      cache[sec]=j;save();rerenderOne(sec);
    }
- }catch(e){}finally{clearTimeout(timer)}
+ }catch(e){
+   const old=cache[sec];
+   if(old&&Array.isArray(old.items)&&old.items.length){
+     cache[sec]={...old,live:false,verified:false,fallback:true,stale:true,checking:false,checked_at:new Date().toISOString(),note:"Source check failed — showing last verified values."};
+     save();rerenderOne(sec);
+   }
+ }finally{clearTimeout(timer)}
 }
 async function refreshAll(force){
  refreshBtn.classList.add("loading");globalStatus.textContent="CHECKING 11 SOURCES…";
@@ -374,7 +380,7 @@ sections.forEach(s=>{
 });
 renderAll();
 refreshAll(false);
-setInterval(()=>refreshAll(false),900000);
+setInterval(()=>refreshAll(false),60000);
 })();
 </script>
 <script>
