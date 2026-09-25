@@ -96,7 +96,7 @@
 <section class="hero"><div class="hero-inner">
 <div><div class="eyebrow">PHILIPPINES EVERYDAY COST MONITOR</div><h1>Daily Cost</h1>
 <p>Updated every moment, never miss!</p></div>
-<div class="global-status" id="globalStatus">Live Now</div>
+<div class="global-status" id="globalStatus">Checking Sources…</div>
 </div></section>
 
 <main class="content">
@@ -196,11 +196,11 @@ const grid=document.getElementById("costGrid"),globalStatus=document.getElementB
 const cache={};
 const medicineState={query:"",visible:24};
 const groceryState={query:"",visible:24};
-try{Object.assign(cache,JSON.parse(localStorage.getItem("mxDailyCostCacheV3")||"{}"))}catch(e){}
+try{Object.assign(cache,JSON.parse(localStorage.getItem("mxDailyCostCacheV4")||"{}"))}catch(e){}
 
 function normalize(sec,data){
  const b=BOOT[sec];
- if(!data)return {section:sec,source:b.source,source_url:b.source_url,as_of:b.as_of,items:b.items.map(x=>({label:x[0],value:x[1],detail:x[2]})),live:false,fallback:false,stale:false,checking:true};
+ if(!data)return {section:sec,source:b.source,source_url:b.source_url,as_of:b.as_of,items:[],live:false,fallback:false,stale:false,checking:true};
  const items=(data.items||[]).map(x=>Array.isArray(x)?{label:x[0],value:x[1],detail:x[2]}:x);
  return {...data,section:sec,items};
 }
@@ -319,7 +319,7 @@ function renderAll(){
  bindGroceryControls();
  bindMedicineControls();
 }
-function save(){try{localStorage.setItem("mxDailyCostCacheV3",JSON.stringify(cache))}catch(e){}}
+function save(){try{localStorage.setItem("mxDailyCostCacheV4",JSON.stringify(cache))}catch(e){}}
 function rerenderOne(sec){
  const old=document.getElementById("card-"+sec);if(!old)return;
  const wrap=document.createElement("div");wrap.innerHTML=renderCard(sec,cache[sec]);old.replaceWith(wrap.firstElementChild);
