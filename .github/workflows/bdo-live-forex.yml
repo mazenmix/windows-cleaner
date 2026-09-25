@@ -20,7 +20,7 @@ concurrency:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     steps:
       - name: Checkout MX Fuel branch
         uses: actions/checkout@v4
@@ -35,14 +35,60 @@ jobs:
           set -euo pipefail
           CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
           echo "Using $CHROME"
-          set +e
-          timeout 55s "$CHROME" --headless=new --disable-gpu --no-sandbox --disable-dev-shm-usage --disable-background-networking --virtual-time-budget=15000 --dump-dom "https://www.bdo.com.ph/forex?wmode=full&mx_fresh=$(date +%s)" > /tmp/bdo-forex.html 2>/tmp/bdo-chrome.err
-          code=$?
-          set -e
-          echo "Chrome exit code: $code"
-          tail -80 /tmp/bdo-chrome.err || true
+          mkdir -p /tmp/bdo-browser
+          cd /tmp/bdo-browser
+          npm init -y >/dev/null 2>&1
+          npm install --no-save puppeteer-core@24 >/dev/null 2>&1
+          CHROME="$CHROME" node <<'NODE'
+          const fs = require("fs");
+          const puppeteer = require("puppeteer-core");
+
+          (async () => {
+            const browser = await puppeteer.launch({
+              executablePath: process.env.CHROME,
+              headless: true,
+              args: [
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu",
+                "--disable-background-networking"
+              ]
+            });
+            try {
+              const page = await browser.newPage();
+              await page.setViewport({width: 1440, height: 1200});
+              await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153 Safari/537.36");
+              await page.goto("https://www.bdo.com.ph/forex?wmode=full&mx_fresh=" + Date.now(), {
+                waitUntil: "domcontentloaded",
+                timeout: 45000
+              });
+
+              await page.waitForFunction(() => {
+                const text = document.body ? document.body.innerText : "";
+                return /Bank['’]s\s+Buy\s+Rate/i.test(text) &&
+                       /Bank['’]s\s+Sell\s+Rate/i.test(text) &&
+                       /\bUSD\b/.test(text) &&
+                       document.querySelectorAll("table tr").length >= 6;
+              }, {timeout: 45000});
+
+              const html = await page.content();
+              const text = await page.evaluate(() => document.body.innerText);
+              fs.writeFileSync("/tmp/bdo-forex.html", html);
+              fs.writeFileSync("/tmp/bdo-forex.txt", text);
+              console.log("Rendered HTML bytes:", Buffer.byteLength(html));
+              console.log(text.slice(0, 6000));
+            } finally {
+              await browser.close();
+            }
+          })().catch(err => {
+            console.error(err);
+            process.exit(1);
+          });
+          NODE
+
           test -s /tmp/bdo-forex.html
-          grep -qi "Bank.*Buy Rate" /tmp/bdo-forex.html
+          grep -Eqi "Bank.?s[[:space:]]+Buy[[:space:]]+Rate" /tmp/bdo-forex.txt
+          grep -Eqi "(^|[[:space:]])USD([[:space:]]|$)" /tmp/bdo-forex.txt
 
       - name: Extract BDO rates
         shell: bash
@@ -86,8 +132,8 @@ jobs:
           page_text = clean(raw)
           updated = ""
           for pat in [
-              r"Updated\s+as\s+of\s+(.{1,80}?)(?=Notes:|Currency Code|$)",
-              r"Indicative\s+Foreign\s+Exchange\s+Rate\s+as\s+of\s+(.{1,80}?)(?=Currency Code|$)"
+              r"Updated\s+as\s+of\s+(.{1,100}?)(?=Notes:|Currency Code|$)",
+              r"Indicative\s+Foreign\s+Exchange\s+Rate\s+as\s+of\s+(.{1,100}?)(?=Currency Code|$)"
           ]:
               m = re.search(pat, page_text, flags=re.I)
               if m:
@@ -114,7 +160,6 @@ jobs:
                   pass
 
           if old and old.get("rates") == out["rates"] and old.get("updated") == out["updated"]:
-              out["fetched_at"] = old.get("fetched_at", out["fetched_at"])
               print("BDO rates unchanged:", json.dumps(out, ensure_ascii=False))
           else:
               with open(path, "w", encoding="utf-8") as f:
@@ -127,7 +172,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git diff --quiet -- data/bdo-forex.json; then
+          if git diff --quiet -- data/bdo-forex.json && git ls-files --error-unmatch data/bdo-forex.json >/dev/null 2>&1; then
             echo "No BDO rate change."
             exit 0
           fi
