@@ -676,10 +676,18 @@
      if(!j.ok||!Array.isArray(j.items)||!j.items.length)throw new Error('No DA data');
      const isLive=j.live===true&&!j.fallback&&!j.stale;
      renderFood(j.items,isLive?("Live"+(j.date?" • "+j.date:"")):"Last Verified");
+     hasFoodData=true;
      if(isLive)saveCache(j);
-   }catch(e){}
+   }catch(e){
+     if(!hasFoodData){
+       stack.innerHTML='<div class="food-row" style="grid-column:1/-1"><div class="food-row-name">Official DA prices temporarily unavailable.</div></div>';
+       if(source){source.textContent="Unavailable";source.classList.remove("checking");source.classList.add("stale")}
+     }
+   }
  }
+ let hasFoodData=false;
  const hadFoodCache=readCache();
+ hasFoodData=hadFoodCache;
  if(!hadFoodCache){
    stack.innerHTML='<div class="food-row" style="grid-column:1/-1"><div class="food-row-name">Checking official DA prices…</div></div>';
    if(source){source.textContent="Checking";source.classList.add("checking")}
