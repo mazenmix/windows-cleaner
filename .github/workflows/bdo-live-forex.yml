@@ -1,0 +1,126 @@
+name: BDO Live Forex Scrape
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/bdo-live-forex.yml"
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout MX Fuel branch
+        uses: actions/checkout@v4
+        with:
+          ref: mx-fuel-watch-web
+          fetch-depth: 0
+
+      - name: Render official BDO forex page
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          echo "Using $CHROME"
+          "$CHROME"             --headless=new             --disable-gpu             --no-sandbox             --disable-dev-shm-usage             --virtual-time-budget=20000             --dump-dom             "https://www.bdo.com.ph/forex?wmode=full&mx_fresh=$(date +%s)"             > /tmp/bdo-forex.html
+          test -s /tmp/bdo-forex.html
+          grep -qi "Bank.*Buy Rate" /tmp/bdo-forex.html
+
+      - name: Extract BDO rates
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data
+          python3 - <<'PY'
+          import re, json, html, os
+          from datetime import datetime, timezone
+
+          raw = open("/tmp/bdo-forex.html", "r", encoding="utf-8", errors="ignore").read()
+
+          def clean(s):
+              s = re.sub(r"<script\b[^>]*>.*?</script>", " ", s, flags=re.I|re.S)
+              s = re.sub(r"<style\b[^>]*>.*?</style>", " ", s, flags=re.I|re.S)
+              s = re.sub(r"<[^>]+>", " ", s)
+              s = html.unescape(s)
+              return re.sub(r"\s+", " ", s).strip()
+
+          rates = {}
+          wanted = {"USD","EUR","GBP","JPY","AUD","CAD","SGD","HKD"}
+
+          for row in re.findall(r"<tr\b[^>]*>(.*?)</tr>", raw, flags=re.I|re.S):
+              cells = re.findall(r"<t[dh]\b[^>]*>(.*?)</t[dh]>", row, flags=re.I|re.S)
+              vals = [clean(x) for x in cells]
+              if len(vals) < 3:
+                  continue
+              m = re.search(r"\b([A-Z]{3})\b", vals[0])
+              if not m or m.group(1) not in wanted:
+                  continue
+              nums = []
+              for txt in vals[1:]:
+                  for n in re.findall(r"(?<!\d)(\d+(?:\.\d+)?)(?!\d)", txt.replace(",","")):
+                      try:
+                          nums.append(float(n))
+                      except ValueError:
+                          pass
+              if len(nums) >= 2 and nums[0] > 0 and nums[1] >= nums[0]:
+                  rates[m.group(1)] = [nums[0], nums[1]]
+
+          page_text = clean(raw)
+          updated = ""
+          for pat in [
+              r"Updated\s+as\s+of\s+(.{1,80}?)(?=Notes:|Currency Code|$)",
+              r"Indicative\s+Foreign\s+Exchange\s+Rate\s+as\s+of\s+(.{1,80}?)(?=Currency Code|$)"
+          ]:
+              m = re.search(pat, page_text, flags=re.I)
+              if m:
+                  updated = m.group(1).strip(" -•|")
+                  break
+
+          if "USD" not in rates or len(rates) < 5:
+              raise SystemExit(f"BDO scrape validation failed: {rates}")
+
+          out = {
+              "provider": "BDO",
+              "source_url": "https://www.bdo.com.ph/forex?wmode=full",
+              "updated": updated or "Latest published BDO rate",
+              "rates": rates
+          }
+
+          path = "data/bdo-forex.json"
+          old = None
+          if os.path.exists(path):
+              try:
+                  old = json.load(open(path, "r", encoding="utf-8"))
+              except Exception:
+                  old = None
+
+          changed = not old or old.get("rates") != out["rates"] or old.get("updated") != out["updated"]
+          if changed:
+              out["fetched_at"] = datetime.now(timezone.utc).isoformat()
+              with open(path, "w", encoding="utf-8") as f:
+                  json.dump(out, f, ensure_ascii=False, indent=2, sort_keys=True)
+                  f.write("\n")
+              print("BDO rates changed:", json.dumps(out, ensure_ascii=False))
+          else:
+              print("BDO rates unchanged:", json.dumps(out, ensure_ascii=False))
+          PY
+
+      - name: Commit changed BDO data
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- data/bdo-forex.json; then
+            echo "No BDO rate change."
+            exit 0
+          fi
+          git config user.name "MX Fuel Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/bdo-forex.json
+          git commit -m "Update BDO live forex rates"
+          git push origin HEAD:mx-fuel-watch-web
