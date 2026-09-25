@@ -169,28 +169,33 @@ function parseLpgLive(text){
  return out;
 }
 function mergeLpg(live,previous){
- const base=new Map((Array.isArray(previous)&&previous.length?previous:FALLBACK_LPG).map(x=>[x.name,{name:x.name,price:Number(x.price)}]));
- for(const x of live||[])if(Number.isFinite(Number(x.price)))base.set(x.name,{name:x.name,price:Number(x.price)});
- return FALLBACK_LPG.map(x=>base.get(x.name)||x);
+ const base=new Map();
+ for(const x of Array.isArray(previous)?previous:[]){
+  if(x&&x.name&&Number.isFinite(Number(x.price)))base.set(x.name,{name:x.name,price:Number(x.price)});
+ }
+ for(const x of live||[]){
+  if(x&&x.name&&Number.isFinite(Number(x.price)))base.set(x.name,{name:x.name,price:Number(x.price)});
+ }
+ return FALLBACK_LPG.map(x=>base.get(x.name)).filter(Boolean);
 }
 function parseUpdated(text){
  const m=String(text||"").match(/Prices updated\s+([^\n]+)/i)
    ||String(text||"").match(/As of\s+([A-Z][a-z]+\s+\d{1,2},\s+20\d{2})/i);
- return m?m[1].trim():"September 22, 2026";
+ return m?m[1].trim():"Latest source update";
 }
 export async function onRequestGet(context){
  const u=new URL(context.request.url),force=u.searchParams.get("force")==="1";
  const cache=caches.default;
- const freshKey=new Request(u.origin+"/api/fuel-cache-v3");
- const lkgKey=new Request(u.origin+"/api/fuel-last-good-v3");
+ const freshKey=new Request(u.origin+"/api/fuel-cache-v4");
+ const lkgKey=new Request(u.origin+"/api/fuel-last-good-v4");
 
  if(!force){
   const hit=await cache.match(freshKey);
   if(hit)return hit;
  }
 
- let previousFuel=FALLBACK_FUEL;
- let previousLpg=FALLBACK_LPG;
+ let previousFuel=[];
+ let previousLpg=[];
  const previous=await cache.match(lkgKey);
  if(previous){
   const pj=await readJsonResponse(previous);
@@ -243,18 +248,18 @@ export async function onRequestGet(context){
    }
   }
   return response({
-   ok:true,
-   fallback:true,
+   ok:false,
+   fallback:false,
    stale:true,
    partial:true,
    source:"GasWatch PH",
    source_url:SOURCE,
-   updated:"September 22, 2026",
+   updated:"",
    checked_at:new Date().toISOString(),
-   fuel:FALLBACK_FUEL,
-   lpg:FALLBACK_LPG,
-   note:"Live source unavailable and no cached verified copy exists yet; safe built-in snapshot shown.",
+   fuel:[],
+   lpg:[],
+   note:"Live source unavailable and no previously verified copy exists. No static snapshot is shown.",
    error:String(e)
-  },200,60);
+  },502,0);
  }
 }
