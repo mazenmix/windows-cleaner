@@ -387,37 +387,38 @@ setInterval(()=>refreshAll(false),60000);
 (function(){
  const box=document.getElementById("visitorStats"),todayEl=document.getElementById("visitorsToday"),nowEl=document.getElementById("visitorsNow");
  if(!box||!todayEl||!nowEl)return;
- const KEY="mxVisitorDemoV2";
- function fmt(v){return Math.max(0,Math.round(v)).toLocaleString("en-US")}
- function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
- function phNow(){
-  const p=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Manila",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(new Date());
-  const o={};p.forEach(x=>{if(x.type!=="literal")o[x.type]=x.value});
-  return {day:o.year+"-"+o.month+"-"+o.day,h:+o.hour,m:+o.minute,s:+o.second};
- }
- function renderDemo(){
-  const t=phNow(),seed=hash(t.day),minutes=t.h*60+t.m,progress=minutes/1440;
-  let st={day:t.day,refreshes:0};
-  try{const old=JSON.parse(localStorage.getItem(KEY)||"null");if(old&&old.day===t.day)st=old}catch(e){}
-  st.refreshes=(st.refreshes||0)+1;
-  try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}
-
-  const base=1120+(seed%620);
-  const dailyGrowth=520+((seed>>>8)%1450);
-  const curve=Math.pow(progress,.72);
-  const today=base+Math.round(dailyGrowth*curve)+Math.min(st.refreshes*3,180);
-
-  const wave=Math.sin((minutes+(seed%360))*Math.PI/180)*38;
-  const pulse=Math.sin((minutes*3+(seed%97))*Math.PI/180)*18;
-  const refreshJitter=((st.refreshes*13+(seed%41))%39)-19;
-  const now=Math.max(120,Math.min(480,250+((seed>>>16)%90)+wave+pulse+refreshJitter));
-
-  todayEl.textContent=fmt(today);
-  nowEl.textContent=fmt(now);
+ const note=box.querySelector(".visitor-estimated");
+ const KEY="mxVisitorRealV1";
+ function fmt(v){return Math.max(0,Math.round(Number(v)||0)).toLocaleString("en-US")}
+ function render(j,cached){
+  if(!j||!Number.isFinite(Number(j.today))||!Number.isFinite(Number(j.now)))return false;
+  todayEl.textContent=fmt(j.today);
+  nowEl.textContent=fmt(j.now);
+  if(note)note.textContent=cached?"Last Verified":"Live • 5 min active";
   box.hidden=false;
+  return true;
  }
- renderDemo();
- setInterval(renderDemo,60000);
+ function restore(){
+  try{return render(JSON.parse(localStorage.getItem(KEY)||"null"),true)}catch(e){return false}
+ }
+ async function refresh(){
+  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),8000);
+  try{
+   const r=await fetch("/api/visitors?ts="+Date.now(),{cache:"no-store",signal:ctrl.signal});
+   if(!r.ok)throw new Error("HTTP "+r.status);
+   const j=await r.json();
+   if(!j.ok||!j.configured||!render(j,false))throw new Error("Visitor counter unavailable");
+   try{localStorage.setItem(KEY,JSON.stringify(j))}catch(e){}
+  }catch(e){
+   if(!restore()){
+    todayEl.textContent="—";nowEl.textContent="—";
+    if(note)note.textContent="Unavailable";
+   }
+  }finally{clearTimeout(timer)}
+ }
+ restore();
+ refresh();
+ setInterval(refresh,60000);
 })();
 </script>
 
