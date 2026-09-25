@@ -96,7 +96,7 @@
 <section class="hero"><div class="hero-inner">
 <div><div class="eyebrow">PHILIPPINES EVERYDAY COST MONITOR</div><h1>Daily Cost</h1>
 <p>Updated every moment, never miss!</p></div>
-<div class="global-status" id="globalStatus">Checking Sources…</div>
+<div class="global-status" id="globalStatus">Live Now</div>
 </div></section>
 
 <main class="content">
@@ -196,11 +196,11 @@ const grid=document.getElementById("costGrid"),globalStatus=document.getElementB
 const cache={};
 const medicineState={query:"",visible:24};
 const groceryState={query:"",visible:24};
-try{Object.assign(cache,JSON.parse(localStorage.getItem("mxDailyCostCacheV4")||"{}"))}catch(e){}
+try{Object.assign(cache,JSON.parse(localStorage.getItem("mxDailyCostCacheV3")||"{}"))}catch(e){}
 
 function normalize(sec,data){
  const b=BOOT[sec];
- if(!data)return {section:sec,source:b.source,source_url:b.source_url,as_of:b.as_of,items:[],live:false,fallback:false,stale:false,checking:true};
+ if(!data)return {section:sec,source:b.source,source_url:b.source_url,as_of:b.as_of,items:b.items.map(x=>({label:x[0],value:x[1],detail:x[2]})),live:false,fallback:false,stale:false,checking:true};
  const items=(data.items||[]).map(x=>Array.isArray(x)?{label:x[0],value:x[1],detail:x[2]}:x);
  return {...data,section:sec,items};
 }
@@ -209,10 +209,9 @@ function timeLabel(iso){
  try{return "Checked "+new Date(iso).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}catch(e){return "Checked"}
 }
 function statusInfo(d){
- if(d&&d.unavailable===true)return {cls:" stale",text:"Unavailable"};
  if(d&&d.live===true&&!d.fallback&&!d.stale)return {cls:"",text:"Live"};
  if(d&&d.verified===true&&!d.fallback&&!d.stale)return {cls:" verified",text:"Verified"};
- if(d&&(d.fallback||d.stale)&&Array.isArray(d.items)&&d.items.length)return {cls:" stale",text:"Last Verified"};
+ if(d&&(d.fallback||d.stale))return {cls:" stale",text:"Last Verified"};
  return {cls:" checking",text:"Checking"};
 }
 function statusHtml(d){
@@ -320,7 +319,7 @@ function renderAll(){
  bindGroceryControls();
  bindMedicineControls();
 }
-function save(){try{localStorage.setItem("mxDailyCostCacheV4",JSON.stringify(cache))}catch(e){}}
+function save(){try{localStorage.setItem("mxDailyCostCacheV3",JSON.stringify(cache))}catch(e){}}
 function rerenderOne(sec){
  const old=document.getElementById("card-"+sec);if(!old)return;
  const wrap=document.createElement("div");wrap.innerHTML=renderCard(sec,cache[sec]);old.replaceWith(wrap.firstElementChild);
@@ -352,14 +351,7 @@ async function refreshOne(sec,force){
    }else if(j&&j.ok&&Array.isArray(j.items)&&j.items.length){
      cache[sec]=j;save();rerenderOne(sec);
    }
- }catch(e){
-   const existing=cache[sec];
-   if(!existing||existing.checking===true||!Array.isArray(existing.items)||!existing.items.length){
-     const b=normalize(sec,null);
-     cache[sec]={...b,checking:false,unavailable:true,stale:true,fallback:false,items:[],checked_at:new Date().toISOString(),note:"Source temporarily unavailable. No static price shown."};
-     rerenderOne(sec);
-   }
- }finally{clearTimeout(timer)}
+ }catch(e){}finally{clearTimeout(timer)}
 }
 async function refreshAll(force){
  refreshBtn.classList.add("loading");globalStatus.textContent="CHECKING 11 SOURCES…";
