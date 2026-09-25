@@ -209,9 +209,10 @@ function timeLabel(iso){
  try{return "Checked "+new Date(iso).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}catch(e){return "Checked"}
 }
 function statusInfo(d){
+ if(d&&d.unavailable===true)return {cls:" stale",text:"Unavailable"};
  if(d&&d.live===true&&!d.fallback&&!d.stale)return {cls:"",text:"Live"};
  if(d&&d.verified===true&&!d.fallback&&!d.stale)return {cls:" verified",text:"Verified"};
- if(d&&(d.fallback||d.stale))return {cls:" stale",text:"Last Verified"};
+ if(d&&(d.fallback||d.stale)&&Array.isArray(d.items)&&d.items.length)return {cls:" stale",text:"Last Verified"};
  return {cls:" checking",text:"Checking"};
 }
 function statusHtml(d){
@@ -351,7 +352,14 @@ async function refreshOne(sec,force){
    }else if(j&&j.ok&&Array.isArray(j.items)&&j.items.length){
      cache[sec]=j;save();rerenderOne(sec);
    }
- }catch(e){}finally{clearTimeout(timer)}
+ }catch(e){
+   const existing=cache[sec];
+   if(!existing||existing.checking===true||!Array.isArray(existing.items)||!existing.items.length){
+     const b=normalize(sec,null);
+     cache[sec]={...b,checking:false,unavailable:true,stale:true,fallback:false,items:[],checked_at:new Date().toISOString(),note:"Source temporarily unavailable. No static price shown."};
+     rerenderOne(sec);
+   }
+ }finally{clearTimeout(timer)}
 }
 async function refreshAll(force){
  refreshBtn.classList.add("loading");globalStatus.textContent="CHECKING 11 SOURCES…";
