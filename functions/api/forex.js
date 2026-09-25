@@ -36,7 +36,7 @@ function json(data,status=200,maxAge=TTL){
  }});
 }
 
-async function fetchText(url,timeout=18000){
+async function fetchText(url,timeout=7000){
  const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);
  try{
   const headers={
@@ -63,17 +63,12 @@ function withFreshParam(url){
 
 async function readableCandidates(url){
  const target=withFreshParam(url);
- const out=[];
- let last;
- // Try the readable representation first, then the official HTML.
- // A candidate is only accepted later if it actually contains parsable rates.
- for(const u of ["https://r.jina.ai/"+target,target]){
-  try{
-   const t=await fetchText(u);
-   if(t&&t.length>300)out.push(t);
-  }catch(e){last=e}
- }
- if(!out.length)throw last||new Error("Source unavailable");
+ const urls=["https://r.jina.ai/"+target,target];
+ const results=await Promise.allSettled(urls.map(u=>fetchText(u,7000)));
+ const out=results
+  .filter(r=>r.status==="fulfilled"&&r.value&&r.value.length>300)
+  .map(r=>r.value);
+ if(!out.length)throw new Error("Source unavailable");
  return out;
 }
 
@@ -192,12 +187,12 @@ async function loadBDORenderedFeed(){
 }
 
 async function loadBDO(){
- // First try the official page directly. If BDO's JS-only table is not visible
- // to a server-side fetch, use the browser-rendered official BDO snapshot.
- try{return await loadPublished("BDO",SOURCES.BDO)}
+ // BDO is JavaScript-rendered. Use the browser-rendered official feed first
+ // so the API never waits on a slow/non-rendered server fetch.
+ try{return await loadBDORenderedFeed()}
  catch(first){
-  try{return await loadBDORenderedFeed()}
-  catch(second){throw new Error("BDO direct + rendered feed failed: "+first+" | "+second)}
+  try{return await loadPublished("BDO",SOURCES.BDO)}
+  catch(second){throw new Error("BDO rendered feed + direct source failed: "+first+" | "+second)}
  }
 }
 
@@ -303,8 +298,8 @@ export async function onRequestGet(context){
  const cache=caches.default;
 
  // V2 keys deliberately invalidate the old cache that contained seeded rates.
- const freshKey=new Request(u.origin+"/api/forex-cache-v2");
- const lkgKey=new Request(u.origin+"/api/forex-last-good-v2");
+ const freshKey=new Request(u.origin+"/api/forex-cache-v3");
+ const lkgKey=new Request(u.origin+"/api/forex-last-good-v3");
 
  if(!force){
   const hit=await cache.match(freshKey);
