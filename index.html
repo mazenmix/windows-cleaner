@@ -732,10 +732,10 @@
      if(isLive)saveCache(j);
    }catch(e){}
  }
- renderFood(FOOD_BOOTSTRAP,"Checking");
+ renderFood(FOOD_BOOTSTRAP,"Last Verified");
  readCache();
  refresh();
- setInterval(refresh,900000);
+ setInterval(refresh,60000);
 })();
 </script>
 
