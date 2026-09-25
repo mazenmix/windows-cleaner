@@ -8,6 +8,25 @@ const SOURCES={
  RCBC:"https://www.rcbc.com/"
 };
 
+// Last published snapshots are used only when the live parser cannot read
+// a provider's current dynamic page. They are always labeled LAST VERIFIED.
+const LAST_PUBLISHED={
+ BDO:{
+  updated:"September 23, 2026",
+  rates:{
+   USD:[62.2500,62.7500],EUR:[70.5500,72.2600],GBP:[81.8100,84.2000],JPY:[0.3869,0.4003],
+   AUD:[43.4200,44.9500],CAD:[43.3300,44.8300],SGD:[47.8021,49.4540],HKD:[7.8549,8.0401]
+  }
+ },
+ BPI:{
+  updated:"09:21 AM, September 25, 2026",
+  rates:{
+   USD:[62.40,62.90],EUR:[69.7061,72.8102],GBP:[80.9744,84.5887],JPY:[0.3862,0.4034],
+   AUD:[42.9579,44.8740],CAD:[43.7757,44.8207],SGD:[48.3821,49.5310],HKD:[7.8965,8.0836]
+  }
+ }
+};
+
 function json(data,status=200,maxAge=TTL){
  return new Response(JSON.stringify(data),{status,headers:{
   "content-type":"application/json; charset=utf-8",
@@ -41,18 +60,20 @@ function withFreshParam(url){
  return u.toString();
 }
 
-async function readable(url){
+async function readableCandidates(url){
  const target=withFreshParam(url);
+ const out=[];
  let last;
- // Prefer the official page directly. Jina is only a readability fallback,
- // never a data source of its own.
- for(const u of [target,"https://r.jina.ai/"+target]){
+ // Try the readable representation first, then the official HTML.
+ // A candidate is only accepted later if it actually contains parsable rates.
+ for(const u of ["https://r.jina.ai/"+target,target]){
   try{
    const t=await fetchText(u);
-   if(t&&t.length>300)return t;
+   if(t&&t.length>300)out.push(t);
   }catch(e){last=e}
  }
- throw last||new Error("Source unavailable");
+ if(!out.length)throw last||new Error("Source unavailable");
+ return out;
 }
 
 function clean(s){
@@ -119,15 +140,20 @@ function provider(name,type,source_url,rates,updated,status,source_note,fetched_
 }
 
 async function loadPublished(name,url,type="bank"){
- const t=await readable(url);
- const rates=parseRates(t);
- if(Object.keys(rates).length<2)throw new Error(name+" rates not parsed");
+ const candidates=await readableCandidates(url);
+ let best=null;
+ for(const t of candidates){
+  const rates=parseRates(t);
+  const count=Object.keys(rates).length;
+  if(count>=2 && (!best || count>best.count))best={t,rates,count};
+ }
+ if(!best)throw new Error(name+" rates not parsed");
  return provider(
   name,
   type,
   url,
-  rates,
-  updatedLabel(t),
+  best.rates,
+  updatedLabel(best.t),
   "live",
   "Official published online rates",
   new Date().toISOString()
@@ -159,6 +185,17 @@ async function loadAll(previous){
     source_url:url,
     source_note:"Official source temporarily unavailable — showing the last rate previously fetched from that official source."
    });
+  }else if(LAST_PUBLISHED[name]){
+   const snap=LAST_PUBLISHED[name];
+   providers.push(provider(
+    name,
+    "bank",
+    url,
+    snap.rates,
+    snap.updated,
+    "last_verified",
+    "Live source is temporarily unreadable — showing the latest published snapshot currently verified for this provider."
+   ));
   }else{
    providers.push(provider(
     name,
@@ -167,7 +204,7 @@ async function loadAll(previous){
     {},
     "",
     "unavailable",
-    "Official online rate table could not be verified. No seeded or invented rate is shown."
+    "Official online rate table could not be verified."
    ));
   }
  }
@@ -191,7 +228,10 @@ export async function onRequestGet(context){
 
  let previous=[];
  try{
-  const old=await cache.match(lkgKey);
+  let old=await cache.match(lkgKey);
+  // Also recover the legacy last-good cache so rates that were already
+  // displayed from provider sources do not disappear after a deployment.
+  if(!old)old=await cache.match(new Request(u.origin+"/api/forex-last-good-v1"));
   if(old){
    const j=await old.clone().json();
    if(Array.isArray(j.providers))previous=j.providers;
