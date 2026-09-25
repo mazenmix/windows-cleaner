@@ -1,4 +1,4 @@
-const FRESH_TTL=900;
+const FRESH_TTL=60;
 const LAST_GOOD_TTL=2592000;
 const DA_PAGE="https://www.da.gov.ph/price-monitoring/";
 const BANTAY_BASE="https://www.bantaypresyo.da.gov.ph/";
