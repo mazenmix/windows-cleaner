@@ -1,4 +1,5 @@
-const TTL=300;
+const TTL=60;
+const LAST_GOOD_TTL=2592000;
 const FEEDS=[
  "https://news.google.com/rss/search?q=Philippines%20(PAGASA%20OR%20typhoon%20OR%20storm%20OR%20LPA)%20when%3A2d&hl=en-PH&gl=PH&ceid=PH%3Aen",
  "https://news.google.com/rss/search?q=Philippines%20(flood%20OR%20heavy%20rain%20OR%20rainfall%20OR%20weather%20warning)%20when%3A2d&hl=en-PH&gl=PH&ceid=PH%3Aen",
@@ -82,16 +83,34 @@ function response(data,status=200){
  }});
 }
 export async function onRequestGet(context){
- const cache=caches.default,u=new URL(context.request.url),key=new Request(u.origin+"/api/weather-news-cache-v1");
- const hit=await cache.match(key);if(hit)return hit;
+ const cache=caches.default,u=new URL(context.request.url);
+ const freshKey=new Request(u.origin+"/api/weather-news-cache-v2");
+ const lkgKey=new Request(u.origin+"/api/weather-news-last-good-v1");
+ const hit=await cache.match(freshKey);if(hit)return hit;
  try{
   const rs=await Promise.allSettled(FEEDS.map(get));let items=[];
   for(const r of rs)if(r.status==="fulfilled")items.push(...parse(r.value));
   items=dedupe(items);
   if(items.length<5)throw new Error("Not enough weather headlines");
-  const out=response({ok:true,checked_at:new Date().toISOString(),items});
-  context.waitUntil(cache.put(key,out.clone()));return out;
+  const data={ok:true,live:true,stale:false,checked_at:new Date().toISOString(),items};
+  const out=response(data);
+  const keep=new Response(JSON.stringify(data),{status:200,headers:{
+   "content-type":"application/json; charset=utf-8",
+   "cache-control":"public, max-age="+LAST_GOOD_TTL+", s-maxage="+LAST_GOOD_TTL,
+   "access-control-allow-origin":"*"
+  }});
+  context.waitUntil(Promise.all([cache.put(freshKey,out.clone()),cache.put(lkgKey,keep.clone())]));
+  return out;
  }catch(e){
-  return response({ok:false,error:String(e),checked_at:new Date().toISOString(),items:[]},502);
+  const last=await cache.match(lkgKey);
+  if(last){
+   try{
+    const j=await last.clone().json();
+    if(j&&Array.isArray(j.items)&&j.items.length){
+     return response({...j,ok:true,live:false,stale:true,last_verified:true,checked_at:new Date().toISOString(),note:"Weather news source temporarily unavailable — last verified headlines kept.",error:String(e)},200);
+    }
+   }catch{}
+  }
+  return response({ok:false,live:false,stale:true,error:String(e),checked_at:new Date().toISOString(),items:[]},502);
  }
 }
