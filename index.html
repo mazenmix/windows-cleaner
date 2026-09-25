@@ -605,60 +605,7 @@
  const stack=document.getElementById('foodCategoryStack');
  const source=document.getElementById('foodSourcePill');
 
- const FOOD_BOOTSTRAP=[
-  {name:'Corn (White)',price:120,unit:'kg',change_pct:null},
-  {name:'Corn (Yellow)',price:120,unit:'kg',change_pct:null},
-  {name:'Alumahan',price:360,unit:'kg',change_pct:null},
-  {name:'Bangus (Large)',price:290,unit:'kg',change_pct:null},
-  {name:'Bangus (Medium)',price:260,unit:'kg',change_pct:null},
-  {name:'Galunggong (Local)',price:300,unit:'kg',change_pct:null},
-  {name:'Tilapia',price:180,unit:'kg',change_pct:null},
-  {name:'Avocado',price:220,unit:'kg',change_pct:null},
-  {name:'Banana (Lakatan)',price:120,unit:'kg',change_pct:null},
-  {name:'Banana (Latundan)',price:100,unit:'kg',change_pct:null},
-  {name:'Banana (Saba)',price:60,unit:'kg',change_pct:null},
-  {name:'Calamansi',price:120,unit:'kg',change_pct:null},
-  {name:'Mango (Carabao)',price:200,unit:'kg',change_pct:null},
-  {name:'Melon',price:120,unit:'kg',change_pct:null},
-  {name:'Papaya',price:90,unit:'pc',change_pct:null},
-  {name:'Watermelon',price:80,unit:'kg',change_pct:null},
-  {name:'Bell Pepper (Green)',price:180,unit:'pc',change_pct:null},
-  {name:'Bell Pepper (Red)',price:150,unit:'pc',change_pct:null},
-  {name:'Cabbage',price:80,unit:'kg',change_pct:null},
-  {name:'Chayote',price:50,unit:'kg',change_pct:null},
-  {name:'Baguio Beans',price:130,unit:'kg',change_pct:null},
-  {name:'Lettuce (Green Ice)',price:150,unit:'kg',change_pct:null},
-  {name:'Lettuce (Romaine)',price:150,unit:'kg',change_pct:null},
-  {name:'Pechay (Baguio)',price:80,unit:'kg',change_pct:null},
-  {name:'White Potato',price:120,unit:'kg',change_pct:null},
-  {name:'Mungbean',price:150,unit:'kg',change_pct:null},
-  {name:'Ampalaya',price:100,unit:'kg',change_pct:null},
-  {name:'Eggplant',price:100,unit:'kg',change_pct:null},
-  {name:'Pechay (Native)',price:100,unit:'kg',change_pct:null},
-  {name:'Sitao',price:100,unit:'kg',change_pct:null},
-  {name:'Squash',price:60,unit:'kg',change_pct:null},
-  {name:'Tomato',price:100,unit:'kg',change_pct:null},
-  {name:'Beef Brisket',price:400,unit:'kg',change_pct:null},
-  {name:'Beef Rump',price:450,unit:'kg',change_pct:null},
-  {name:'Frozen Kasim',price:240,unit:'kg',change_pct:null},
-  {name:'Frozen Liempo',price:290,unit:'kg',change_pct:null},
-  {name:'Pork Belly (Liempo)',price:370,unit:'kg',change_pct:null},
-  {name:'Pork Ham (Kasim)',price:320,unit:'kg',change_pct:null},
-  {name:'Whole Chicken',price:220,unit:'kg',change_pct:null},
-  {name:'Sugar (Brown)',price:70,unit:'kg',change_pct:null},
-  {name:'Sugar (Refined)',price:80,unit:'kg',change_pct:null},
-  {name:'Sugar (Washed)',price:70,unit:'kg',change_pct:null},
-  {name:'Imported Rice Premium',price:50,unit:'kg',change_pct:null},
-  {name:'Imported Rice Special',price:60,unit:'kg',change_pct:null},
-  {name:'Local Rice Premium',price:55,unit:'kg',change_pct:null},
-  {name:'Local Rice Special',price:60,unit:'kg',change_pct:null},
-  {name:'Local Rice Well Milled',price:45,unit:'kg',change_pct:null},
-  {name:'Chili (Red)',price:150,unit:'kg',change_pct:null},
-  {name:'Garlic (Imported)',price:140,unit:'kg',change_pct:null},
-  {name:'Ginger',price:180,unit:'kg',change_pct:null},
-  {name:'Red Onion',price:120,unit:'kg',change_pct:null},
-  {name:'White Onion',price:100,unit:'kg',change_pct:null}
- ];
+ const FOOD_BOOTSTRAP=[];
 
  const categories=[
    ['Vegetables','#68dc8c'],
@@ -732,8 +679,11 @@
      if(isLive)saveCache(j);
    }catch(e){}
  }
- renderFood(FOOD_BOOTSTRAP,"Checking");
- readCache();
+ const hadFoodCache=readCache();
+ if(!hadFoodCache){
+   stack.innerHTML='<div class="food-row" style="grid-column:1/-1"><div class="food-row-name">Checking official DA prices…</div></div>';
+   if(source){source.textContent="Checking";source.classList.add("checking")}
+ }
  refresh();
  setInterval(refresh,900000);
 })();
@@ -844,24 +794,13 @@
 <script>
 (function(){
 const brandColors={Shell:'#ffce1e',Petron:'#1577d5',Caltex:'#ff334b',Phoenix:'#ff7417',Seaoil:'#16d887',Unioil:'#9b4de8',Jetti:'#1cc9e8','Flying V':'#ff4f9b',Cleanfuel:'#a4ee38',Total:'#9d50ff',PTT:'#19a9e5'};
-let fuelData=[
-{name:'Shell',stations:204,diesel:[105.73,7.80],premDiesel:[112.94,7.80],unleaded91:[93.68,4.80],eGas:null,prem95:[100.93,4.80],prem97:[107.21,4.80],kerosene:[132.85,6.40]},
-{name:'Petron',stations:240,diesel:[104.19,7.77],premDiesel:[107.22,7.80],unleaded91:[91.73,4.75],eGas:null,prem95:[92.75,4.77],prem97:[101.83,4.80],kerosene:[129.58,6.40]},
-{name:'Caltex',stations:131,diesel:[107.43,7.82],premDiesel:[111.69,7.82],unleaded91:[94.63,4.88],eGas:null,prem95:[101.83,4.88],prem97:[104.60,4.88],kerosene:[128.43,6.47]},
-{name:'Phoenix',stations:70,diesel:[108.35,7.82],premDiesel:null,unleaded91:[99.44,4.88],eGas:[105.38,4.88],prem95:[101.45,4.88],prem97:[104.85,4.88],kerosene:null},
-{name:'Seaoil',stations:71,diesel:[104.20,7.82],premDiesel:[110.23,7.82],unleaded91:[91.21,4.88],eGas:[117.06,4.88],prem95:[94.22,4.88],prem97:[94.78,4.88],kerosene:[134.56,6.47]},
-{name:'Unioil',stations:83,diesel:[103.26,7.60],premDiesel:null,unleaded91:[90.28,4.66],eGas:[114.28,4.80],prem95:[93.31,4.69],prem97:[108.99,4.80],kerosene:null},
-{name:'Jetti',stations:10,diesel:[104.91,6.80],premDiesel:null,unleaded91:[92.59,4.80],eGas:null,prem95:[96.51,4.80],prem97:[103.70,4.80],kerosene:null},
-{name:'Flying V',stations:38,diesel:[100.73,7.80],premDiesel:null,unleaded91:[86.84,4.80],eGas:null,prem95:[87.79,4.80],prem97:null,kerosene:null},
-{name:'Cleanfuel',stations:54,diesel:[104.82,7.82],premDiesel:null,unleaded91:[92.49,4.88],eGas:null,prem95:[96.51,4.88],prem97:null,kerosene:null},
-{name:'Total',stations:41,diesel:[104.54,7.82],premDiesel:[111.88,7.82],unleaded91:[94.08,4.88],eGas:null,prem95:[95.40,4.88],prem97:[103.70,4.88],kerosene:null},
-{name:'PTT',stations:22,diesel:[100.13,7.82],premDiesel:[103.51,7.82],unleaded91:[89.59,4.88],eGas:null,prem95:[90.44,4.88],prem97:null,kerosene:null}
-];
-let lpgData=[{name:'Regasco',price:1229,color:'#16da6d',change:null},{name:'Solane',price:1266,color:'#ff3847',change:null},{name:'Petron Gasul',price:1291,color:'#2489ff',change:null},{name:'SL Gas',price:1319,color:'#18e7a1',change:null},{name:'Phoenix LPG',price:1334,color:'#ff7517',change:null},{name:'Total Gas',price:1636,color:'#9f53ff',change:null}];
+let fuelData=[];
+const lpgColors={'Regasco':'#16da6d','Solane':'#ff3847','Petron Gasul':'#2489ff','SL Gas':'#18e7a1','Phoenix LPG':'#ff7517','Total Gas':'#9f53ff'};
+let lpgData=[];
 let selectedKg=11;const cols=['diesel','premDiesel','unleaded91','eGas','prem95','prem97','kerosene'];const $=id=>document.getElementById(id);
-const FUEL_CACHE_KEY='mxFuelLastKnownGoodV2';
-function saveFuelCache(updated){
- try{localStorage.setItem(FUEL_CACHE_KEY,JSON.stringify({savedAt:Date.now(),updated:updated||'',fuel:fuelData,lpg:lpgData}))}catch(e){}
+const FUEL_CACHE_KEY='mxFuelLastKnownGoodV3';
+function saveFuelCache(updated,includeLpg){
+ try{localStorage.setItem(FUEL_CACHE_KEY,JSON.stringify({savedAt:Date.now(),updated:updated||'',fuel:fuelData,lpg:includeLpg?lpgData:[]}))}catch(e){}
 }
 function readFuelCache(){
  try{
@@ -877,9 +816,9 @@ function readFuelCache(){
 
 function setFuelStatus(text,isStale){
  const label=$('liveLabel');
- if(label)label.textContent='Live Now';
+ if(label)label.textContent=text||'Checking';
  const badge=label&&label.closest('.livebadge');
- if(badge)badge.classList.remove('stale');
+ if(badge)badge.classList.toggle('stale',!!isStale);
 }
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove('show'),1700)}
 function getRanks(key){return fuelData.filter(r=>r[key]&&Number.isFinite(r[key][0])).map(r=>r[key][0]).sort((a,b)=>a-b)}
@@ -969,18 +908,19 @@ async function refreshSource(manual){
   if(!j.ok||!Array.isArray(j.fuel)||j.fuel.length<8)throw new Error('Invalid fuel data');
   fuelData=j.fuel;
   if(Array.isArray(j.lpg)&&j.lpg.length){
-   const map=new Map(j.lpg.map(x=>[x.name,Number(x.price)]));
-   lpgData=lpgData.map(x=>map.has(x.name)?Object.assign({},x,{price:map.get(x.name)}):x);
+   lpgData=j.lpg
+    .filter(x=>x&&x.name&&Number.isFinite(Number(x.price)))
+    .map(x=>({name:x.name,price:Number(x.price),color:lpgColors[x.name]||'#7aa7c7',change:Number.isFinite(Number(x.change))?Number(x.change):null}));
   }
   $('updatedLabel').textContent='Updated '+(j.updated||'latest source');
   const fuelIsLive=!j.fallback&&!j.stale;
-  if(fuelIsLive)saveFuelCache(j.updated||'latest source');
+  if(fuelIsLive)saveFuelCache(j.updated||'latest source',!j.lpg_stale);
   renderFuel();renderLpg();
   setFuelStatus(fuelIsLive?(j.lpg_stale?'Fuel Live • LPG Last Verified':'Live Prices'):'Last Verified',!fuelIsLive);
   if(manual)toast(fuelIsLive?(j.lpg_stale?'Fuel refreshed • LPG kept at last verified values':'Fuel and LPG prices refreshed'):'Latest verified prices kept');
  }catch(e){
-  setFuelStatus('Last Verified',true);
-  if(manual)toast('Live source unavailable — latest verified prices kept');
+  setFuelStatus(fuelData.length>=8?'Last Verified':'Source unavailable',true);
+  if(manual)toast(fuelData.length>=8?'Live source unavailable — latest verified prices kept':'Live source unavailable — no unverified price shown');
  }finally{document.body.classList.remove('loading-shimmer')}
 }
 $('refreshAll').addEventListener('click',()=>refreshSource(true));
@@ -997,7 +937,17 @@ $('alertSave').addEventListener('click',async()=>{
 });
 renderAlertList();
 
-readFuelCache();renderFuel();renderLpg();refreshSource(false);setInterval(()=>refreshSource(false),60000);
+const hadFuelCache=readFuelCache();
+if(hadFuelCache){
+ renderFuel();renderLpg();setFuelStatus('Last Verified',true);
+}else{
+ $('fuelRows').innerHTML='<tr><td colspan="9" class="price-na">Checking live fuel source…</td></tr>';
+ $('mobileFuelCards').innerHTML='<div class="price-na">Checking live fuel source…</div>';
+ $('lpgGrid').innerHTML='<div class="price-na">Checking live LPG source…</div>';
+ $('brandCountText').textContent='Checking source…';
+ setFuelStatus('Checking…',true);
+}
+refreshSource(false);setInterval(()=>refreshSource(false),60000);
 })();
 </script>
 <script>
