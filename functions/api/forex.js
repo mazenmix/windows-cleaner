@@ -158,10 +158,15 @@ async function loadPublished(name,url,type="bank"){
 
 async function loadBDORenderedFeed(){
  const url=BDO_RENDERED_FEED+"?ts="+Date.now();
- const r=await fetch(url,{
-  headers:{"accept":"application/json","cache-control":"no-cache, no-store"},
-  cf:{cacheTtl:0,cacheEverything:false}
- });
+ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),5000);
+ let r;
+ try{
+  r=await fetch(url,{
+   headers:{"accept":"application/json","cache-control":"no-cache, no-store"},
+   signal:ctrl.signal,
+   cf:{cacheTtl:0,cacheEverything:false}
+  });
+ }finally{clearTimeout(timer)}
  if(!r.ok)throw new Error("BDO rendered feed HTTP "+r.status);
  const j=await r.json();
  if(!j||j.provider!=="BDO"||!j.rates||Object.keys(j.rates).length<5)throw new Error("BDO rendered feed invalid");
