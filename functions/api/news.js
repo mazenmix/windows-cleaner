@@ -1,4 +1,5 @@
-const TTL=300;
+const TTL=60;
+const LAST_GOOD_TTL=2592000;
 const FEEDS=[
  "https://news.google.com/rss/search?q=Philippines%20when%3A1d&hl=en-PH&gl=PH&ceid=PH%3Aen",
  "https://news.google.com/rss/search?q=Philippines%20(weather%20OR%20economy%20OR%20transport%20OR%20oil%20OR%20power)%20when%3A1d&hl=en-PH&gl=PH&ceid=PH%3Aen",
@@ -98,8 +99,9 @@ function response(data,status=200){
 export async function onRequestGet(context){
  const cache=caches.default;
  const origin=new URL(context.request.url).origin;
- const key=new Request(origin+"/api/news-cache-v1");
- const hit=await cache.match(key);
+ const freshKey=new Request(origin+"/api/news-cache-v2");
+ const lkgKey=new Request(origin+"/api/news-last-good-v1");
+ const hit=await cache.match(freshKey);
  if(hit)return hit;
  try{
    const xmls=await Promise.allSettled(FEEDS.map(get));
@@ -107,10 +109,25 @@ export async function onRequestGet(context){
    for(const r of xmls)if(r.status==="fulfilled")items.push(...parse(r.value));
    items=dedupe(items);
    if(items.length<8)throw new Error("Not enough trusted headlines");
-   const out=response({ok:true,source:"Google News aggregation of trusted Philippine publishers",checked_at:new Date().toISOString(),items});
-   context.waitUntil(cache.put(key,out.clone()));
+   const data={ok:true,live:true,stale:false,source:"Google News aggregation of trusted Philippine publishers",checked_at:new Date().toISOString(),items};
+   const out=response(data);
+   const keep=new Response(JSON.stringify(data),{status:200,headers:{
+    "content-type":"application/json; charset=utf-8",
+    "cache-control":"public, max-age="+LAST_GOOD_TTL+", s-maxage="+LAST_GOOD_TTL,
+    "access-control-allow-origin":"*"
+   }});
+   context.waitUntil(Promise.all([cache.put(freshKey,out.clone()),cache.put(lkgKey,keep.clone())]));
    return out;
  }catch(e){
-   return response({ok:false,error:String(e),checked_at:new Date().toISOString(),items:[]},502);
+   const last=await cache.match(lkgKey);
+   if(last){
+    try{
+     const j=await last.clone().json();
+     if(j&&Array.isArray(j.items)&&j.items.length){
+      return response({...j,ok:true,live:false,stale:true,last_verified:true,checked_at:new Date().toISOString(),note:"News source temporarily unavailable — last verified headlines kept.",error:String(e)},200);
+     }
+    }catch{}
+   }
+   return response({ok:false,live:false,stale:true,error:String(e),checked_at:new Date().toISOString(),items:[]},502);
  }
 }
