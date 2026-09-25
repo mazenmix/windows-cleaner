@@ -201,6 +201,46 @@ async function loadBDO(){
  }
 }
 
+function parseRCBCRates(text){
+ const out={};
+ const src=String(text||"");
+ const wanted=["USD","EUR","JPY","HKD","SGD"];
+ for(const code of wanted){
+  const patterns=[
+   new RegExp("(?:^|\\n)\\s*"+code+"\\s*\\|\\s*([0-9]+(?:\\.[0-9]+)?)\\s*\\|\\s*([0-9]+(?:\\.[0-9]+)?)","im"),
+   new RegExp("(?:^|>)\\s*"+code+"\\s*(?:<[^>]+>\\s*)+([0-9]+(?:\\.[0-9]+)?)(?:\\s*<[^>]+>)+\\s*([0-9]+(?:\\.[0-9]+)?)","i")
+  ];
+  for(const re of patterns){
+   const m=src.match(re);
+   if(!m)continue;
+   const p=pair(m[1],m[2]);
+   if(p){out[code]=p;break}
+  }
+ }
+ return out;
+}
+
+async function loadRCBC(){
+ const candidates=await readableCandidates(SOURCES.RCBC);
+ let best=null;
+ for(const t of candidates){
+  const rates=parseRCBCRates(t);
+  const count=Object.keys(rates).length;
+  if(count>=3 && (!best||count>best.count))best={t,rates,count};
+ }
+ if(!best)throw new Error("RCBC official FX table not parsed");
+ return provider(
+  "RCBC",
+  "bank",
+  SOURCES.RCBC,
+  best.rates,
+  updatedLabel(best.t),
+  "live",
+  "Official RCBC Foreign Exchange Rates table only",
+  new Date().toISOString()
+ );
+}
+
 async function loadAll(previous){
  const jobs=[
   ["BDO",SOURCES.BDO],
@@ -210,7 +250,7 @@ async function loadAll(previous){
  const results=await Promise.allSettled([
   loadBDO(),
   loadPublished("BPI",SOURCES.BPI),
-  loadPublished("RCBC",SOURCES.RCBC)
+  loadRCBC()
  ]);
  const providers=[];
 
