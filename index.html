@@ -786,7 +786,7 @@
 (function(){
  const currencies=["USD","EUR","JPY","AUD","CAD","SGD","HKD"];
  const labels={live:"LIVE",verified:"VERIFIED",last_verified:"LAST VERIFIED",unavailable:"UNAVAILABLE"};
- const cacheKey="mxForexComparisonV1";
+ const cacheKey="mxForexComparisonV2";
  const rowsEl=document.getElementById("fxRows"),mobileEl=document.getElementById("fxMobile"),statusEl=document.getElementById("fxStatus"),checkedEl=document.getElementById("fxChecked");
  if(!rowsEl||!mobileEl)return;
 
@@ -817,10 +817,11 @@
   const providers=Array.isArray(j.providers)?j.providers:[],best=bests(providers);
   rowsEl.innerHTML=providers.map(p=>'<tr><td>'+providerName(p)+'</td>'+currencies.map(c=>'<td>'+pairHtml(p.rates&&p.rates[c],c,best[c])+'</td>').join('')+'</tr>').join('');
   mobileEl.innerHTML=providers.map(p=>'<article class="fx-mobile-card"><div class="fx-mobile-head"><b>'+esc(p.name)+'</b><span class="fx-mobile-status">'+esc(labels[p.status]||p.status||"")+'</span></div><div class="fx-mobile-grid">'+currencies.map(c=>'<div class="fx-mobile-currency"><strong>'+c+'</strong>'+pairHtml(p.rates&&p.rates[c],c,best[c])+'</div>').join('')+'</div></article>').join('');
-  const live=providers.filter(p=>p.status==="live").length,verified=providers.filter(p=>p.status==="verified").length,last=providers.filter(p=>p.status==="last_verified").length;
+  const live=providers.filter(p=>p.status==="live").length,last=providers.filter(p=>p.status==="last_verified").length,unavailable=providers.filter(p=>p.status==="unavailable").length;
   statusEl.className="fx-status "+(live?"live":"mixed");
-  statusEl.textContent=(fromCache?"CACHED • ":"")+"LIVE "+live+" • VERIFIED "+verified+(last?" • LAST "+last:"");
-  checkedEl.textContent=j.checked_at?"Checked "+new Date(j.checked_at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"Latest available";
+  const bits=[];if(live)bits.push("LIVE "+live);if(last)bits.push("LAST VERIFIED "+last);if(unavailable)bits.push("UNAVAILABLE "+unavailable);if(!bits.length)bits.push("CHECKING");
+  statusEl.textContent=(fromCache?"CACHED • ":"")+bits.join(" • ");
+  checkedEl.textContent=j.checked_at?"Sources checked "+new Date(j.checked_at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"Latest available";
  }
  function save(j){try{localStorage.setItem(cacheKey,JSON.stringify(j))}catch(e){}}
  function restore(){try{const j=JSON.parse(localStorage.getItem(cacheKey)||"null");if(j&&Array.isArray(j.providers)){render(j,true);return true}}catch(e){}return false}
@@ -835,7 +836,7 @@
    if(!restore()){statusEl.className="fx-status mixed";statusEl.textContent="Rates temporarily unavailable";checkedEl.textContent="Retrying automatically…"}
   }
  }
- restore();load(false);setInterval(()=>load(false),300000);
+ restore();load(false);setInterval(()=>load(false),60000);
  const refresh=document.getElementById("refreshAll");if(refresh)refresh.addEventListener("click",()=>load(true));
 })();
 </script>
