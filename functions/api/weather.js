@@ -1,4 +1,5 @@
-const TTL=600;
+const TTL=60;
+const LAST_GOOD_TTL=2592000;
 const PAGASA_TC="https://bagong.pagasa.dost.gov.ph/tropical-cyclone-bulletin-iframe";
 const PAGASA_THREAT="https://www.pagasa.dost.gov.ph/tropical-cyclone/tc-threat-potential-forecast";
 const PAGASA_FLOOD="https://www.pagasa.dost.gov.ph/flood";
@@ -209,14 +210,28 @@ export async function onRequestGet(context){
  if(!Number.isFinite(lat)||!Number.isFinite(lon))return json({ok:false,error:"lat and lon are required"},400,60);
 
  const cache=caches.default;
- const key=new Request(u.origin+"/api/weather-cache-v2?lat="+lat.toFixed(3)+"&lon="+lon.toFixed(3)+"&name="+encodeURIComponent(name));
+ const suffix="?lat="+lat.toFixed(3)+"&lon="+lon.toFixed(3)+"&name="+encodeURIComponent(name);
+ const freshKey=new Request(u.origin+"/api/weather-cache-v3"+suffix);
+ const lkgKey=new Request(u.origin+"/api/weather-last-good-v1"+suffix);
  if(u.searchParams.get("force")!=="1"){
-  const hit=await cache.match(key);if(hit)return hit;
+  const hit=await cache.match(freshKey);if(hit)return hit;
  }
  try{
   const data=await weatherData(context,lat,lon,name);
-  const out=json(data);
-  context.waitUntil(cache.put(key,out.clone()));
+  const out=json(data,200,TTL);
+  const keep=json(data,200,LAST_GOOD_TTL);
+  context.waitUntil(Promise.all([cache.put(freshKey,out.clone()),cache.put(lkgKey,keep.clone())]));
   return out;
- }catch(e){return json({ok:false,error:String(e),checked_at:new Date().toISOString()},502,60)}
+ }catch(e){
+  const last=await cache.match(lkgKey);
+  if(last){
+   try{
+    const j=await last.clone().json();
+    if(j&&j.ok){
+     return json({...j,ok:true,live:false,stale:true,last_verified:true,checked_at:new Date().toISOString(),note:"Live weather source temporarily unavailable — last verified weather data kept.",error:String(e)},200,60);
+    }
+   }catch{}
+  }
+  return json({ok:false,live:false,stale:true,error:String(e),checked_at:new Date().toISOString()},502,60);
+ }
 }
