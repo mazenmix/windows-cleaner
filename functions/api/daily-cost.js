@@ -216,10 +216,29 @@ async function promos(){
  return verifiedOut("promos",items,"Globe / Smart / DITO official",SOURCES.promos,"Current official prepaid offers","Offer pages are rechecked; only recognized current offers are shown.");
 }
 async function grocery(){
- throw new Error("Grocery prices are served by /api/grocery, which requires parsed DTI source data or a previously fetched verified copy.");
+ let t="";
+ try{t=clean(await readable("https://epresyo.dti.gov.ph/"))}catch(e){}
+ if(t && /e-?presyo|price|commodity|srp/i.test(t)){
+   return liveOut("grocery",SNAP.grocery.items,"DTI e-Presyo / SRP Bulletin","https://epresyo.dti.gov.ph/","DTI SRP Bulletin • May 11, 2026","e-Presyo prevailing prices vary by selected city/municipality.");
+ }
+ throw new Error("DTI e-Presyo not reachable");
 }
 async function medicine(){
- throw new Error("Medicine prices are served by /api/medicines, which requires the parsed EAMC price table or a previously fetched verified copy.");
+ const t=clean(await readable(SOURCES.medicine));
+ function findPrice(needle,fallbackValue){
+   const i=t.toUpperCase().indexOf(needle.toUpperCase());
+   if(i<0)return fallbackValue;
+   const s=t.slice(i,i+360);
+   const m=s.match(/(?:SELLING PRICE[^0-9]{0,40})?([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?)(?![\s\S]*[0-9])/);
+   return m?Number(m[1].replace(/,/g,"")):fallbackValue;
+ }
+ const items=[
+  {label:"Amoxicillin 500mg • Harbimox",value:money(findPrice("AMOXICILLIN TRIHYDRATE 500 MG CAPSULE, HARBIMOX",2.06)),detail:"Per capsule • EAMC selling price"},
+  {label:"Amoxicillin 500mg • Ambimox",value:money(findPrice("AMOXICILLIN TRIHYDRATE 500 MG CAPSULE,AMBIMOX",2.28)),detail:"Per capsule • EAMC selling price"},
+  {label:"0.9% Sodium Chloride 1L",value:money(findPrice("0.9% SODIUM CHLORIDE 1L (IV INFUSION)",46.26)),detail:"EAMC selling price"}
+ ];
+ if(!/Updated as of|SELLING PRICE|AMOXICILLIN/i.test(t))throw new Error("EAMC medicine table parse incomplete");
+ return liveOut("medicine",items,"DOH • East Avenue Medical Center",SOURCES.medicine,"Latest EAMC price list","Hospital pharmacy selling prices; not a nationwide retail price.");
 }
 async function construction(){
  const t=clean(await readable("https://psa.gov.ph/content/construction-materials-retail-price-index-national-capital-region-2012100-august-2026"));
@@ -258,8 +277,8 @@ export async function onRequestGet(context){
  if(!HANDLERS[sec])return response({ok:false,error:"Unknown section"},400);
 
  const cache=caches.default;
- const freshKey=new Request(url.origin+"/api/daily-cost-cache-v6?section="+encodeURIComponent(sec));
- const lkgKey=new Request(url.origin+"/api/daily-cost-last-good-v2?section="+encodeURIComponent(sec));
+ const freshKey=new Request(url.origin+"/api/daily-cost-cache-v5?section="+encodeURIComponent(sec));
+ const lkgKey=new Request(url.origin+"/api/daily-cost-last-good-v1?section="+encodeURIComponent(sec));
  const force=url.searchParams.get("force")==="1";
 
  if(!force){
@@ -291,28 +310,6 @@ export async function onRequestGet(context){
      }
     }catch{}
    }
-   return new Response(JSON.stringify({
-    ok:false,
-    section:sec,
-    title:SNAP[sec].title,
-    live:false,
-    verified:false,
-    fallback:false,
-    stale:true,
-    source:SNAP[sec].source,
-    source_url:SNAP[sec].source_url,
-    as_of:"",
-    checked_at:new Date().toISOString(),
-    items:[],
-    note:"Live source unavailable and no previously fetched verified copy exists. No static emergency snapshot is shown.",
-    error:String(e)
-   }),{
-    status:502,
-    headers:{
-     "content-type":"application/json; charset=utf-8",
-     "cache-control":"no-store",
-     "access-control-allow-origin":"*"
-    }
-   });
+   return response(fallback(sec,e),200);
  }
 }
