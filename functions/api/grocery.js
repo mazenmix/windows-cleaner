@@ -209,8 +209,8 @@ function rank(items){
 export async function onRequestGet(context){
  const url=new URL(context.request.url),force=url.searchParams.get("force")==="1";
  const cache=caches.default;
- const freshKey=new Request(url.origin+"/api/grocery-cache-v6");
- const lkgKey=new Request(url.origin+"/api/grocery-last-good-v2");
+ const freshKey=new Request(url.origin+"/api/grocery-cache-v7");
+ const lkgKey=new Request(url.origin+"/api/grocery-last-good-v3");
 
  if(!force){
   const hit=await cache.match(freshKey);
@@ -264,22 +264,28 @@ export async function onRequestGet(context){
     }
    }catch{}
   }
-  const verified={
-   ok:true,
+  return new Response(JSON.stringify({
+   ok:false,
    live:false,
-   verified:true,
+   verified:false,
    fallback:false,
-   stale:false,
+   stale:true,
    source:"Department of Trade and Industry • SRP Bulletin",
    source_url:LANDING,
    landing_url:LANDING,
-   updated:"May 2026 • latest verified DTI SRP set",
+   updated:"",
    checked_at:new Date().toISOString(),
-   count:VERIFIED_FALLBACK.length,
-   items:rank(VERIFIED_FALLBACK),
-   note:"DTI e-Presyo/SRP source is being retried automatically. Showing the latest verified 2026 SRP set instead of an empty card.",
-   refresh_error:String(e)
-  };
-  return response(verified,200);
+   items:[],
+   count:0,
+   note:"Current DTI source could not be refreshed and no previously fetched verified copy exists. No built-in snapshot is shown.",
+   error:String(e)
+  }),{
+   status:502,
+   headers:{
+    "content-type":"application/json; charset=utf-8",
+    "cache-control":"no-store",
+    "access-control-allow-origin":"*"
+   }
+  });
  }
 }
