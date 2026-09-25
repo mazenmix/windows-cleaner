@@ -20,6 +20,7 @@ concurrency:
 jobs:
   scrape:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     steps:
       - name: Checkout MX Fuel branch
         uses: actions/checkout@v4
@@ -28,12 +29,18 @@ jobs:
           fetch-depth: 0
 
       - name: Render official BDO forex page
+        timeout-minutes: 2
         shell: bash
         run: |
           set -euo pipefail
           CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
           echo "Using $CHROME"
-          "$CHROME"             --headless=new             --disable-gpu             --no-sandbox             --disable-dev-shm-usage             --virtual-time-budget=20000             --dump-dom             "https://www.bdo.com.ph/forex?wmode=full&mx_fresh=$(date +%s)"             > /tmp/bdo-forex.html
+          set +e
+          timeout 55s "$CHROME" --headless=new --disable-gpu --no-sandbox --disable-dev-shm-usage --disable-background-networking --virtual-time-budget=15000 --dump-dom "https://www.bdo.com.ph/forex?wmode=full&mx_fresh=$(date +%s)" > /tmp/bdo-forex.html 2>/tmp/bdo-chrome.err
+          code=$?
+          set -e
+          echo "Chrome exit code: $code"
+          tail -80 /tmp/bdo-chrome.err || true
           test -s /tmp/bdo-forex.html
           grep -qi "Bank.*Buy Rate" /tmp/bdo-forex.html
 
@@ -88,13 +95,14 @@ jobs:
                   break
 
           if "USD" not in rates or len(rates) < 5:
-              raise SystemExit(f"BDO scrape validation failed: {rates}")
+              raise SystemExit("BDO scrape validation failed: " + json.dumps(rates))
 
           out = {
               "provider": "BDO",
               "source_url": "https://www.bdo.com.ph/forex?wmode=full",
               "updated": updated or "Latest published BDO rate",
-              "rates": rates
+              "rates": rates,
+              "fetched_at": datetime.now(timezone.utc).isoformat()
           }
 
           path = "data/bdo-forex.json"
@@ -103,17 +111,16 @@ jobs:
               try:
                   old = json.load(open(path, "r", encoding="utf-8"))
               except Exception:
-                  old = None
+                  pass
 
-          changed = not old or old.get("rates") != out["rates"] or old.get("updated") != out["updated"]
-          if changed:
-              out["fetched_at"] = datetime.now(timezone.utc).isoformat()
+          if old and old.get("rates") == out["rates"] and old.get("updated") == out["updated"]:
+              out["fetched_at"] = old.get("fetched_at", out["fetched_at"])
+              print("BDO rates unchanged:", json.dumps(out, ensure_ascii=False))
+          else:
               with open(path, "w", encoding="utf-8") as f:
                   json.dump(out, f, ensure_ascii=False, indent=2, sort_keys=True)
                   f.write("\n")
               print("BDO rates changed:", json.dumps(out, ensure_ascii=False))
-          else:
-              print("BDO rates unchanged:", json.dumps(out, ensure_ascii=False))
           PY
 
       - name: Commit changed BDO data
