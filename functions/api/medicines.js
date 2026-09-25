@@ -1,5 +1,5 @@
 const SOURCE="https://eamc.doh.gov.ph/drugs-and-medicines-price-list/";
-const TTL=3600;
+const TTL=60;
 const LAST_GOOD_TTL=2592000;
 
 function decode(s){
