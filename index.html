@@ -877,9 +877,9 @@ function readFuelCache(){
 
 function setFuelStatus(text,isStale){
  const label=$('liveLabel');
- if(label)label.textContent='Live Now';
+ if(label)label.textContent=text||'Checking…';
  const badge=label&&label.closest('.livebadge');
- if(badge)badge.classList.remove('stale');
+ if(badge)badge.classList.toggle('stale',!!isStale);
 }
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove('show'),1700)}
 function getRanks(key){return fuelData.filter(r=>r[key]&&Number.isFinite(r[key][0])).map(r=>r[key][0]).sort((a,b)=>a-b)}
@@ -997,7 +997,7 @@ $('alertSave').addEventListener('click',async()=>{
 });
 renderAlertList();
 
-readFuelCache();renderFuel();renderLpg();refreshSource(false);setInterval(()=>refreshSource(false),60000);
+readFuelCache();renderFuel();renderLpg();setFuelStatus('Checking…',true);refreshSource(false);setInterval(()=>refreshSource(false),60000);
 })();
 </script>
 <script>
