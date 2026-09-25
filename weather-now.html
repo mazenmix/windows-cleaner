@@ -172,7 +172,7 @@ linear-gradient(135deg,rgba(10,44,73,.98),rgba(5,25,43,.97) 58%,rgba(8,33,54,.96
   }catch(e){}finally{clearTimeout(t)}
  }
  if(!cached())render(BOOT);
- refresh();setInterval(refresh,300000);
+ refresh();setInterval(refresh,60000);
 })();
 </script>
 
@@ -199,7 +199,12 @@ const REGIONS=[
 ];
 const state={name:"Metro Manila / NCR",lat:14.5995,lon:120.9842,data:null};
 const LS="mxWeatherNowLocationV1";
+const DATA_LS="mxWeatherNowDataV1";
 try{const x=JSON.parse(localStorage.getItem(LS)||"null");if(x&&Number.isFinite(x.lat)&&Number.isFinite(x.lon)){state.name=x.name||state.name;state.lat=x.lat;state.lon=x.lon}}catch(e){}
+try{
+ const x=JSON.parse(localStorage.getItem(DATA_LS)||"null");
+ if(x&&x.data&&Number.isFinite(x.lat)&&Number.isFinite(x.lon)&&Math.abs(x.lat-state.lat)<0.001&&Math.abs(x.lon-state.lon)<0.001)state.data=x.data;
+}catch(e){}
 
 const hero=document.getElementById("weatherHero"),riskGrid=document.getElementById("riskGrid"),alertGrid=document.getElementById("alertGrid"),hourStrip=document.getElementById("hourStrip"),dailyGrid=document.getElementById("dailyGrid"),outlookGrid=document.getElementById("outlookGrid"),refreshBtn=document.getElementById("refreshWeather"),livebar=document.getElementById("livebar");
 
@@ -305,12 +310,13 @@ async function loadWeather(force=false){
   const r=await fetch(u,{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);
   const j=await r.json();if(!j.ok)throw new Error(j.error||"Weather unavailable");
   renderAll(j);saveLoc();
+  try{localStorage.setItem(DATA_LS,JSON.stringify({name:state.name,lat:state.lat,lon:state.lon,data:j,saved_at:Date.now()}))}catch(e){}
  }catch(e){
   livebar.textContent="Live weather updates powered by the world’s most advanced satellite systems presented by MazenmiX";
   if(!state.data)hero.innerHTML='<div class="loading-card">Unable to load weather data. Tap Refresh to try again.</div>';
  }finally{refreshBtn.classList.remove("loading")}
 }
-function setPlace(name,lat,lon){state.name=name;state.lat=Number(lat);state.lon=Number(lon);loadWeather(true)}
+function setPlace(name,lat,lon){state.name=name;state.lat=Number(lat);state.lon=Number(lon);state.data=null;loadWeather(true)}
 function bindControls(){
  const sel=document.getElementById("regionSelect"),apply=document.getElementById("applyRegion"),input=document.getElementById("placeSearch"),results=document.getElementById("searchResults"),loc=document.getElementById("useLocation");
  let closest=0,best=Infinity;REGIONS.forEach((r,i)=>{const q=(r[1]-state.lat)**2+(r[2]-state.lon)**2;if(q<best){best=q;closest=i}});sel.value=closest;
@@ -321,8 +327,9 @@ function bindControls(){
  document.addEventListener("click",e=>{if(!e.target.closest(".search-wrap"))results.classList.remove("show")},{once:true});
 }
 refreshBtn.addEventListener("click",()=>loadWeather(true));
+if(state.data)renderAll(state.data);
 loadWeather(false);
-setInterval(()=>loadWeather(false),600000);
+setInterval(()=>loadWeather(false),60000);
 })();
 </script>
 <script>
