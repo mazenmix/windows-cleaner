@@ -1,4 +1,4 @@
-const TTL=3600;
+const TTL=60;
 const LAST_GOOD_TTL=2592000;
 const LANDING="https://www.dti.gov.ph/konsyumer/latest-srps-basic-necessities-prime-commodities";
 
@@ -268,8 +268,9 @@ export async function onRequestGet(context){
    ok:true,
    live:false,
    verified:true,
-   fallback:false,
-   stale:false,
+   fallback:true,
+   stale:true,
+   last_verified:true,
    source:"Department of Trade and Industry • SRP Bulletin",
    source_url:LANDING,
    landing_url:LANDING,
