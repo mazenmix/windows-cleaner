@@ -7,6 +7,7 @@ const SOURCES={
  BPI:"https://www.bpi.com.ph/personal/bank/forex/rates",
  RCBC:"https://www.rcbc.com/"
 };
+const BDO_RENDERED_FEED="https://raw.githubusercontent.com/mazenmix/windows-cleaner/mx-fuel-watch-web/data/bdo-forex.json";
 
 // Last published snapshots are used only when the live parser cannot read
 // a provider's current dynamic page. They are always labeled LAST VERIFIED.
@@ -160,13 +161,57 @@ async function loadPublished(name,url,type="bank"){
  );
 }
 
+async function loadBDORenderedFeed(){
+ const url=BDO_RENDERED_FEED+"?ts="+Date.now();
+ const r=await fetch(url,{
+  headers:{"accept":"application/json","cache-control":"no-cache, no-store"},
+  cf:{cacheTtl:0,cacheEverything:false}
+ });
+ if(!r.ok)throw new Error("BDO rendered feed HTTP "+r.status);
+ const j=await r.json();
+ if(!j||j.provider!=="BDO"||!j.rates||Object.keys(j.rates).length<5)throw new Error("BDO rendered feed invalid");
+ const rates={};
+ for(const code of CURRENCIES){
+  const v=j.rates[code];
+  if(Array.isArray(v)){
+   const p=pair(v[0],v[1]);
+   if(p)rates[code]=p;
+  }
+ }
+ if(!rates.USD||Object.keys(rates).length<5)throw new Error("BDO rendered feed incomplete");
+ return provider(
+  "BDO",
+  "bank",
+  SOURCES.BDO,
+  rates,
+  j.updated||"Latest published BDO rate",
+  "live",
+  "Rendered directly from the official BDO forex page by the MX Fuel browser scraper.",
+  j.fetched_at||new Date().toISOString()
+ );
+}
+
+async function loadBDO(){
+ // First try the official page directly. If BDO's JS-only table is not visible
+ // to a server-side fetch, use the browser-rendered official BDO snapshot.
+ try{return await loadPublished("BDO",SOURCES.BDO)}
+ catch(first){
+  try{return await loadBDORenderedFeed()}
+  catch(second){throw new Error("BDO direct + rendered feed failed: "+first+" | "+second)}
+ }
+}
+
 async function loadAll(previous){
  const jobs=[
   ["BDO",SOURCES.BDO],
   ["BPI",SOURCES.BPI],
   ["RCBC",SOURCES.RCBC]
  ];
- const results=await Promise.allSettled(jobs.map(([name,url])=>loadPublished(name,url)));
+ const results=await Promise.allSettled([
+  loadBDO(),
+  loadPublished("BPI",SOURCES.BPI),
+  loadPublished("RCBC",SOURCES.RCBC)
+ ]);
  const providers=[];
 
  for(let i=0;i<results.length;i++){
