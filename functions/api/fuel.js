@@ -2,16 +2,16 @@ const FRESH_TTL = 30;
 const LAST_GOOD_TTL = 2592000;
 const SOURCE = "https://gaswatchph.com/";
 
-// Built-in snapshot is only a safety net. Keep it aligned with the latest
-// verified GasWatch PH brand-overview table so a source outage never revives
-// older prices.
+// Latest verified GasWatch weekly snapshot. Used only when the live source
+// cannot be reached. Diesel + Unleaded 91 mirror the newer weekly brand
+// snapshot section; the remaining columns come from the detailed comparison.
 const FALLBACK_FUEL = [
   {name:"Shell",stations:204,diesel:[105.73,7.80],premDiesel:[112.94,7.80],unleaded91:[93.68,4.80],eGas:null,prem95:[100.93,4.80],prem97:[107.21,4.80],kerosene:[132.85,6.40]},
-  {name:"Petron",stations:240,diesel:[104.14,7.72],premDiesel:[107.22,7.80],unleaded91:[91.72,4.74],eGas:null,prem95:[92.75,4.77],prem97:[101.83,4.80],kerosene:[129.58,6.40]},
-  {name:"Caltex",stations:131,diesel:[107.29,7.68],premDiesel:[111.55,7.68],unleaded91:[94.52,4.77],eGas:null,prem95:[101.65,4.70],prem97:[104.60,4.88],kerosene:[128.43,6.47]},
+  {name:"Petron",stations:240,diesel:[104.22,7.80],premDiesel:[107.22,7.80],unleaded91:[91.78,4.80],eGas:null,prem95:[92.75,4.77],prem97:[101.83,4.80],kerosene:[129.58,6.40]},
+  {name:"Caltex",stations:131,diesel:[107.43,7.82],premDiesel:[111.55,7.68],unleaded91:[94.63,4.88],eGas:null,prem95:[101.65,4.70],prem97:[104.60,4.88],kerosene:[128.43,6.47]},
   {name:"Phoenix",stations:70,diesel:[108.35,7.82],premDiesel:null,unleaded91:[99.44,4.88],eGas:[105.38,4.88],prem95:[101.45,4.88],prem97:[104.85,4.88],kerosene:null},
   {name:"Seaoil",stations:71,diesel:[104.20,7.82],premDiesel:[110.23,7.82],unleaded91:[91.21,4.88],eGas:[117.06,4.88],prem95:[94.22,4.88],prem97:[94.78,4.88],kerosene:[134.56,6.47]},
-  {name:"Unioil",stations:83,diesel:[103.26,7.60],premDiesel:null,unleaded91:[90.28,4.66],eGas:[114.28,4.80],prem95:[93.31,4.69],prem97:[108.99,4.80],kerosene:null},
+  {name:"Unioil",stations:83,diesel:[103.46,7.80],premDiesel:null,unleaded91:[90.42,4.80],eGas:[114.28,4.80],prem95:[93.31,4.69],prem97:[108.99,4.80],kerosene:null},
   {name:"Jetti",stations:10,diesel:[104.91,6.80],premDiesel:null,unleaded91:[92.59,4.80],eGas:null,prem95:[96.51,4.80],prem97:[103.70,4.80],kerosene:null},
   {name:"Flying V",stations:38,diesel:[100.73,7.80],premDiesel:null,unleaded91:[86.84,4.80],eGas:null,prem95:[87.79,4.80],prem97:null,kerosene:null},
   {name:"Cleanfuel",stations:54,diesel:[104.82,7.82],premDiesel:null,unleaded91:[92.49,4.88],eGas:null,prem95:[96.51,4.88],prem97:null,kerosene:null},
@@ -47,7 +47,7 @@ async function fetchText(url, timeout = 11000) {
   try {
     const isJina = /^https:\/\/r\.jina\.ai\//i.test(url);
     const headers = {
-      "user-agent": "Mozilla/5.0 (compatible; MXFuelWatch/4.0)",
+      "user-agent": "Mozilla/5.0 (compatible; MXFuelWatch/4.1)",
       "accept": "text/plain,text/markdown,text/html,*/*",
       "cache-control": "no-cache, no-store",
       "pragma": "no-cache"
@@ -98,8 +98,7 @@ function parseFuel(text) {
       .filter((x, i, a) => !(i === 0 && x === "") && !(i === a.length - 1 && x === ""));
     if (p.length < 9 || !BRAND_NAMES.has(p[0])) continue;
     const stations = Number.parseInt(String(p[1]).replace(/,/g, ""), 10);
-    if (!Number.isFinite(stations) || stations <= 0) continue;
-    if (seen.has(p[0])) continue;
+    if (!Number.isFinite(stations) || stations <= 0 || seen.has(p[0])) continue;
     seen.add(p[0]);
     rows.push({
       name: p[0],
@@ -115,6 +114,52 @@ function parseFuel(text) {
   }
 
   return rows.length >= 8 ? rows : [];
+}
+
+function parseWeeklySnapshot(text) {
+  const src = String(text || "");
+  const marker = src.search(/Metro Manila diesel and unleaded prices by brand/i);
+  if (marker < 0) return [];
+  const section = src.slice(marker, marker + 7000);
+  const out = [];
+  const seen = new Set();
+
+  for (const line of section.split(/\r?\n/)) {
+    if (!line.includes("|")) continue;
+    const p = line.split("|")
+      .map(x => x.trim())
+      .filter((x, i, a) => !(i === 0 && x === "") && !(i === a.length - 1 && x === ""));
+    if (p.length < 3 || !BRAND_NAMES.has(p[0]) || seen.has(p[0])) continue;
+    const diesel = Number(String(p[1]).replace(/[^0-9.]/g, ""));
+    const unleaded = Number(String(p[2]).replace(/[^0-9.]/g, ""));
+    if (!Number.isFinite(diesel) || !Number.isFinite(unleaded) || diesel < 20 || unleaded < 20) continue;
+    seen.add(p[0]);
+    out.push({name:p[0], diesel, unleaded});
+  }
+  return out.length >= 8 ? out : [];
+}
+
+function adjustedPair(oldPair, newPrice) {
+  if (!Array.isArray(oldPair) || !Number.isFinite(Number(oldPair[0]))) return [newPrice, 0];
+  const oldPrice = Number(oldPair[0]);
+  const oldDelta = Number(oldPair[1] || 0);
+  const priorWeek = oldPrice - oldDelta;
+  const newDelta = newPrice - priorWeek;
+  return [newPrice, Number(newDelta.toFixed(2))];
+}
+
+function mergeWeeklySnapshot(baseRows, snapshotRows) {
+  if (!Array.isArray(snapshotRows) || snapshotRows.length < 8) return baseRows;
+  const map = new Map(snapshotRows.map(x => [x.name, x]));
+  return baseRows.map(row => {
+    const s = map.get(row.name);
+    if (!s) return row;
+    return {
+      ...row,
+      diesel: adjustedPair(row.diesel, s.diesel),
+      unleaded91: adjustedPair(row.unleaded91, s.unleaded)
+    };
+  });
 }
 
 function parseLpgLive(text) {
@@ -171,7 +216,7 @@ function updatedEpoch(label) {
 }
 
 function candidateScore(c) {
-  return (updatedEpoch(c.updated) * 1000) + (c.fuel.length * 100) + c.lpg.length;
+  return (updatedEpoch(c.updated) * 1000) + (c.snapshot.length * 1000) + (c.fuel.length * 100) + c.lpg.length;
 }
 
 async function sourceCandidates() {
@@ -188,11 +233,13 @@ async function sourceCandidates() {
   for (let i = 0; i < settled.length; i++) {
     const r = settled[i];
     if (r.status !== "fulfilled" || !r.value || r.value.length < 800) continue;
-    const fuel = parseFuel(r.value);
-    if (fuel.length < 8) continue;
+    const detailed = parseFuel(r.value);
+    if (detailed.length < 8) continue;
+    const snapshot = parseWeeklySnapshot(r.value);
+    const fuel = mergeWeeklySnapshot(detailed, snapshot);
     const lpg = parseLpgLive(r.value);
     const updated = parseUpdated(r.value);
-    candidates.push({url:urls[i], text:r.value, fuel, lpg, updated});
+    candidates.push({url:urls[i], text:r.value, fuel, snapshot, lpg, updated});
   }
   candidates.sort((a,b) => candidateScore(b) - candidateScore(a));
   return candidates;
@@ -210,7 +257,6 @@ async function buildLiveData(previousFuel, previousLpg, previousUpdated) {
   const previousEpoch = updatedEpoch(previousUpdated);
   const newestEpoch = updatedEpoch(newest.updated);
 
-  // Never replace a known newer snapshot with an older proxy/cache render.
   if (previousEpoch && newestEpoch && newestEpoch < previousEpoch) {
     throw new Error(`Source render is older (${newest.updated}) than last verified (${previousUpdated})`);
   }
@@ -223,6 +269,8 @@ async function buildLiveData(previousFuel, previousLpg, previousUpdated) {
 
   return {
     fuel: newest.fuel,
+    snapshot_live: newest.snapshot.length >= 8,
+    snapshot_count: newest.snapshot.length,
     lpg: mergeLpg(liveLpg, previousLpg),
     lpg_live: liveLpg.length >= 4,
     lpg_live_count: liveLpg.length,
@@ -237,9 +285,9 @@ export async function onRequestGet(context) {
   const force = u.searchParams.get("force") === "1";
   const cache = caches.default;
 
-  // v4 invalidates the older server-side snapshot immediately after deploy.
-  const freshKey = new Request(`${u.origin}/api/fuel-cache-v4`);
-  const lkgKey = new Request(`${u.origin}/api/fuel-last-good-v4`);
+  // v5 invalidates every prior fuel snapshot after deployment.
+  const freshKey = new Request(`${u.origin}/api/fuel-cache-v5`);
+  const lkgKey = new Request(`${u.origin}/api/fuel-last-good-v5`);
 
   if (!force) {
     const hit = await cache.match(freshKey);
@@ -265,6 +313,8 @@ export async function onRequestGet(context) {
       fallback: false,
       stale: false,
       partial: !!live.partial,
+      snapshot_live: !!live.snapshot_live,
+      snapshot_count: live.snapshot_count || 0,
       lpg_live: !!live.lpg_live,
       lpg_stale: !live.lpg_live,
       lpg_live_count: live.lpg_live_count || 0,
@@ -275,9 +325,9 @@ export async function onRequestGet(context) {
       checked_at: new Date().toISOString(),
       fuel: live.fuel,
       lpg: live.lpg,
-      note: live.lpg_live
-        ? "Live GasWatch fuel and LPG data loaded."
-        : "Fuel table is live. LPG kept at the last verified values."
+      note: live.snapshot_live
+        ? "Detailed GasWatch table loaded and newest weekly Diesel/Unleaded brand snapshot merged."
+        : "Detailed GasWatch table loaded; weekly snapshot was not available in this render."
     };
 
     const fresh = response(data, 200, FRESH_TTL);
@@ -309,6 +359,7 @@ export async function onRequestGet(context) {
       fallback: true,
       stale: true,
       partial: true,
+      snapshot_live: false,
       source: "GasWatch PH",
       source_url: SOURCE,
       updated: "September 22, 2026",
