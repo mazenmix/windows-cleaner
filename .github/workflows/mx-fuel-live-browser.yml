@@ -41,7 +41,7 @@ jobs:
           CHROME="$CHROME" node <<'NODE'
           const fs = require('fs');
           const puppeteer = require('puppeteer-core');
-          const BRANDS = new Set(['Shell','Petron','Caltex','Phoenix','Seaoil','Unioil','Jetti','Flying V','Cleanfuel','Total','PTT']);
+          const BRANDS_OK = new Set(['Shell','Petron','Caltex','Phoenix','Seaoil','Unioil','Jetti','Flying V','Cleanfuel','Total','PTT']);
 
           function pair(text) {
             const s = String(text || '').trim();
@@ -76,18 +76,54 @@ jobs:
                 };
                 return [...document.querySelectorAll('table')].some(t => {
                   const h = t.innerText || '';
-                  const rows = [...t.querySelectorAll('tbody tr')];
-                  return visible(t) && /BRAND/i.test(h) && /STATIONS/i.test(h) && /DIESEL/i.test(h) && /UNLEADED 91/i.test(h) && rows.length >= 8;
+                  return visible(t) && /BRAND/i.test(h) && /STATIONS/i.test(h) && /DIESEL/i.test(h) && /UNLEADED 91/i.test(h) && t.querySelectorAll('tbody tr').length >= 8;
                 });
               }, {timeout:45000});
 
               await new Promise(r => setTimeout(r, 5000));
 
-              const communityProbe = await page.evaluate(async () => {
-                const r = await fetch('/api/community-prices?mx_probe=' + Date.now(), {cache:'no-store'});
-                return {status:r.status, text:await r.text()};
+              const probe = await page.evaluate(async () => {
+                const cpRes = await fetch('/api/community-prices?mx_probe=' + Date.now(), {cache:'no-store'});
+                const cp = await cpRes.json();
+                let stationAccess = false, brandAccess = false, stationCount = 0, brandKeys = [];
+                let calc = null;
+                try {
+                  stationAccess = typeof GAS_STATIONS !== 'undefined' && Array.isArray(GAS_STATIONS);
+                  brandAccess = typeof BRANDS !== 'undefined' && !!BRANDS;
+                  if (stationAccess) stationCount = GAS_STATIONS.length;
+                  if (brandAccess) brandKeys = Object.keys(BRANDS).slice(0,20);
+                  if (stationAccess) {
+                    const community = cp.communityPrices || {};
+                    const fuelKeys = ['diesel','premiumDiesel','unleaded','egasoline','premium95','premium97','kerosene'];
+                    const grouped = {};
+                    for (const st of GAS_STATIONS) {
+                      const b = String(st.brand || '').toLowerCase();
+                      if (!b) continue;
+                      if (!grouped[b]) grouped[b] = {stations:0, vals:{}};
+                      grouped[b].stations++;
+                      const ov = community[String(st.id)] || {};
+                      for (const k of fuelKeys) {
+                        let v = ov[k] && Number.isFinite(Number(ov[k].price)) ? Number(ov[k].price) : Number(st.prices && st.prices[k]);
+                        if (!Number.isFinite(v) || v <= 0) continue;
+                        (grouped[b].vals[k] ||= []).push(v);
+                      }
+                    }
+                    calc = Object.fromEntries(Object.entries(grouped).map(([b,g]) => [b,{stations:g.stations,avg:Object.fromEntries(Object.entries(g.vals).map(([k,a])=>[k,Math.round((a.reduce((x,y)=>x+y,0)/a.length)*100)/100]))}]));
+                  }
+                } catch (e) { calc = {error:String(e)}; }
+
+                const resources = performance.getEntriesByType('resource').map(x=>x.name).filter(x=>/\.js(?:\?|$)/.test(x));
+                const snippets = [];
+                for (const u of resources) {
+                  try {
+                    const txt = await (await fetch(u,{cache:'no-store'})).text();
+                    const ix = txt.indexOf('community-prices');
+                    if (ix >= 0) snippets.push({url:u, snippet:txt.slice(Math.max(0,ix-4000), ix+8000)});
+                  } catch (_) {}
+                }
+                return {cpStatus:cpRes.status, stationAccess,brandAccess,stationCount,brandKeys,calc,snippets};
               });
-              console.log('COMMUNITY_RESPONSE', communityProbe.status, communityProbe.text.slice(0, 24000));
+              console.log('AGG_PROBE', JSON.stringify(probe, null, 2));
 
               const data = await page.evaluate(() => {
                 const visible = el => {
@@ -112,7 +148,7 @@ jobs:
               for (const c of data.rows) {
                 if (c.length < 9) continue;
                 const name = c[0].replace(/\s+/g,' ').trim();
-                if (!BRANDS.has(name)) continue;
+                if (!BRANDS_OK.has(name)) continue;
                 const stations = parseInt(String(c[1]).replace(/,/g,''), 10);
                 if (!Number.isFinite(stations) || stations <= 0) continue;
                 rows.push({
