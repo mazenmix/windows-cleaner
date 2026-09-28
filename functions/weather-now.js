@@ -62,7 +62,6 @@ export async function onRequest(context) {
  var cities=[['Manila',14.5995,120.9842],['Cebu',10.3157,123.8854],['Davao',7.1907,125.4553],['Baguio',16.4023,120.5960],['Iloilo',10.7202,122.5621],['Bacolod',10.6765,122.9509],['Boracay',11.9674,121.9248],['Cagayan de Oro',8.4542,124.6319]];
  function el(id){return document.getElementById(id)}
  function num(v){v=Number(v);return Number.isFinite(v)?v:null}
- function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
  function h24(s){var p=String(s||'').split('T')[1]||'';return Number(p.slice(0,2))}
  function timeLabel(s){var p=String(s||'').split('T')[1]||'';var h=Number(p.slice(0,2)),m=p.slice(3,5)||'00';if(!Number.isFinite(h))return '—';var ap=h>=12?'PM':'AM';var hh=h%12||12;return hh+':'+m+' '+ap}
  function weatherEmoji(code){code=Number(code);if(code===0)return '☀️';if(code<=2)return '🌤️';if(code===3)return '☁️';if(code===45||code===48)return '🌫️';if(code>=95)return '⛈️';if(code>=51)return '🌧️';return '🌥️'}
@@ -90,7 +89,7 @@ export async function onRequest(context) {
   return{best:best,worst:worst};
  }
  function renderIntel(d){
-  var w=analyzeWindows(d),best=w.best,worst=w.worst,r=d.risks||{},tc=d.pagasa&&d.pagasa.cyclone||{},fl=d.pagasa&&d.pagasa.flood||{};
+  var w=analyzeWindows(d),best=w.best,r=d.risks||{},tc=d.pagasa&&d.pagasa.cyclone||{},fl=d.pagasa&&d.pagasa.flood||{};
   var rain=maxRain24(d),gust=maxWind24(d),heat=Number(r.heat&&r.heat.value)||Number(d.forecast&&d.forecast.current&&d.forecast.current.apparent_temperature)||0;
   var severe=String(r.severe&&r.severe.level||''),flood=String(r.flood&&r.flood.level||'');
   var verdict='GO OUT',cls='',reason='Weather stress is relatively low in the best available window.';
@@ -133,7 +132,7 @@ export async function onRequest(context) {
  window.fetch=function(input,init){return nativeFetch(input,init).then(function(res){try{var raw=typeof input==='string'?input:(input&&input.url)||'';if(raw.indexOf('/api/weather?')!==-1&&raw.indexOf('mode=search')===-1){var loc=parseFetchLocation(raw);res.clone().json().then(function(j){if(j&&j.ok)renderAll(j,loc)}).catch(function(){})}}catch(e){}return res})};
  window.addEventListener('pagehide',function(){if(!lastData)return;try{localStorage.setItem(PREV_KEY,JSON.stringify({loc:lastLoc,snap:currentSnapshot(lastData),saved_at:Date.now()}))}catch(e){}});
 })();
-<\/script>`;
+</script>`;
 
   if (!updatedHtml.includes('id="mxWeatherEnhancementStyles"')) {
     updatedHtml = updatedHtml.replace('</head>', enhancementCss + '\n</head>');
