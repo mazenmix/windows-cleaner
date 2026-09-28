@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Daily Cost PH — MazenmiX</title>
 <meta name="theme-color" content="#061526">
-<meta name="description" content="Daily Cost PH — Philippine electricity, toll, transport, exchange, mobile, grocery, medicine and everyday cost monitoring.">
+<meta name="description" content="Daily Cost PH — Philippine electricity, toll, transport, jeepney, exchange, mobile, grocery, medicine and everyday cost monitoring.">
 <link rel="icon" href="./favicon.svg" type="image/svg+xml">
 <style>
 :root{--bg:#061526;--panel:#0a2036;--panel2:#071a2d;--line:#173b5d;--text:#f5f8fc;--muted:#7fa4c5;--muted2:#547894;--blue:#48a2ff;--green:#12e49b;--orange:#ff9f2e;--amber:#ffc44d;--red:#ff5267}
@@ -35,7 +35,6 @@
 .medicine-more:hover{border-color:#3c8ed0;background:#0b2b48}
 @media(max-width:700px){.medicine-tools{align-items:stretch;flex-direction:column}.medicine-result-count{padding-left:3px}.medicine-rows{grid-template-columns:1fr}.medicine-rows .row:nth-child(odd),.medicine-rows .row:nth-child(even){padding-left:0;padding-right:0;border-right:0}}
 
-
 .grocery-card{grid-column:1/-1}
 .grocery-tools{padding:12px 14px 8px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(30,72,106,.48)}
 .grocery-search{flex:1;height:38px;border:1px solid #1d4f78;border-radius:21px;background:#061a2c;color:#eaf4fb;padding:0 14px;outline:none;font-size:10px}
@@ -49,14 +48,12 @@
 .grocery-more:hover{border-color:#3c8ed0;background:#0b2b48}
 @media(max-width:700px){.grocery-tools{align-items:stretch;flex-direction:column}.grocery-result-count{padding-left:3px}.grocery-rows{grid-template-columns:1fr}.grocery-rows .row:nth-child(odd),.grocery-rows .row:nth-child(even){padding-left:0;padding-right:0;border-right:0}}
 
-
 .news-ticker{height:40px;min-height:40px;max-height:40px;border-bottom:1px solid #183c59;background:linear-gradient(90deg,#061827,#081e32);display:flex;align-items:stretch;overflow:hidden}
 .news-label{flex:0 0 auto;min-width:128px;padding:0 15px;display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(180deg,#24100f,#160908);border-right:1px solid #6d2722;color:#ffd7cf;font-size:9.5px;font-weight:500;letter-spacing:1.15px;z-index:2;box-shadow:10px 0 22px rgba(2,12,20,.42),inset 0 1px 0 rgba(255,255,255,.03)}
 .news-label:before{content:"";width:7px;height:7px;border-radius:50%;background:#ff3d32;box-shadow:0 0 0 4px rgba(255,61,50,.09),0 0 12px rgba(255,61,50,.85);animation:breakingPulse 1.15s ease-in-out infinite alternate}
 @keyframes breakingPulse{from{opacity:.75;transform:scale(.92)}to{opacity:1;transform:scale(1.08)}}
 .news-window{min-width:0;flex:1;overflow:hidden;display:flex;align-items:center;height:100%;white-space:nowrap}
 .news-track{display:inline-flex;flex-wrap:nowrap;flex:0 0 auto;width:max-content;min-width:max-content;align-items:center;height:100%;white-space:nowrap;will-change:transform;transform:translate3d(0,0,0);-webkit-transform:translate3d(0,0,0);backface-visibility:hidden;-webkit-backface-visibility:hidden;animation:newsMarquee 70s linear infinite;-webkit-animation:newsMarquee 70s linear infinite;animation-play-state:running;-webkit-animation-play-state:running}
-
 .news-item{display:inline-flex;flex:0 0 auto;align-items:center;gap:8px;padding:0 15px;font-size:11.5px;color:#dbe9f4;white-space:nowrap;line-height:1}
 .news-source{font-size:9px;font-weight:500;letter-spacing:.5px;color:#64bcff}
 .news-headline{font-weight:400;color:#f2f7fb;letter-spacing:.05px}
@@ -76,6 +73,10 @@
 @media(max-width:900px){.visitor-stats{order:3;width:100%;margin-left:0;justify-content:flex-start}.visitor-chip{height:34px}.visitor-chip .visitor-label{font-size:7.5px}.visitor-chip b{font-size:10.5px}}
 @media(max-width:520px){.visitor-stats{display:grid;grid-template-columns:1fr 1fr}.visitor-chip{justify-content:center;padding:0 9px}}
 
+/* Readability pass: larger, weather-page-style typography */
+.hero p{font-size:14px;line-height:1.7}.global-status{font-size:10px;padding:9px 13px}.section-title span{font-size:11px}.titlebox h3{font-size:16px;line-height:1.2}.source-name{font-size:10.5px;margin-top:2px}.status{font-size:9px;padding:7px 11px}.card-head{min-height:72px;padding:14px 16px}.icon{width:42px;height:42px;font-size:21px}.rows{padding:6px 16px}.row{min-height:56px;gap:14px}.row-label{font-size:13.5px;line-height:1.35}.row-detail{margin-top:4px;font-size:10.5px;line-height:1.4}.row-value{font-size:15.5px}.card-foot{min-height:44px;padding:10px 16px;font-size:10.5px}.card-note{padding:2px 16px 12px;font-size:10.5px;line-height:1.55}.medicine-search,.grocery-search{height:42px;font-size:12.5px}.medicine-result-count,.grocery-result-count{font-size:10.5px}.medicine-more,.grocery-more{height:38px;font-size:11px}.visitor-chip .visitor-label{font-size:9.5px}.visitor-chip b{font-size:13px}.visitor-estimated{font-size:7px;opacity:.62}.news-item{font-size:12px}.news-source{font-size:9.5px}.footer-inner{font-size:10.5px}
+@media(max-width:700px){.hero p{font-size:13.5px}.global-status{font-size:9.5px}.titlebox h3{font-size:15.5px}.source-name{font-size:10px}.status{font-size:8.5px;padding:7px 10px}.row{min-height:58px}.row-label{font-size:13px}.row-detail{font-size:10.5px}.row-value{font-size:15px}.card-foot{font-size:10px}.medicine-search,.grocery-search{font-size:12px}.medicine-result-count,.grocery-result-count{font-size:10px}.visitor-chip .visitor-label{font-size:9px}.visitor-chip b{font-size:12.5px}.news-item{font-size:11px}.news-source{font-size:9px}}
+@media(max-width:420px){.rows,.card-head,.card-foot{padding-left:13px;padding-right:13px}.row-label{font-size:12.5px}.row-detail{font-size:10px}.row-value{font-size:14.5px}.titlebox h3{font-size:15px}}
 </style>
 </head>
 <body>
@@ -170,6 +171,7 @@ const sections=[
  {id:"electricity",icon:"⚡",title:"Electricity Rates"},
  {id:"tolls",icon:"🛣️",title:"Toll Fees"},
  {id:"transport",icon:"🚆",title:"Public Transport Fares"},
+ {id:"jeepney",icon:"🚐",title:"Jeepney Fares"},
  {id:"exchange",icon:"💱",title:"Peso Exchange Rates"},
  {id:"promos",icon:"📶",title:"Internet & Mobile Promos"},
  {id:"construction",icon:"🏗️",title:"Construction Materials"},
@@ -182,6 +184,7 @@ const BOOT={
  electricity:{source:"Meralco",source_url:"https://company.meralco.com.ph/news-and-advisories/lower-rates-september-2026",as_of:"September 2026",items:[["Meralco overall rate","₱14.7424/kWh","September billing rate"],["vs August 2026","−₱0.0409/kWh","Lower month-on-month"],["200 kWh bill effect","≈ ₱8.18 less","Rate-change estimate"]]},
  tolls:{source:"TRB-based current toll matrices",source_url:"https://expresswayph.com/",as_of:"2026 rates",items:[["NLEX Open System","₱85","Class 1"],["Balintawak → Dau","₱348","NLEX • Class 1"],["Balintawak → Subic/Tipo","₱857","NLEX/SCTEX • Class 1"],["Balintawak → Alabang","₱428","Skyway • Class 1"],["Alabang → Sto. Tomas","₱170","SLEX • Class 1"],["Greenfield → Sta. Rosa-Tagaytay","₱44","CALAX • Class 1"]]},
  transport:{source:"LRTA / DOTr",source_url:"https://www.lrta.gov.ph/tickets-and-fares/",as_of:"Effective March 23, 2026",items:[["LRT-2 / MRT-3 discount","50% off","Across-the-board fare discount"],["LRT-2 single journey","₱8–₱18","Discounted fare range"],["LRT-2 stored value","₱6.50–₱16.50","Discounted fare range"],["Beep card","₱30 + ₱14 load","Standard stored-value card"]]},
+ jeepney:{source:"Philippine News Agency • LTFRB / DOTr",source_url:"https://www.pna.gov.ph/articles/1284951",as_of:"Effective September 28, 2026",items:[["Traditional jeepney minimum","₱14","First 4 km"],["Traditional succeeding km","+₱2.00/km","Every kilometer after first 4 km"],["Modern jeepney minimum","₱17","First 4 km"],["Modern succeeding km","+₱2.40/km","Every kilometer after first 4 km"],["Student / Senior / PWD discount","20%","Mandatory fare discount"]]},
  exchange:{source:"Bangko Sentral ng Pilipinas",source_url:"https://www.bsp.gov.ph/Statistics/sdds/sdds.aspx",as_of:"24 September 2026",items:[["USD","₱62.6190","PHP per US dollar"],["JPY","₱0.3958","PHP per Japanese yen"],["GBP","₱82.9451","PHP per British pound"]]},
  promos:{source:"Globe / Smart / DITO official",source_url:"https://www.globe.com.ph/prepaid/go-promos/plus",as_of:"Current offers",items:[["Globe Go+99","₱99 / 7 days","20 GB total data"],["Globe Go+109","₱109 / 7 days","22 GB total data"],["Smart Power All 59","₱59 / 3 days","5 GB + 3 GB 5G + calls/texts"],["Smart New Power All 99","₱99","Current prepaid offer"],["DITO Level-Up 99","₱99 / 30 days","7 GB + calls/texts"],["DITO Level-Up 109","₱109 / 30 days","10 GB + calls/texts"]]},
  grocery:{source:"Department of Trade and Industry • SRP Bulletin",source_url:"https://www.dti.gov.ph/konsyumer/latest-srps-basic-necessities-prime-commodities",as_of:"Checking latest DTI SRP bulletin",items:[]},
@@ -360,7 +363,7 @@ async function refreshOne(sec,force){
  }finally{clearTimeout(timer)}
 }
 async function refreshAll(force){
- refreshBtn.classList.add("loading");globalStatus.textContent="CHECKING 11 SOURCES…";
+ refreshBtn.classList.add("loading");globalStatus.textContent="CHECKING 12 SOURCES…";
  await Promise.allSettled(sections.map(s=>refreshOne(s.id,force)));
  refreshBtn.classList.remove("loading");
  const vals=sections.map(x=>cache[x.id]).filter(Boolean);
