@@ -87,10 +87,8 @@ jobs:
                 return /Gasul\s*\/\s*LPG Prices/i.test(t) && /11\s*kg/i.test(t);
               }, { timeout: 45000 });
 
-              // Give GasWatch JavaScript time to render the LPG cards.
               await new Promise(resolve => setTimeout(resolve, 2500));
 
-              // Force the 11 kg view if a size selector is present.
               await page.evaluate(() => {
                 const buttons = [...document.querySelectorAll('button')];
                 const b = buttons.find(x => /^\s*11\s*kg\s*$/i.test(x.innerText || ''));
@@ -159,13 +157,14 @@ jobs:
               shutil.copyfile('/tmp/gaswatch-lpg.json', path)
           PY
 
-          if git diff --quiet -- data/gaswatch-lpg.json; then
+          # Stage first so a brand-new snapshot is detected too (git diff alone ignores untracked files).
+          git add data/gaswatch-lpg.json 2>/dev/null || true
+          if git diff --cached --quiet -- data/gaswatch-lpg.json; then
             echo "GasWatch LPG prices unchanged; daily verification completed."
             exit 0
           fi
 
           git config user.name "MX Fuel Bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/gaswatch-lpg.json
           git commit -m "Update exact rendered GasWatch LPG prices"
           git push origin HEAD:mx-fuel-watch-web
