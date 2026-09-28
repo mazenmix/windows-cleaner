@@ -15,7 +15,12 @@ export async function onRequest(context) {
     '$3\n\n$4\n\n$5\n\n$1\n\n$2'
   );
 
-  if (reordered === html) {
+  const updatedHtml = reordered.replace(
+    '<h2>Risk Intelligence</h2>',
+    '<h2>Risk Potential</h2>'
+  );
+
+  if (updatedHtml === html) {
     return new Response(html, {
       status: response.status,
       statusText: response.statusText,
@@ -28,7 +33,7 @@ export async function onRequest(context) {
   headers.delete('etag');
   headers.delete('content-encoding');
 
-  return new Response(reordered, {
+  return new Response(updatedHtml, {
     status: response.status,
     statusText: response.statusText,
     headers,
