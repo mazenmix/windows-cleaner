@@ -27,7 +27,7 @@ jobs:
           ref: mx-fuel-watch-web
           fetch-depth: 0
 
-      - name: Render GasWatch PH and capture brand table
+      - name: Render GasWatch PH and capture visible live brand table
         timeout-minutes: 2
         shell: bash
         run: |
@@ -43,10 +43,6 @@ jobs:
           const puppeteer = require('puppeteer-core');
           const BRANDS = new Set(['Shell','Petron','Caltex','Phoenix','Seaoil','Unioil','Jetti','Flying V','Cleanfuel','Total','PTT']);
 
-          function num(s) {
-            const m = String(s || '').replace(/,/g,'').match(/-?\d+(?:\.\d+)?/);
-            return m ? Number(m[0]) : null;
-          }
           function pair(text) {
             const s = String(text || '').trim();
             if (!s || /N\/A/i.test(s)) return null;
@@ -67,30 +63,52 @@ jobs:
               const page = await browser.newPage();
               await page.setViewport({width: 1440, height: 1600});
               await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36');
+              page.on('response', res => {
+                const type = res.request().resourceType();
+                if (type === 'xhr' || type === 'fetch') console.log('LIVE_REQUEST', res.status(), res.url());
+              });
+
               await page.goto('https://gaswatchph.com/?mx_browser=' + Date.now(), {waitUntil:'domcontentloaded', timeout:45000});
               await page.waitForFunction(() => {
-                const tables = [...document.querySelectorAll('table')];
-                return tables.some(t => {
+                const visible = el => {
+                  const cs = getComputedStyle(el), r = el.getBoundingClientRect();
+                  return cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 300 && r.height > 100;
+                };
+                return [...document.querySelectorAll('table')].some(t => {
                   const h = t.innerText || '';
                   const rows = [...t.querySelectorAll('tbody tr')];
-                  return /BRAND/i.test(h) && /STATIONS/i.test(h) && /DIESEL/i.test(h) && /UNLEADED 91/i.test(h) && rows.length >= 8;
+                  return visible(t) && /BRAND/i.test(h) && /STATIONS/i.test(h) && /DIESEL/i.test(h) && /UNLEADED 91/i.test(h) && rows.length >= 8;
                 });
               }, {timeout:45000});
 
+              // Give GasWatch's client-side community/live adjustments time to replace the initial table values.
+              await new Promise(r => setTimeout(r, 5000));
+
               const data = await page.evaluate(() => {
-                const tables = [...document.querySelectorAll('table')];
-                const table = tables.find(t => {
+                const visible = el => {
+                  const cs = getComputedStyle(el), r = el.getBoundingClientRect();
+                  return cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 300 && r.height > 100;
+                };
+                const candidates = [...document.querySelectorAll('table')].filter(t => {
                   const h = t.innerText || '';
-                  return /BRAND/i.test(h) && /STATIONS/i.test(h) && /DIESEL/i.test(h) && /UNLEADED 91/i.test(h);
+                  return /BRAND/i.test(h) && /STATIONS/i.test(h) && /DIESEL/i.test(h) && /UNLEADED 91/i.test(h) && t.querySelectorAll('tbody tr').length >= 8;
                 });
+                const table = candidates.find(visible) || candidates[0];
                 if (!table) throw new Error('Brand overview table not found');
                 const bodyText = document.body ? document.body.innerText : '';
                 const m = bodyText.match(/Prices updated\s+([^\n]+)/i);
                 return {
                   updated: m ? m[1].trim() : 'Latest source data',
+                  diagnostics: candidates.map((t, i) => ({
+                    index: i,
+                    visible: visible(t),
+                    box: {w: Math.round(t.getBoundingClientRect().width), h: Math.round(t.getBoundingClientRect().height)},
+                    preview: (t.innerText || '').slice(0, 1000)
+                  })),
                   rows: [...table.querySelectorAll('tbody tr')].map(tr => [...tr.querySelectorAll('td')].map(td => td.innerText.trim()))
                 };
               });
+              console.log('TABLE_DIAGNOSTICS', JSON.stringify(data.diagnostics, null, 2));
 
               const rows = [];
               for (const c of data.rows) {
@@ -100,27 +118,18 @@ jobs:
                 const stations = parseInt(String(c[1]).replace(/,/g,''), 10);
                 if (!Number.isFinite(stations) || stations <= 0) continue;
                 rows.push({
-                  name,
-                  stations,
-                  diesel: pair(c[2]),
-                  premDiesel: pair(c[3]),
-                  unleaded91: pair(c[4]),
-                  eGas: pair(c[5]),
-                  prem95: pair(c[6]),
-                  prem97: pair(c[7]),
-                  kerosene: pair(c[8])
+                  name, stations,
+                  diesel: pair(c[2]), premDiesel: pair(c[3]), unleaded91: pair(c[4]),
+                  eGas: pair(c[5]), prem95: pair(c[6]), prem97: pair(c[7]), kerosene: pair(c[8])
                 });
               }
               if (rows.length < 8) throw new Error('Only ' + rows.length + ' valid brand rows rendered');
               const out = {
-                provider: 'GasWatch PH',
-                source_url: 'https://gaswatchph.com/',
-                updated: data.updated,
-                rendered_at: new Date().toISOString(),
-                fuel: rows
+                provider: 'GasWatch PH', source_url: 'https://gaswatchph.com/',
+                updated: data.updated, rendered_at: new Date().toISOString(), fuel: rows
               };
               fs.writeFileSync('/tmp/gaswatch-live.json', JSON.stringify(out, null, 2) + '\n');
-              console.log(JSON.stringify(out, null, 2));
+              console.log('FINAL_FUEL', JSON.stringify(out, null, 2));
             } finally {
               await browser.close();
             }
