@@ -1,0 +1,161 @@
+name: MX Fuel Live Browser Scrape
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/mx-fuel-live-browser.yml"
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mx-fuel-live-browser
+  cancel-in-progress: true
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout MX Fuel site branch
+        uses: actions/checkout@v4
+        with:
+          ref: mx-fuel-watch-web
+          fetch-depth: 0
+
+      - name: Render GasWatch PH and capture brand table
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          echo "Using $CHROME"
+          mkdir -p /tmp/mx-fuel-browser
+          cd /tmp/mx-fuel-browser
+          npm init -y >/dev/null 2>&1
+          npm install --no-save puppeteer-core@24 >/dev/null 2>&1
+          CHROME="$CHROME" node <<'NODE'
+          const fs = require('fs');
+          const puppeteer = require('puppeteer-core');
+          const BRANDS = new Set(['Shell','Petron','Caltex','Phoenix','Seaoil','Unioil','Jetti','Flying V','Cleanfuel','Total','PTT']);
+
+          function num(s) {
+            const m = String(s || '').replace(/,/g,'').match(/-?\d+(?:\.\d+)?/);
+            return m ? Number(m[0]) : null;
+          }
+          function pair(text) {
+            const s = String(text || '').trim();
+            if (!s || /N\/A/i.test(s)) return null;
+            const nums = [...s.replace(/,/g,'').matchAll(/[+-]?\d+(?:\.\d+)?/g)].map(m => Number(m[0]));
+            if (!nums.length || !Number.isFinite(nums[0])) return null;
+            let delta = nums.length > 1 && Number.isFinite(nums[1]) ? Math.abs(nums[1]) : 0;
+            if (/↓/.test(s)) delta = -delta;
+            return [nums[0], delta];
+          }
+
+          (async () => {
+            const browser = await puppeteer.launch({
+              executablePath: process.env.CHROME,
+              headless: true,
+              args: ['--no-sandbox','--disable-dev-shm-usage','--disable-gpu']
+            });
+            try {
+              const page = await browser.newPage();
+              await page.setViewport({width: 1440, height: 1600});
+              await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36');
+              await page.goto('https://gaswatchph.com/?mx_browser=' + Date.now(), {waitUntil:'domcontentloaded', timeout:45000});
+              await page.waitForFunction(() => {
+                const tables = [...document.querySelectorAll('table')];
+                return tables.some(t => {
+                  const h = t.innerText || '';
+                  const rows = [...t.querySelectorAll('tbody tr')];
+                  return /BRAND/i.test(h) && /STATIONS/i.test(h) && /DIESEL/i.test(h) && /UNLEADED 91/i.test(h) && rows.length >= 8;
+                });
+              }, {timeout:45000});
+
+              const data = await page.evaluate(() => {
+                const tables = [...document.querySelectorAll('table')];
+                const table = tables.find(t => {
+                  const h = t.innerText || '';
+                  return /BRAND/i.test(h) && /STATIONS/i.test(h) && /DIESEL/i.test(h) && /UNLEADED 91/i.test(h);
+                });
+                if (!table) throw new Error('Brand overview table not found');
+                const bodyText = document.body ? document.body.innerText : '';
+                const m = bodyText.match(/Prices updated\s+([^\n]+)/i);
+                return {
+                  updated: m ? m[1].trim() : 'Latest source data',
+                  rows: [...table.querySelectorAll('tbody tr')].map(tr => [...tr.querySelectorAll('td')].map(td => td.innerText.trim()))
+                };
+              });
+
+              const rows = [];
+              for (const c of data.rows) {
+                if (c.length < 9) continue;
+                const name = c[0].replace(/\s+/g,' ').trim();
+                if (!BRANDS.has(name)) continue;
+                const stations = parseInt(String(c[1]).replace(/,/g,''), 10);
+                if (!Number.isFinite(stations) || stations <= 0) continue;
+                rows.push({
+                  name,
+                  stations,
+                  diesel: pair(c[2]),
+                  premDiesel: pair(c[3]),
+                  unleaded91: pair(c[4]),
+                  eGas: pair(c[5]),
+                  prem95: pair(c[6]),
+                  prem97: pair(c[7]),
+                  kerosene: pair(c[8])
+                });
+              }
+              if (rows.length < 8) throw new Error('Only ' + rows.length + ' valid brand rows rendered');
+              const out = {
+                provider: 'GasWatch PH',
+                source_url: 'https://gaswatchph.com/',
+                updated: data.updated,
+                rendered_at: new Date().toISOString(),
+                fuel: rows
+              };
+              fs.writeFileSync('/tmp/gaswatch-live.json', JSON.stringify(out, null, 2) + '\n');
+              console.log(JSON.stringify(out, null, 2));
+            } finally {
+              await browser.close();
+            }
+          })().catch(err => { console.error(err); process.exit(1); });
+          NODE
+
+          test -s /tmp/gaswatch-live.json
+
+      - name: Publish only when fuel values changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data
+          python3 - <<'PY'
+          import json, os, shutil
+          new = json.load(open('/tmp/gaswatch-live.json','r',encoding='utf-8'))
+          path = 'data/gaswatch-live.json'
+          old = None
+          if os.path.exists(path):
+              try: old = json.load(open(path,'r',encoding='utf-8'))
+              except Exception: pass
+          same = bool(old and old.get('updated') == new.get('updated') and old.get('fuel') == new.get('fuel'))
+          if same:
+              print('Fuel values unchanged; no commit needed.')
+          else:
+              shutil.copyfile('/tmp/gaswatch-live.json', path)
+              print('Fuel values changed; snapshot updated.')
+          PY
+
+          if git diff --quiet -- data/gaswatch-live.json; then
+            echo "No rendered fuel change."
+            exit 0
+          fi
+          git config user.name "MX Fuel Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/gaswatch-live.json
+          git commit -m "Update browser-rendered GasWatch fuel prices"
+          git push origin HEAD:mx-fuel-watch-web
