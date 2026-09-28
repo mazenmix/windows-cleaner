@@ -1,0 +1,32 @@
+{
+  "provider": "GasWatch PH",
+  "source_url": "https://gaswatchph.com/",
+  "tank_kg": 11,
+  "rendered_at": "2026-09-28T08:12:51.839Z",
+  "lpg": [
+    {
+      "name": "Regasco",
+      "price": 1229
+    },
+    {
+      "name": "Solane",
+      "price": 1266
+    },
+    {
+      "name": "Petron Gasul",
+      "price": 1291
+    },
+    {
+      "name": "SL Gas",
+      "price": 1319
+    },
+    {
+      "name": "Phoenix LPG",
+      "price": 1334
+    },
+    {
+      "name": "Total Gas",
+      "price": 1636
+    }
+  ]
+}
