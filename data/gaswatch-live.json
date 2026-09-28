@@ -1,0 +1,19 @@
+{
+  "provider": "GasWatch PH",
+  "source_url": "https://gaswatchph.com/",
+  "updated": "September 22, 2026",
+  "rendered_at": "2026-09-28T07:43:08Z",
+  "fuel": [
+    {"name":"Shell","stations":204,"diesel":[105.73,7.80],"premDiesel":[112.94,7.80],"unleaded91":[93.68,4.80],"eGas":null,"prem95":[100.93,4.80],"prem97":[107.21,4.80],"kerosene":[132.85,6.40]},
+    {"name":"Petron","stations":240,"diesel":[104.14,7.72],"premDiesel":[107.22,7.80],"unleaded91":[91.72,4.74],"eGas":null,"prem95":[92.75,4.77],"prem97":[101.83,4.80],"kerosene":[129.58,6.40]},
+    {"name":"Caltex","stations":131,"diesel":[107.29,7.68],"premDiesel":[111.55,7.68],"unleaded91":[94.52,4.77],"eGas":null,"prem95":[101.65,4.70],"prem97":[104.60,4.88],"kerosene":[128.43,6.47]},
+    {"name":"Phoenix","stations":70,"diesel":[108.35,7.82],"premDiesel":null,"unleaded91":[99.44,4.88],"eGas":[105.38,4.88],"prem95":[101.45,4.88],"prem97":[104.85,4.88],"kerosene":null},
+    {"name":"Seaoil","stations":71,"diesel":[104.20,7.82],"premDiesel":[110.23,7.82],"unleaded91":[91.21,4.88],"eGas":[117.06,4.88],"prem95":[94.22,4.88],"prem97":[94.78,4.88],"kerosene":[134.56,6.47]},
+    {"name":"Unioil","stations":83,"diesel":[103.11,7.45],"premDiesel":null,"unleaded91":[90.15,4.53],"eGas":[114.28,4.80],"prem95":[93.18,4.56],"prem97":[108.99,4.80],"kerosene":null},
+    {"name":"Jetti","stations":10,"diesel":[104.91,6.80],"premDiesel":null,"unleaded91":[92.59,4.80],"eGas":null,"prem95":[96.51,4.80],"prem97":[103.70,4.80],"kerosene":null},
+    {"name":"Flying V","stations":38,"diesel":[100.73,7.80],"premDiesel":null,"unleaded91":[86.84,4.80],"eGas":null,"prem95":[87.79,4.80],"prem97":null,"kerosene":null},
+    {"name":"Cleanfuel","stations":54,"diesel":[104.82,7.82],"premDiesel":null,"unleaded91":[92.49,4.88],"eGas":null,"prem95":[96.51,4.88],"prem97":null,"kerosene":null},
+    {"name":"Total","stations":41,"diesel":[104.54,7.82],"premDiesel":[111.88,7.82],"unleaded91":[94.08,4.88],"eGas":null,"prem95":[95.40,4.88],"prem97":[103.70,4.88],"kerosene":null},
+    {"name":"PTT","stations":22,"diesel":[100.13,7.82],"premDiesel":[103.51,7.82],"unleaded91":[89.59,4.88],"eGas":null,"prem95":[90.44,4.88],"prem97":null,"kerosene":null}
+  ]
+}
