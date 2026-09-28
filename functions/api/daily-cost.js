@@ -5,6 +5,7 @@ const SOURCES={
  electricity:"https://company.meralco.com.ph/news-and-advisories/lower-rates-september-2026",
  tolls:"https://expresswayph.com/expressways/nlex-sctex/",
  transport:"https://www.lrta.gov.ph/tickets-and-fares/",
+ jeepney:"https://www.pna.gov.ph/articles/1284951",
  exchange:"https://www.bsp.gov.ph/SitePages/Default.aspx",
  promos:"https://www.globe.com.ph/prepaid/go-promos/plus",
  grocery:"https://www.dti.gov.ph/konsyumer/e-presyo/",
@@ -34,6 +35,13 @@ const SNAP={
   {label:"LRT-2 single journey",value:"₱8–₱18",detail:"Discounted fare range"},
   {label:"LRT-2 stored value",value:"₱6.50–₱16.50",detail:"Discounted fare range"},
   {label:"Beep card",value:"₱30 + ₱14 load",detail:"Standard stored-value card"}
+ ]},
+ jeepney:{title:"Jeepney Fares",source:"Philippine News Agency • LTFRB / DOTr",source_url:SOURCES.jeepney,as_of:"Effective September 28, 2026",items:[
+  {label:"Traditional jeepney minimum",value:"₱14",detail:"First 4 km"},
+  {label:"Traditional succeeding km",value:"+₱2.00/km",detail:"Every kilometer after first 4 km"},
+  {label:"Modern jeepney minimum",value:"₱17",detail:"First 4 km"},
+  {label:"Modern succeeding km",value:"+₱2.40/km",detail:"Every kilometer after first 4 km"},
+  {label:"Student / Senior / PWD discount",value:"20%",detail:"Mandatory fare discount"}
  ]},
  exchange:{title:"Peso Exchange Rates",source:"Bangko Sentral ng Pilipinas",source_url:"https://www.bsp.gov.ph/Statistics/sdds/sdds.aspx",as_of:"24 September 2026",items:[
   {label:"USD",value:"₱62.6190",detail:"PHP per US dollar"},
@@ -182,6 +190,23 @@ async function transport(){
  ];
  return verifiedOut("transport",items,"LRTA / DOTr",SOURCES.transport,"Current LRTA fare page","Official page is rechecked automatically; station-to-station fare ranges come from the current fare matrix poster.");
 }
+async function jeepney(){
+ const t=clean(await readable(SOURCES.jeepney));
+ const tradMin=findNum(t,/traditional jeepneys?[^.]{0,240}(?:to|at)\s*(?:PHP|P|₱)\s*([0-9]+(?:\.[0-9]+)?)/i);
+ const tradKm=findNum(t,/traditional jeepneys?[^.]{0,320}(?:with|plus)\s*(?:PHP|P|₱)\s*([0-9]+(?:\.[0-9]+)?)\s*(?:for|per)[^.]{0,50}succeeding kilometer/i);
+ const modernMin=findNum(t,/modern jeepneys?[^.]{0,240}(?:to|at|from\s*(?:PHP|P|₱)\s*[0-9.]+\s*to)\s*(?:PHP|P|₱)\s*([0-9]+(?:\.[0-9]+)?)/i);
+ const modernKm=findNum(t,/modern jeepneys?[^.]{0,320}(?:with|plus)\s*(?:PHP|P|₱)\s*([0-9]+(?:\.[0-9]+)?)\s*(?:for|per)[^.]{0,50}succeeding kilometer/i);
+ const discount=findNum(t,/mandatory\s+([0-9]+)\s*percent\s+fare discounts?/i)||findNum(t,/([0-9]+)\s*percent\s+fare discounts?[^.]{0,100}(?:students?|senior citizens?|persons with disabilities|PWD)/i);
+ if(!tradMin||!tradKm||!modernMin||!modernKm)throw new Error("Current jeepney fares not parsed");
+ const items=[
+  {label:"Traditional jeepney minimum",value:"₱"+tradMin.toLocaleString("en-PH"),detail:"First 4 km"},
+  {label:"Traditional succeeding km",value:"+₱"+tradKm.toFixed(2)+"/km",detail:"Every kilometer after first 4 km"},
+  {label:"Modern jeepney minimum",value:"₱"+modernMin.toLocaleString("en-PH"),detail:"First 4 km"},
+  {label:"Modern succeeding km",value:"+₱"+modernKm.toFixed(2)+"/km",detail:"Every kilometer after first 4 km"}
+ ];
+ if(discount)items.push({label:"Student / Senior / PWD discount",value:discount+"%",detail:"Mandatory fare discount"});
+ return verifiedOut("jeepney",items,"Philippine News Agency • LTFRB / DOTr",SOURCES.jeepney,"Effective September 28, 2026","Latest LTFRB-adjusted jeepney fares are rechecked automatically; fallback keeps the last verified matrix if the source is temporarily unavailable.");
+}
 async function exchange(){
  const t=clean(await readable("https://www.bsp.gov.ph/SitePages/Default.aspx"));
  function fx(code){return findNum(t,new RegExp(code+"[^0-9]{0,80}([0-9]+\\.[0-9]{3,4})","i"))}
@@ -269,7 +294,7 @@ async function travel(){
  return liveOut("travel",items,"New NAIA Infra Corp.",SOURCES.travel,"Current NAIA PSC");
 }
 
-const HANDLERS={electricity,tolls,transport,exchange,promos,grocery,medicine,construction,vehicle,living,travel};
+const HANDLERS={electricity,tolls,transport,jeepney,exchange,promos,grocery,medicine,construction,vehicle,living,travel};
 
 export async function onRequestGet(context){
  const url=new URL(context.request.url);
