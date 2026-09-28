@@ -1,4 +1,4 @@
-name: MX Fuel Live Browser Scrape
+name: MX Fuel Exact Sync
 
 on:
   push:
@@ -13,73 +13,226 @@ permissions:
   contents: write
 
 concurrency:
-  group: mx-fuel-live-browser
+  group: mx-fuel-exact-sync
   cancel-in-progress: true
 
 jobs:
-  scrape:
+  sync:
     runs-on: ubuntu-latest
     timeout-minutes: 4
     steps:
-      - name: Checkout MX Fuel site branch
+      - name: Checkout MX Fuel production branch
         uses: actions/checkout@v4
         with:
           ref: mx-fuel-watch-web
           fetch-depth: 0
 
-      - name: Render GasWatch PH and capture visible live brand table
+      - name: Capture the same rendered GasWatch brand table users see
         timeout-minutes: 2
         shell: bash
         run: |
           set -euo pipefail
           CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
-          mkdir -p /tmp/mx-fuel-browser && cd /tmp/mx-fuel-browser
+          mkdir -p /tmp/mx-fuel-browser
+          cd /tmp/mx-fuel-browser
           npm init -y >/dev/null 2>&1
           npm install --no-save puppeteer-core@24 >/dev/null 2>&1
+
           CHROME="$CHROME" node <<'NODE'
-          const fs=require('fs'), puppeteer=require('puppeteer-core');
-          const OK=new Set(['Shell','Petron','Caltex','Phoenix','Seaoil','Unioil','Jetti','Flying V','Cleanfuel','Total','PTT']);
-          function pair(text){const s=String(text||'').trim();if(!s||/N\/A/i.test(s))return null;const n=[...s.replace(/,/g,'').matchAll(/[+-]?\d+(?:\.\d+)?/g)].map(m=>Number(m[0]));if(!n.length||!Number.isFinite(n[0]))return null;let d=n.length>1?Math.abs(n[1]):0;if(/↓/.test(s))d=-d;return[n[0],d]}
-          (async()=>{const browser=await puppeteer.launch({executablePath:process.env.CHROME,headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--disable-gpu']});try{
-            const page=await browser.newPage();await page.setViewport({width:1440,height:1600});
-            await page.goto('https://gaswatchph.com/?mx_browser='+Date.now(),{waitUntil:'domcontentloaded',timeout:45000});
-            await page.waitForFunction(()=>[...document.querySelectorAll('table')].some(t=>/BRAND/i.test(t.innerText||'')&&/DIESEL/i.test(t.innerText||'')&&t.querySelectorAll('tbody tr').length>=8),{timeout:45000});
-            await new Promise(r=>setTimeout(r,5000));
-            const debug=await page.evaluate(async()=>{
-              const urls=performance.getEntriesByType('resource').map(x=>x.name).filter(x=>/\.js(?:\?|$)/.test(x));
-              const out=[];
-              for(const u of urls){try{const txt=await(await fetch(u,{cache:'no-store'})).text();for(const needle of ['fetchAllCommunityPrices','communityPrices','LAST_UPDATED','renderBrand','brandOverview']){const ix=txt.indexOf(needle);if(ix>=0)out.push({url:u,needle,snippet:txt.slice(Math.max(0,ix-6000),ix+14000)})}}catch(_){}}
-              let cutoff=null,calc=null;
-              try{
-                cutoff=typeof LAST_UPDATED!=='undefined'?LAST_UPDATED:null;
-                const cp=(await(await fetch('/api/community-prices?x='+Date.now(),{cache:'no-store'})).json()).communityPrices||{};
-                const cdate=cutoff?new Date(cutoff):null, keys=['diesel','premiumDiesel','unleaded','egasoline','premium95','premium97','kerosene'];
-                const grouped={};
-                for(const st of GAS_STATIONS){const b=String(st.brand||'').toLowerCase();if(!b)continue;const vals={};let any=false;for(const k of keys){let v=Number(st.prices&&st.prices[k]);const rep=cp[String(st.id)]&&cp[String(st.id)][k];if(rep&&Number.isFinite(Number(rep.price))&&(!cdate||!rep.timestamp||new Date(rep.timestamp)>=cdate))v=Number(rep.price);if(Number.isFinite(v)&&v>0){vals[k]=v;any=true}}
-                  if(!any)continue;if(!grouped[b])grouped[b]={stations:0,vals:{}};grouped[b].stations++;for(const [k,v] of Object.entries(vals))(grouped[b].vals[k]||=[]).push(v)}
-                calc=Object.fromEntries(Object.entries(grouped).map(([b,g])=>[b,{stations:g.stations,avg:Object.fromEntries(Object.entries(g.vals).map(([k,a])=>[k,Math.round(a.reduce((x,y)=>x+y,0)/a.length*100)/100]))}]));
-              }catch(e){calc={error:String(e)}}
-              return{cutoff,calc,out};
+          const fs = require('fs');
+          const puppeteer = require('puppeteer-core');
+
+          const BRANDS = new Set([
+            'Shell','Petron','Caltex','Phoenix','Seaoil','Unioil',
+            'Jetti','Flying V','Cleanfuel','Total','PTT'
+          ]);
+
+          function pair(text) {
+            const s = String(text || '').trim();
+            if (!s || /N\/A/i.test(s)) return null;
+            const nums = [...s.replace(/,/g, '').matchAll(/[+-]?\d+(?:\.\d+)?/g)]
+              .map(m => Number(m[0]));
+            if (!nums.length || !Number.isFinite(nums[0])) return null;
+            let delta = nums.length > 1 && Number.isFinite(nums[1]) ? Math.abs(nums[1]) : 0;
+            if (/↓/.test(s)) delta = -delta;
+            return [nums[0], delta];
+          }
+
+          (async () => {
+            const browser = await puppeteer.launch({
+              executablePath: process.env.CHROME,
+              headless: true,
+              args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
             });
-            console.log('APP_LOGIC',JSON.stringify(debug,null,2));
-            const data=await page.evaluate(()=>{const t=[...document.querySelectorAll('table')].find(t=>/BRAND/i.test(t.innerText||'')&&/STATIONS/i.test(t.innerText||'')&&/DIESEL/i.test(t.innerText||'')&&t.querySelectorAll('tbody tr').length>=8);const m=(document.body.innerText||'').match(/Prices updated\s+([^\n]+)/i);return{updated:m?m[1].trim():'Latest source data',rows:[...t.querySelectorAll('tbody tr')].map(tr=>[...tr.querySelectorAll('td')].map(td=>td.innerText.trim()))}});
-            const rows=[];for(const c of data.rows){if(c.length<9)continue;const name=c[0].replace(/\s+/g,' ').trim();if(!OK.has(name))continue;const stations=parseInt(c[1].replace(/,/g,''),10);rows.push({name,stations,diesel:pair(c[2]),premDiesel:pair(c[3]),unleaded91:pair(c[4]),eGas:pair(c[5]),prem95:pair(c[6]),prem97:pair(c[7]),kerosene:pair(c[8])})}
-            if(rows.length<8)throw new Error('invalid rows');fs.writeFileSync('/tmp/gaswatch-live.json',JSON.stringify({provider:'GasWatch PH',source_url:'https://gaswatchph.com/',updated:data.updated,rendered_at:new Date().toISOString(),fuel:rows},null,2)+'\n');
-          }finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});
+
+            try {
+              const page = await browser.newPage();
+              await page.setViewport({ width: 1440, height: 1600 });
+              await page.setUserAgent(
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36'
+              );
+
+              let communityResolved;
+              const communitySeen = new Promise(resolve => { communityResolved = resolve; });
+              page.on('response', response => {
+                if (/\/api\/community-prices(?:\?|$)/.test(response.url()) && response.ok()) {
+                  communityResolved();
+                }
+              });
+
+              await page.goto('https://gaswatchph.com/?mx_sync=' + Date.now(), {
+                waitUntil: 'domcontentloaded',
+                timeout: 45000
+              });
+
+              await page.waitForFunction(() => {
+                const isVisible = el => {
+                  const cs = getComputedStyle(el);
+                  const r = el.getBoundingClientRect();
+                  return cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 300 && r.height > 100;
+                };
+                return [...document.querySelectorAll('table')].some(table => {
+                  const text = table.innerText || '';
+                  return isVisible(table) &&
+                    /BRAND/i.test(text) && /STATIONS/i.test(text) &&
+                    /DIESEL/i.test(text) && /UNLEADED 91/i.test(text) &&
+                    table.querySelectorAll('tbody tr').length >= 8;
+                });
+              }, { timeout: 45000 });
+
+              // GasWatch updates station prices from /api/community-prices after the initial DOM.
+              // Wait for that request, then wait for the brand table to settle before reading it.
+              await Promise.race([
+                communitySeen,
+                new Promise(resolve => setTimeout(resolve, 12000))
+              ]);
+              await new Promise(resolve => setTimeout(resolve, 1200));
+
+              const readTableText = () => page.evaluate(() => {
+                const isVisible = el => {
+                  const cs = getComputedStyle(el);
+                  const r = el.getBoundingClientRect();
+                  return cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 300 && r.height > 100;
+                };
+                const tables = [...document.querySelectorAll('table')].filter(table => {
+                  const text = table.innerText || '';
+                  return /BRAND/i.test(text) && /STATIONS/i.test(text) &&
+                    /DIESEL/i.test(text) && /UNLEADED 91/i.test(text) &&
+                    table.querySelectorAll('tbody tr').length >= 8;
+                });
+                const table = tables.find(isVisible) || tables[0];
+                return table ? table.innerText : '';
+              });
+
+              let previous = '';
+              for (let i = 0; i < 4; i++) {
+                const current = await readTableText();
+                if (current && current === previous) break;
+                previous = current;
+                await new Promise(resolve => setTimeout(resolve, 800));
+              }
+
+              const data = await page.evaluate(() => {
+                const isVisible = el => {
+                  const cs = getComputedStyle(el);
+                  const r = el.getBoundingClientRect();
+                  return cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 300 && r.height > 100;
+                };
+                const tables = [...document.querySelectorAll('table')].filter(table => {
+                  const text = table.innerText || '';
+                  return /BRAND/i.test(text) && /STATIONS/i.test(text) &&
+                    /DIESEL/i.test(text) && /UNLEADED 91/i.test(text) &&
+                    table.querySelectorAll('tbody tr').length >= 8;
+                });
+                const table = tables.find(isVisible) || tables[0];
+                if (!table) throw new Error('GasWatch brand table not found');
+
+                const pageText = document.body ? document.body.innerText : '';
+                const updated = pageText.match(/Prices updated\s+([^\n]+)/i);
+                return {
+                  updated: updated ? updated[1].trim() : 'Latest source data',
+                  rows: [...table.querySelectorAll('tbody tr')]
+                    .map(tr => [...tr.querySelectorAll('td')].map(td => td.innerText.trim()))
+                };
+              });
+
+              const fuel = [];
+              for (const c of data.rows) {
+                if (c.length < 9) continue;
+                const name = c[0].replace(/\s+/g, ' ').trim();
+                if (!BRANDS.has(name)) continue;
+                const stations = Number.parseInt(String(c[1]).replace(/,/g, ''), 10);
+                if (!Number.isFinite(stations) || stations <= 0) continue;
+                fuel.push({
+                  name,
+                  stations,
+                  diesel: pair(c[2]),
+                  premDiesel: pair(c[3]),
+                  unleaded91: pair(c[4]),
+                  eGas: pair(c[5]),
+                  prem95: pair(c[6]),
+                  prem97: pair(c[7]),
+                  kerosene: pair(c[8])
+                });
+              }
+
+              if (fuel.length !== 11) {
+                throw new Error(`Expected 11 GasWatch brands; captured ${fuel.length}`);
+              }
+
+              const output = {
+                provider: 'GasWatch PH',
+                source_url: 'https://gaswatchph.com/',
+                updated: data.updated,
+                rendered_at: new Date().toISOString(),
+                fuel
+              };
+              fs.writeFileSync('/tmp/gaswatch-live.json', JSON.stringify(output, null, 2) + '\n');
+              console.log(`Captured ${fuel.length} rendered brands for ${data.updated}`);
+            } finally {
+              await browser.close();
+            }
+          })().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
           NODE
-      - name: Publish only when fuel values changed
+
+          test -s /tmp/gaswatch-live.json
+
+      - name: Publish only when displayed prices changed
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p data
           python3 - <<'PY'
-          import json,os,shutil
-          new=json.load(open('/tmp/gaswatch-live.json')); path='data/gaswatch-live.json'; old=None
+          import json, os, shutil
+
+          new = json.load(open('/tmp/gaswatch-live.json', 'r', encoding='utf-8'))
+          path = 'data/gaswatch-live.json'
+          old = None
           if os.path.exists(path):
-            try: old=json.load(open(path))
-            except: pass
-          if not(old and old.get('updated')==new.get('updated') and old.get('fuel')==new.get('fuel')): shutil.copyfile('/tmp/gaswatch-live.json',path)
+              try:
+                  old = json.load(open(path, 'r', encoding='utf-8'))
+              except Exception:
+                  pass
+
+          unchanged = bool(
+              old and
+              old.get('updated') == new.get('updated') and
+              old.get('fuel') == new.get('fuel')
+          )
+          if not unchanged:
+              shutil.copyfile('/tmp/gaswatch-live.json', path)
           PY
-          if git diff --quiet -- data/gaswatch-live.json; then exit 0; fi
-          git config user.name "MX Fuel Bot"; git config user.email "actions@users.noreply.github.com"
-          git add data/gaswatch-live.json; git commit -m "Update browser-rendered GasWatch fuel prices"; git push origin HEAD:mx-fuel-watch-web
+
+          if git diff --quiet -- data/gaswatch-live.json; then
+            echo "GasWatch displayed prices unchanged."
+            exit 0
+          fi
+
+          git config user.name "MX Fuel Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/gaswatch-live.json
+          git commit -m "Update exact rendered GasWatch fuel prices"
+          git push origin HEAD:mx-fuel-watch-web
