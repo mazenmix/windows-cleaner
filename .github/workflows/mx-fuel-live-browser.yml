@@ -81,8 +81,13 @@ jobs:
                 });
               }, {timeout:45000});
 
-              // Give GasWatch's client-side community/live adjustments time to replace the initial table values.
               await new Promise(r => setTimeout(r, 5000));
+
+              const communityProbe = await page.evaluate(async () => {
+                const r = await fetch('/api/community-prices?mx_probe=' + Date.now(), {cache:'no-store'});
+                return {status:r.status, text:await r.text()};
+              });
+              console.log('COMMUNITY_RESPONSE', communityProbe.status, communityProbe.text.slice(0, 24000));
 
               const data = await page.evaluate(() => {
                 const visible = el => {
@@ -99,16 +104,9 @@ jobs:
                 const m = bodyText.match(/Prices updated\s+([^\n]+)/i);
                 return {
                   updated: m ? m[1].trim() : 'Latest source data',
-                  diagnostics: candidates.map((t, i) => ({
-                    index: i,
-                    visible: visible(t),
-                    box: {w: Math.round(t.getBoundingClientRect().width), h: Math.round(t.getBoundingClientRect().height)},
-                    preview: (t.innerText || '').slice(0, 1000)
-                  })),
                   rows: [...table.querySelectorAll('tbody tr')].map(tr => [...tr.querySelectorAll('td')].map(td => td.innerText.trim()))
                 };
               });
-              console.log('TABLE_DIAGNOSTICS', JSON.stringify(data.diagnostics, null, 2));
 
               const rows = [];
               for (const c of data.rows) {
