@@ -2,16 +2,15 @@ const FRESH_TTL = 30;
 const LAST_GOOD_TTL = 2592000;
 const SOURCE = "https://gaswatchph.com/";
 
-// Latest verified GasWatch weekly snapshot. Used only when the live source
-// cannot be reached. Diesel + Unleaded 91 mirror the newer weekly brand
-// snapshot section; the remaining columns come from the detailed comparison.
+// Safety snapshot only. Live GasWatch "Price Comparison" rows are canonical.
+// Do not overwrite live brand prices with the slower weekly snapshot section.
 const FALLBACK_FUEL = [
   {name:"Shell",stations:204,diesel:[105.73,7.80],premDiesel:[112.94,7.80],unleaded91:[93.68,4.80],eGas:null,prem95:[100.93,4.80],prem97:[107.21,4.80],kerosene:[132.85,6.40]},
-  {name:"Petron",stations:240,diesel:[104.22,7.80],premDiesel:[107.22,7.80],unleaded91:[91.78,4.80],eGas:null,prem95:[92.75,4.77],prem97:[101.83,4.80],kerosene:[129.58,6.40]},
-  {name:"Caltex",stations:131,diesel:[107.43,7.82],premDiesel:[111.55,7.68],unleaded91:[94.63,4.88],eGas:null,prem95:[101.65,4.70],prem97:[104.60,4.88],kerosene:[128.43,6.47]},
+  {name:"Petron",stations:240,diesel:[104.14,7.72],premDiesel:[107.22,7.80],unleaded91:[91.72,4.74],eGas:null,prem95:[92.75,4.77],prem97:[101.83,4.80],kerosene:[129.58,6.40]},
+  {name:"Caltex",stations:131,diesel:[107.29,7.68],premDiesel:[111.55,7.68],unleaded91:[94.52,4.77],eGas:null,prem95:[101.65,4.70],prem97:[104.60,4.88],kerosene:[128.43,6.47]},
   {name:"Phoenix",stations:70,diesel:[108.35,7.82],premDiesel:null,unleaded91:[99.44,4.88],eGas:[105.38,4.88],prem95:[101.45,4.88],prem97:[104.85,4.88],kerosene:null},
   {name:"Seaoil",stations:71,diesel:[104.20,7.82],premDiesel:[110.23,7.82],unleaded91:[91.21,4.88],eGas:[117.06,4.88],prem95:[94.22,4.88],prem97:[94.78,4.88],kerosene:[134.56,6.47]},
-  {name:"Unioil",stations:83,diesel:[103.46,7.80],premDiesel:null,unleaded91:[90.42,4.80],eGas:[114.28,4.80],prem95:[93.31,4.69],prem97:[108.99,4.80],kerosene:null},
+  {name:"Unioil",stations:83,diesel:[103.26,7.60],premDiesel:null,unleaded91:[90.28,4.66],eGas:[114.28,4.80],prem95:[93.31,4.69],prem97:[108.99,4.80],kerosene:null},
   {name:"Jetti",stations:10,diesel:[104.91,6.80],premDiesel:null,unleaded91:[92.59,4.80],eGas:null,prem95:[96.51,4.80],prem97:[103.70,4.80],kerosene:null},
   {name:"Flying V",stations:38,diesel:[100.73,7.80],premDiesel:null,unleaded91:[86.84,4.80],eGas:null,prem95:[87.79,4.80],prem97:null,kerosene:null},
   {name:"Cleanfuel",stations:54,diesel:[104.82,7.82],premDiesel:null,unleaded91:[92.49,4.88],eGas:null,prem95:[96.51,4.88],prem97:null,kerosene:null},
@@ -47,7 +46,7 @@ async function fetchText(url, timeout = 11000) {
   try {
     const isJina = /^https:\/\/r\.jina\.ai\//i.test(url);
     const headers = {
-      "user-agent": "Mozilla/5.0 (compatible; MXFuelWatch/4.1)",
+      "user-agent": "Mozilla/5.0 (compatible; MXFuelWatch/4.2)",
       "accept": "text/plain,text/markdown,text/html,*/*",
       "cache-control": "no-cache, no-store",
       "pragma": "no-cache"
@@ -139,26 +138,16 @@ function parseWeeklySnapshot(text) {
   return out.length >= 8 ? out : [];
 }
 
-function adjustedPair(oldPair, newPrice) {
-  if (!Array.isArray(oldPair) || !Number.isFinite(Number(oldPair[0]))) return [newPrice, 0];
-  const oldPrice = Number(oldPair[0]);
-  const oldDelta = Number(oldPair[1] || 0);
-  const priorWeek = oldPrice - oldDelta;
-  const newDelta = newPrice - priorWeek;
-  return [newPrice, Number(newDelta.toFixed(2))];
-}
-
-function mergeWeeklySnapshot(baseRows, snapshotRows) {
+function fillMissingFromWeeklySnapshot(baseRows, snapshotRows) {
   if (!Array.isArray(snapshotRows) || snapshotRows.length < 8) return baseRows;
   const map = new Map(snapshotRows.map(x => [x.name, x]));
   return baseRows.map(row => {
     const s = map.get(row.name);
     if (!s) return row;
-    return {
-      ...row,
-      diesel: adjustedPair(row.diesel, s.diesel),
-      unleaded91: adjustedPair(row.unleaded91, s.unleaded)
-    };
+    const out = {...row};
+    if (!Array.isArray(out.diesel) && Number.isFinite(s.diesel)) out.diesel = [s.diesel, 0];
+    if (!Array.isArray(out.unleaded91) && Number.isFinite(s.unleaded)) out.unleaded91 = [s.unleaded, 0];
+    return out;
   });
 }
 
@@ -215,8 +204,12 @@ function updatedEpoch(label) {
   return Number.isFinite(d) ? d : 0;
 }
 
-function candidateScore(c) {
-  return (updatedEpoch(c.updated) * 1000) + (c.snapshot.length * 1000) + (c.fuel.length * 100) + c.lpg.length;
+function compareCandidates(a, b) {
+  const dateDiff = updatedEpoch(b.updated) - updatedEpoch(a.updated);
+  if (dateDiff) return dateDiff;
+  const fuelDiff = b.fuel.length - a.fuel.length;
+  if (fuelDiff) return fuelDiff;
+  return b.lpg.length - a.lpg.length;
 }
 
 async function sourceCandidates() {
@@ -224,8 +217,8 @@ async function sourceCandidates() {
   const urls = [
     `https://r.jina.ai/https://gaswatchph.com/?mx_fresh=${stamp}`,
     `https://r.jina.ai/http://gaswatchph.com/?mx_fresh=${stamp}`,
-    `https://r.jina.ai/https://gaswatchph.com/`,
-    `${SOURCE}?mx_fresh=${stamp}`
+    `${SOURCE}?mx_fresh=${stamp}`,
+    `https://r.jina.ai/https://gaswatchph.com/`
   ];
 
   const settled = await Promise.allSettled(urls.map(u => fetchText(u)));
@@ -236,12 +229,12 @@ async function sourceCandidates() {
     const detailed = parseFuel(r.value);
     if (detailed.length < 8) continue;
     const snapshot = parseWeeklySnapshot(r.value);
-    const fuel = mergeWeeklySnapshot(detailed, snapshot);
+    const fuel = fillMissingFromWeeklySnapshot(detailed, snapshot);
     const lpg = parseLpgLive(r.value);
     const updated = parseUpdated(r.value);
-    candidates.push({url:urls[i], text:r.value, fuel, snapshot, lpg, updated});
+    candidates.push({url:urls[i], fuel, snapshot, lpg, updated});
   }
-  candidates.sort((a,b) => candidateScore(b) - candidateScore(a));
+  candidates.sort(compareCandidates);
   return candidates;
 }
 
@@ -249,7 +242,7 @@ async function readJsonResponse(r) {
   try { return await r.clone().json(); } catch (_) { return null; }
 }
 
-async function buildLiveData(previousFuel, previousLpg, previousUpdated) {
+async function buildLiveData(previousLpg, previousUpdated) {
   const candidates = await sourceCandidates();
   if (!candidates.length) throw new Error("GasWatch live table unavailable");
 
@@ -269,7 +262,7 @@ async function buildLiveData(previousFuel, previousLpg, previousUpdated) {
 
   return {
     fuel: newest.fuel,
-    snapshot_live: newest.snapshot.length >= 8,
+    snapshot_available: newest.snapshot.length >= 8,
     snapshot_count: newest.snapshot.length,
     lpg: mergeLpg(liveLpg, previousLpg),
     lpg_live: liveLpg.length >= 4,
@@ -285,35 +278,33 @@ export async function onRequestGet(context) {
   const force = u.searchParams.get("force") === "1";
   const cache = caches.default;
 
-  // v5 invalidates every prior fuel snapshot after deployment.
-  const freshKey = new Request(`${u.origin}/api/fuel-cache-v5`);
-  const lkgKey = new Request(`${u.origin}/api/fuel-last-good-v5`);
+  // v6 invalidates the old cache that could contain weekly-snapshot overrides.
+  const freshKey = new Request(`${u.origin}/api/fuel-cache-v6`);
+  const lkgKey = new Request(`${u.origin}/api/fuel-last-good-v6`);
 
   if (!force) {
     const hit = await cache.match(freshKey);
     if (hit) return hit;
   }
 
-  let previousFuel = FALLBACK_FUEL;
   let previousLpg = FALLBACK_LPG;
   let previousUpdated = "September 22, 2026";
 
   const previous = await cache.match(lkgKey);
   if (previous) {
     const pj = await readJsonResponse(previous);
-    if (pj && Array.isArray(pj.fuel) && pj.fuel.length >= 8) previousFuel = pj.fuel;
     if (pj && Array.isArray(pj.lpg) && pj.lpg.length) previousLpg = pj.lpg;
     if (pj && pj.updated) previousUpdated = pj.updated;
   }
 
   try {
-    const live = await buildLiveData(previousFuel, previousLpg, previousUpdated);
+    const live = await buildLiveData(previousLpg, previousUpdated);
     const data = {
       ok: true,
       fallback: false,
       stale: false,
       partial: !!live.partial,
-      snapshot_live: !!live.snapshot_live,
+      snapshot_available: !!live.snapshot_available,
       snapshot_count: live.snapshot_count || 0,
       lpg_live: !!live.lpg_live,
       lpg_stale: !live.lpg_live,
@@ -325,9 +316,7 @@ export async function onRequestGet(context) {
       checked_at: new Date().toISOString(),
       fuel: live.fuel,
       lpg: live.lpg,
-      note: live.snapshot_live
-        ? "Detailed GasWatch table loaded and newest weekly Diesel/Unleaded brand snapshot merged."
-        : "Detailed GasWatch table loaded; weekly snapshot was not available in this render."
+      note: "Live GasWatch Price Comparison table is canonical; weekly snapshot is used only to fill missing live cells."
     };
 
     const fresh = response(data, 200, FRESH_TTL);
@@ -359,7 +348,7 @@ export async function onRequestGet(context) {
       fallback: true,
       stale: true,
       partial: true,
-      snapshot_live: false,
+      snapshot_available: false,
       source: "GasWatch PH",
       source_url: SOURCE,
       updated: "September 22, 2026",
