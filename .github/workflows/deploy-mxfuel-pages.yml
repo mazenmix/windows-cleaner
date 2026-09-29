@@ -1,5 +1,6 @@
 name: Deploy MX Fuel to Cloudflare Pages
 
+# One-time cleanup deployment after removing Senior Easy Mode.
 on:
   push:
     branches:
