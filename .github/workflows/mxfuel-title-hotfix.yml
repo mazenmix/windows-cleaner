@@ -1,0 +1,52 @@
+name: MX Fuel browser title hotfix
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/mxfuel-title-hotfix.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout MX Fuel web branch
+        uses: actions/checkout@v4
+        with:
+          ref: mx-fuel-watch-web
+          fetch-depth: 0
+
+      - name: Change browser tab title only
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          old = '<title>MX Fuel Watch PH</title>'
+          new = '<title>Abangan ninyo!</title>'
+          if old in s:
+              s = s.replace(old, new, 1)
+              p.write_text(s, encoding='utf-8')
+              print('Browser title updated.')
+          elif new in s:
+              print('Browser title already correct.')
+          else:
+              raise SystemExit('Expected <title> tag was not found; no file changed.')
+          PY
+
+      - name: Commit and push web branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- index.html; then
+            echo "No commit needed."
+          else
+            git add index.html
+            git commit -m "Change browser title to Abangan ninyo!"
+            git push origin HEAD:mx-fuel-watch-web
+          fi
