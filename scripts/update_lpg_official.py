@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Production sync: commits from this updater intentionally trigger Cloudflare Pages deployment.
 import io
 import json
 import re
@@ -89,7 +90,6 @@ def latest_doe_ncr_pdf():
             ncr_url = urljoin(DOE_ROOT, a["href"])
             break
     if not ncr_url:
-        # Current DOE route used by the portal; retained as a deterministic fallback.
         ncr_url = "https://doe.gov.ph/data-and-prices/lpg-monitor/ncr-lpg-prices"
 
     html = fetch(ncr_url)
