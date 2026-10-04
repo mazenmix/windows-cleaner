@@ -1,0 +1,51 @@
+name: MX Fuel LPG Official Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */3 * * *"
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/mx-fuel-lpg-official-sync.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mx-fuel-lpg-official-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out MX Fuel web branch
+        uses: actions/checkout@v4
+        with:
+          ref: mx-fuel-watch-web
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install LPG sync dependencies
+        run: python -m pip install --upgrade requests beautifulsoup4 pdfplumber
+
+      - name: Refresh official LPG prices
+        run: python scripts/update_lpg_official.py
+
+      - name: Publish refreshed LPG snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/gaswatch-lpg.json
+          if git diff --cached --quiet; then
+            echo "LPG snapshot already current."
+          else
+            git commit -m "Refresh LPG prices from official sources [skip ci]"
+            git push origin HEAD:mx-fuel-watch-web
+          fi
