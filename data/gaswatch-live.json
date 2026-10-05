@@ -2,7 +2,7 @@
   "provider": "GasWatch PH",
   "source_url": "https://gaswatchph.com/",
   "updated": "September 29, 2026",
-  "rendered_at": "2026-10-05T17:39:18.761Z",
+  "rendered_at": "2026-10-05T23:22:07.313Z",
   "fuel": [
     {
       "name": "Shell",
@@ -66,8 +66,8 @@
       "name": "Caltex",
       "stations": 131,
       "diesel": [
-        97.57,
-        -7.62
+        97.58,
+        -7.61
       ],
       "premDiesel": [
         100.83,
