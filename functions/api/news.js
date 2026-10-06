@@ -368,42 +368,69 @@ function dedupe(items){
 }
 
 async function collect(){
-  const jobs=[];
-  jobs.push({kind:"gdelt",name:"GDELT",url:GDELT_URL,p:fetchText(GDELT_URL,12000)});
-  for(const u of GOOGLE_FEEDS)jobs.push({kind:"rss",name:"Google News",url:u,p:fetchText(u)});
-  for(const s of PAGE_SOURCES)jobs.push({...s,p:fetchText(s.url)});
-  const settled=await Promise.allSettled(jobs.map(j=>j.p));
-  let items=[];
   const diagnostics=[];
-  settled.forEach((r,i)=>{
-    const job=jobs[i];
+  let items=[];
+
+  // Fast path: these two direct publisher pages are the sources that are
+  // actually succeeding from Cloudflare. Do not make the user wait for
+  // rate-limited Google/GDELT/Jina requests before returning headlines.
+  const primary=PAGE_SOURCES.filter(s=>s.kind==="gmahtml"||s.kind==="philstarhtml");
+  const primarySettled=await Promise.allSettled(primary.map(s=>fetchText(s.url,4500)));
+  primarySettled.forEach((r,i)=>{
+    const job=primary[i];
     if(r.status!=="fulfilled"){
-      diagnostics.push({name:job.name||job.kind,ok:false,error:String(r.reason||"fetch failed")});
+      diagnostics.push({name:job.name,ok:false,error:String(r.reason||"fetch failed")});
+      return;
+    }
+    let parsed=[];
+    try{
+      if(job.kind==="gmahtml")parsed=parseDirectHtml(r.value,"GMA NEWS","gmanetwork.com").filter(x=>philippinesRelevant(x.headline));
+      else if(job.kind==="philstarhtml")parsed=parsePhilstarDirectHtml(r.value);
+      diagnostics.push({name:job.name,ok:true,items:parsed.length});
+      items.push(...parsed);
+    }catch(e){
+      diagnostics.push({name:job.name,ok:false,error:"parse: "+String(e)});
+    }
+  });
+
+  items=dedupe(items);
+  if(items.length>=3){
+    return {items,diagnostics,feedCount:primary.length,fastPath:true};
+  }
+
+  // Fallback path is only used when both direct publisher pages are weak/down.
+  const fallbacks=[
+    {kind:"gdelt",name:"GDELT",url:GDELT_URL},
+    ...GOOGLE_FEEDS.map(url=>({kind:"rss",name:"Google News",url})),
+    ...PAGE_SOURCES.filter(s=>s.kind==="gma"||s.kind==="philstar")
+  ];
+  const settled=await Promise.allSettled(fallbacks.map(j=>fetchText(j.url,4000)));
+  settled.forEach((r,i)=>{
+    const job=fallbacks[i];
+    if(r.status!=="fulfilled"){
+      diagnostics.push({name:job.name,ok:false,error:String(r.reason||"fetch failed")});
       return;
     }
     let parsed=[];
     try{
       if(job.kind==="gdelt")parsed=parseGdeltJson(r.value);
       else if(job.kind==="rss")parsed=parseGoogleRss(r.value);
-      else if(job.kind==="gma")parsed=parseGmaJina(r.value);
+      else if(job.kind==="gma")parsed=parseGmaJina(r.value).filter(x=>philippinesRelevant(x.headline));
       else if(job.kind==="philstar")parsed=parsePhilstarJina(r.value);
-      else if(job.kind==="gmahtml")parsed=parseDirectHtml(r.value,"GMA NEWS","gmanetwork.com").filter(x=>philippinesRelevant(x.headline));
-      else if(job.kind==="philstarhtml")parsed=parsePhilstarDirectHtml(r.value);
+      diagnostics.push({name:job.name,ok:true,items:parsed.length});
+      items.push(...parsed);
     }catch(e){
-      diagnostics.push({name:job.name||job.kind,ok:false,error:"parse: "+String(e)});
-      return;
+      diagnostics.push({name:job.name,ok:false,error:"parse: "+String(e)});
     }
-    diagnostics.push({name:job.name||job.kind,ok:true,items:parsed.length});
-    items.push(...parsed);
   });
-  return {items:dedupe(items),diagnostics};
+  return {items:dedupe(items),diagnostics,feedCount:primary.length+fallbacks.length,fastPath:false};
 }
 
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v8");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v7");
+  const freshKey=new Request(origin+"/api/news-cache-v9");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v8");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
@@ -419,9 +446,9 @@ export async function onRequestGet(context){
       live:true,
       stale:false,
       source:"MX Rapid Feed",
-      method:"GDELT + direct Philippine sources + RSS fallback",
+      method:result.fastPath?"Direct Philippine sources":"Direct Philippine sources + emergency fallbacks",
       checked_at:new Date().toISOString(),
-      feed_count:GOOGLE_FEEDS.length+PAGE_SOURCES.length,
+      feed_count:result.feedCount||2,
       feeds_ok:result.diagnostics.filter(x=>x.ok).length,
       source_count:sources.length,
       sources,
