@@ -372,7 +372,9 @@ function restoreLocal(){
  try{
   var x=JSON.parse(localStorage.getItem("mxNewsCacheV1")||"null");
   if(!x||!x.data||!Array.isArray(x.data.items)||!x.data.items.length||Date.now()-x.saved>21600000)return false;
-  state.items=x.data.items;state.meta=x.data;state.signature=dataSignature(state.items);state.latestSignature="";
+  state.items=x.data.items.filter(isLatestFresh);state.meta=x.data;
+  if(!state.items.length)return false;
+  state.signature=dataSignature(state.items);state.latestSignature="";
   renderMeta(Object.assign({},x.data,{stale:true}));render();
   return true;
  }catch(_){return false}
@@ -385,8 +387,11 @@ async function load(){
   var j=await r.json();
   if(!r.ok||!j||!Array.isArray(j.items)||!j.items.length)throw new Error((j&&j.error)||"Feed unavailable");
 
-  var sig=dataSignature(j.items),changed=sig!==state.signature;
-  state.items=j.items;state.meta=j;renderMeta(j);saveLocal(j);
+  var strictItems=j.items.filter(isLatestFresh);
+  if(!strictItems.length)throw new Error("No headlines inside the strict 3-hour window");
+  j.items=strictItems;
+  var sig=dataSignature(strictItems),changed=sig!==state.signature;
+  state.items=strictItems;state.meta=j;renderMeta(j);saveLocal(j);
 
   if(changed){
     state.signature=sig;
@@ -422,6 +427,6 @@ function clock(){
 clock();setInterval(clock,1000);restoreLocal();load();setInterval(load,15000);
 })();
 </script>
-<!-- NEWS build: fresh-3h-v6 -->
+<!-- NEWS build: strict-fresh-3h-v7 -->
 </body>
 </html>
