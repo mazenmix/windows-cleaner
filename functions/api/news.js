@@ -23,15 +23,28 @@ const CATEGORY_GOOGLE_EXTENDED = [
 const CATEGORY_GOOGLE_FEEDS = [
   {name:"SPORTS DESK",category:"Sports",url:googleCategoryFeed("Philippines (Gilas OR PBA OR UAAP OR NCAA OR boxing OR volleyball OR football OR sports)")},
   {name:"BUSINESS DESK",category:"Business",url:googleCategoryFeed("Philippines (business OR economy OR BSP OR peso OR inflation OR stock market OR jobs OR fuel prices)")},
-  {name:"HEALTH DESK",category:"Health",url:googleCategoryFeed("Philippines (DOH OR health OR hospital OR disease OR outbreak OR medical OR medicine OR vaccine)")},
-  {name:"WEATHER DESK",category:"Weather",url:googleCategoryFeed("Philippines (PAGASA OR typhoon OR weather OR flood OR storm OR monsoon OR heat index)")},
+
+  {name:"HEALTH DOH",category:"Health",url:googleCategoryFeed("Philippines (DOH OR health department OR hospital OR healthcare OR medical)")},
+  {name:"HEALTH DISEASE",category:"Health",url:googleCategoryFeed("Philippines (dengue OR mpox OR measles OR rabies OR leptospirosis OR tuberculosis OR outbreak OR vaccine)")},
+  {name:"HEALTH WELLNESS",category:"Health",url:googleCategoryFeed("Philippines (mental health OR cancer OR medicine OR doctors OR patients OR public health)")},
+
+  {name:"WEATHER PAGASA",category:"Weather",url:googleCategoryFeed("Philippines (PAGASA OR typhoon OR tropical storm OR tropical depression OR low pressure area OR LPA)")},
+  {name:"WEATHER RAIN",category:"Weather",url:googleCategoryFeed("Philippines (heavy rain OR rainfall OR flood OR monsoon OR ITCZ OR thunderstorm)")},
+  {name:"WEATHER HEAT",category:"Weather",url:googleCategoryFeed("Philippines (heat index OR weather advisory OR gale warning OR storm surge)")},
+
+  {name:"TECH CYBER",category:"Technology",url:googleCategoryFeed("Philippines (cybersecurity OR cyberattack OR hacking OR data breach OR phishing OR digital security)")},
+  {name:"TECH TELECOM",category:"Technology",url:googleCategoryFeed("Philippines (PLDT OR Globe OR DITO OR telecom OR 5G OR internet OR satellite)")},
+  {name:"TECH AI FINTECH",category:"Technology",url:googleCategoryFeed("Philippines (AI OR artificial intelligence OR GCash OR Maya OR fintech OR startup OR technology)")},
+
+  {name:"TRAVEL TOURISM",category:"Travel",url:googleCategoryFeed("Philippines (tourism OR tourist arrivals OR travel destination OR resort OR hotel OR beach)")},
+  {name:"TRAVEL VISA",category:"Travel",url:googleCategoryFeed("Philippines (visa OR passport OR immigration OR travel advisory OR overseas travel)")},
+  {name:"TRAVEL DESTINATION",category:"Travel",url:googleCategoryFeed("Philippines (Boracay OR Palawan OR Cebu tourism OR Siargao OR Bohol tourism OR destination)")},
+
   {name:"POLITICS DESK",category:"Politics",url:googleCategoryFeed("Philippines (Senate OR Congress OR Marcos OR Duterte OR Malacanang OR election OR impeachment OR government)")},
-  {name:"TECH DESK",category:"Technology",url:googleCategoryFeed("Philippines (technology OR cyber OR AI OR telecom OR digital OR internet OR data breach)")},
-  {name:"TRAVEL DESK",category:"Travel",url:googleCategoryFeed("Philippines (tourism OR travel OR airport OR airline OR destination OR resort)")},
   {name:"TRANSPORT DESK",category:"Transport",url:googleCategoryFeed("Philippines (DOTr OR MMDA OR MRT OR LRT OR traffic OR transport OR airport OR flight OR road)")},
   {name:"CRIME DESK",category:"Crime",url:googleCategoryFeed("Philippines (PNP OR police OR arrest OR crime OR robbery OR shooting OR kidnapping)")},
-  {name:"NATION DESK",category:"Nation",url:googleCategoryFeed("Philippines (Supreme Court OR government OR education OR agriculture OR national OR local government)")}
-];
+  {name:"NATION DESK",category:"Nation",url:googleCategoryFeed("Philippines (Supreme Court OR education OR agriculture OR national OR local government)")}
+]
 
 const RSS_SOURCES = [
   {name:"GMA NEWS",url:"https://data.gmanews.tv/gno/rss/news/feed.xml"},
@@ -765,8 +778,8 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v19");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v18");
+  const freshKey=new Request(origin+"/api/news-cache-v20");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v19");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
