@@ -77,6 +77,8 @@ function plain(s){
 function cleanTitle(s){
   return plain(s)
     .replace(/^LIVE\s*[:\-]?\s*/i,"LIVE: ")
+    .replace(/^LIVE:\s*(?:just now|moments? ago|\d+\s*(?:s|sec|secs|seconds?|m|min|mins|minutes?|h|hr|hrs|hours?)\s*ago)\s*/i,"LIVE: ")
+    .replace(/\s+(?:just now|moments? ago|\d+\s*(?:s|sec|secs|seconds?|m|min|mins|minutes?|h|hr|hrs|hours?)\s*ago)\s*$/i,"")
     .replace(/\s+/g," ")
     .trim();
 }
@@ -158,7 +160,13 @@ function relativeToTs(raw){
 }
 function normalizeUrl(url){
   const s=decode(url);
-  return /^https?:\/\//i.test(s)?s:"";
+  if(!/^https?:\/\//i.test(s))return "";
+  try{
+    const u=new URL(s);
+    u.hash="";
+    u.search="";
+    return u.href.replace(/\/$/,"");
+  }catch(e){return s}
 }
 function makeItem(headline,source,url,ts,summary="",image=""){
   const h=cleanTitle(headline);
@@ -244,6 +252,28 @@ function parseJinaPage(text,source,domain){
   }
   return out;
 }
+function parsePhilstarDirectHtml(text){
+  const src=String(text||"");
+  const out=[];
+  const re=/<h[1-4]\b[^>]*>([\s\S]*?)<\/h[1-4]>/gi;
+  let m;
+  while((m=re.exec(src))){
+    const block=m[1];
+    const a=block.match(/<a\b[^>]*href=["'](https?:\/\/[^"']*philstar\.com[^"']*)["'][^>]*>([\s\S]*?)<\/a>/i);
+    if(!a)continue;
+    const url=normalizeUrl(a[1]);
+    const title=cleanTitle(a[2]);
+    if(!validNewsLink(title,url,"philstar.com"))continue;
+    const around=src.slice(Math.max(0,m.index-500),Math.min(src.length,re.lastIndex+160));
+    const am=around.match(/(?:just now|moments? ago|\d+\s*(?:s|sec|secs|seconds?|m|min|mins|minutes?|h|hr|hrs|hours?)\s*ago)/i);
+    const ts=relativeToTs(am&&am[0]);
+    if(!ts)continue;
+    const obj=makeItem(title,"PHILSTAR",url,ts,"");
+    if(obj)out.push(obj);
+  }
+  return out;
+}
+
 function parseGmaJina(text){
   const src=String(text||"");
   const just=src.match(/(?:##\s*Just In|Just In)([\s\S]{0,7000}?)(?:##\s*Top News|SEE MORE ARTICLES|Top News)/i);
@@ -254,7 +284,19 @@ function parsePhilstarJina(text){
   const src=String(text||"");
   const marker=src.search(/#{1,4}\s*Headlines/i);
   const section=marker>=0?src.slice(marker,marker+16000):src.slice(0,18000);
-  return parseJinaPage(section,"PHILSTAR","philstar.com");
+  const out=[];
+  const re=/^#{1,4}\s*\[([^\]\n]{18,260})\]\((https?:\/\/[^\s)]+philstar\.com[^\s)]*)\)/gmi;
+  let m;
+  while((m=re.exec(section))){
+    const title=cleanTitle(m[1]),url=normalizeUrl(m[2]);
+    if(!validNewsLink(title,url,"philstar.com"))continue;
+    const age=nearbyAge(section,m.index,re.lastIndex);
+    const ts=relativeToTs(age);
+    if(!ts)continue;
+    const obj=makeItem(title,"PHILSTAR",url,ts,"");
+    if(obj)out.push(obj);
+  }
+  return out;
 }
 
 
@@ -346,7 +388,7 @@ async function collect(){
       else if(job.kind==="gma")parsed=parseGmaJina(r.value);
       else if(job.kind==="philstar")parsed=parsePhilstarJina(r.value);
       else if(job.kind==="gmahtml")parsed=parseDirectHtml(r.value,"GMA NEWS","gmanetwork.com").filter(x=>philippinesRelevant(x.headline));
-      else if(job.kind==="philstarhtml")parsed=parseDirectHtml(r.value,"PHILSTAR","philstar.com");
+      else if(job.kind==="philstarhtml")parsed=parsePhilstarDirectHtml(r.value);
     }catch(e){
       diagnostics.push({name:job.name||job.kind,ok:false,error:"parse: "+String(e)});
       return;
@@ -360,8 +402,8 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v7");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v6");
+  const freshKey=new Request(origin+"/api/news-cache-v8");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v7");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
