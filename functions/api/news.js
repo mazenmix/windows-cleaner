@@ -223,8 +223,13 @@ function nearbyAge(text,start,end){
 function validNewsLink(title,url,domain){
   if(!title||title.length<18||title.length>260)return false;
   if(!url.includes(domain))return false;
-  if(/home|headlines|news$|showbiz|lifestyle|privacy|contact|advertise|subscribe|see more|image|facebook|instagram|youtube|rss feed/i.test(title))return false;
+  if(/home|headlines|news$|privacy|contact|advertise|subscribe|see more|image|facebook|instagram|youtube|rss feed/i.test(title))return false;
   if(/\/news\/(?:$|index|rss)/i.test(url))return false;
+  let path="";
+  try{path=new URL(url).pathname}catch(e){return false}
+  if(domain==="gmanetwork.com"&&!/\/news\/[^/]+\/[^/]+\/\d+\/.+\/(?:story|video)\/?$/i.test(path))return false;
+  if(domain==="philstar.com"&&!/^\/(?:headlines|nation|business|sports|entertainment|lifestyle|world|other-sections)\/20\d\d\/\d{1,2}\/\d{1,2}\/\d+\//i.test(path))return false;
+  if(/\/authors?\//i.test(path))return false;
   return !excluded(title);
 }
 function parseJinaPage(text,source,domain){
@@ -305,15 +310,15 @@ function parseDirectHtml(text,source,domain){
 }
 
 function dedupe(items){
-  const seen=new Set(),out=[],perSource=new Map();
+  const seen=new Set(),seenUrls=new Set(),out=[],perSource=new Map();
   items.sort((a,b)=>b.ts-a.ts);
   for(const x of items){
     const key=x.headline.toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
     const short=key.split(" ").slice(0,11).join(" ");
-    if(!key||seen.has(key)||seen.has(short))continue;
+    if(!key||seen.has(key)||seen.has(short)||(x.url&&seenUrls.has(x.url)))continue;
     const n=perSource.get(x.source)||0;
     if(n>=25)continue;
-    seen.add(key);seen.add(short);perSource.set(x.source,n+1);
+    seen.add(key);seen.add(short);if(x.url)seenUrls.add(x.url);perSource.set(x.source,n+1);
     out.push(x);
     if(out.length>=70)break;
   }
@@ -355,8 +360,8 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v6");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v5");
+  const freshKey=new Request(origin+"/api/news-cache-v7");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v6");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
