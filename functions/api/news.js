@@ -480,16 +480,16 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v11");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v10");
+  const freshKey=new Request(origin+"/api/news-cache-v12");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v11");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
 
   try{
     const result=await collect();
-    const items=result.items;
-    if(items.length<3)throw Object.assign(new Error("Not enough fresh headlines"),{diagnostics:result.diagnostics});
+    const items=result.items.filter(isFresh3h).sort((a,b)=>b.ts-a.ts);
+    if(items.length<3)throw Object.assign(new Error("Not enough headlines inside the strict 3-hour window"),{diagnostics:result.diagnostics});
 
     const sources=[...new Set(items.map(x=>x.source))];
     const data={
@@ -502,7 +502,7 @@ export async function onRequestGet(context){
       feed_count:result.feedCount||2,
       feeds_ok:result.diagnostics.filter(x=>x.ok).length,
       source_count:sources.length,
-      fresh_3h_count:Number(result.fresh3h!=null?result.fresh3h:items.filter(isFresh3h).length),
+      fresh_3h_count:items.length,
       freshness_window_minutes:180,
       sources,
       diagnostics:result.diagnostics,
@@ -522,8 +522,12 @@ export async function onRequestGet(context){
       try{
         const j=await last.clone().json();
         if(j&&Array.isArray(j.items)&&j.items.length){
+          const stillFresh=j.items.filter(isFresh3h).sort((a,b)=>b.ts-a.ts);
+          if(!stillFresh.length)throw new Error("Last verified headlines have expired beyond 3 hours");
           return response({
             ...j,
+            items:stillFresh,
+            fresh_3h_count:stillFresh.length,
             ok:true,live:false,stale:true,last_verified:true,
             checked_at:new Date().toISOString(),
             note:"Live sources are retrying — showing the last verified headlines.",
