@@ -93,19 +93,22 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
 .live-title:hover{color:#fff}
 
 .lower{display:block;margin-top:12px}
-.latest-panel{border:1px solid rgba(44,70,94,.72);border-radius:16px;background:linear-gradient(180deg,rgba(7,18,29,.97),rgba(5,14,23,.97));padding:14px;box-shadow:0 14px 40px rgba(0,0,0,.16)}
+.latest-panel{border:1px solid rgba(44,70,94,.58);border-radius:18px;background:linear-gradient(180deg,rgba(7,18,29,.72),rgba(5,14,23,.55));padding:14px;box-shadow:0 14px 40px rgba(0,0,0,.12)}
 .latest-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .latest-head h2{font-size:14px;margin:0}.latest-head h2 span{color:var(--orange)}
 .latest-head .count{font-size:9px;color:#718496}
-.latest-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.news-card{border:1px solid rgba(34,55,76,.84);border-radius:14px;background:linear-gradient(145deg,#0a1826,#07131f);min-height:178px;overflow:hidden;display:flex;flex-direction:column;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;box-shadow:0 7px 22px rgba(0,0,0,.10)}
-.news-card:hover{transform:translateY(-1px);border-color:#354b61;box-shadow:0 12px 26px rgba(0,0,0,.16)}
-.news-media{height:82px;position:relative;background:linear-gradient(135deg,#153a5f,#101b29);overflow:hidden;display:grid;place-items:center}
-.news-media img{width:100%;height:100%;object-fit:cover;display:block;position:relative;z-index:2}.news-media .fallback{font-size:30px;position:absolute;z-index:1}
-.news-body{padding:10px;display:flex;flex-direction:column;flex:1}
-.news-kicker{display:flex;align-items:center;gap:5px}.news-kicker .ago{margin-left:auto;font-size:8px;color:#7c8e9e}
-.news-card h3{font-size:12.5px;line-height:1.28;margin:8px 0 10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.news-foot{margin-top:auto;display:flex;align-items:center;color:#71869a;font-size:8px}.news-foot b{color:#afbecb}.news-foot span{margin-left:auto;color:#d2dce5;font-size:12px}
+.latest-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.news-card{position:relative;isolation:isolate;border:1px solid rgba(45,72,98,.92);border-radius:16px;background:#081420;min-height:245px;overflow:hidden;display:flex;align-items:flex-end;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;box-shadow:0 9px 26px rgba(0,0,0,.16)}
+.news-card:hover{transform:translateY(-2px);border-color:#45617a;box-shadow:0 16px 34px rgba(0,0,0,.24)}
+.news-card:after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(2,7,12,.02) 0%,rgba(2,7,12,.08) 30%,rgba(2,7,12,.58) 63%,rgba(2,7,12,.96) 100%)}
+.news-media{position:absolute;inset:0;z-index:1;background:linear-gradient(135deg,#153a5f,#101b29);overflow:hidden;display:grid;place-items:center}
+.news-media img{width:100%;height:100%;object-fit:cover;object-position:center center;display:block;position:relative;z-index:2;transition:transform .28s ease,filter .28s ease}.news-media .fallback{font-size:42px;position:absolute;z-index:1}
+.news-card:hover .news-media img{transform:scale(1.018)}
+.news-body{position:relative;z-index:3;width:100%;padding:16px 16px 14px;display:flex;flex-direction:column;justify-content:flex-end;min-height:155px}
+.news-kicker{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.news-kicker .ago{margin-left:auto;font-size:9px;color:#c6d2dd;text-shadow:0 1px 7px rgba(0,0,0,.75)}
+.news-card h3{font-size:16px;line-height:1.22;margin:10px 0 12px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.82);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.news-foot{margin-top:auto;display:flex;align-items:center;color:#b7c6d4;font-size:9px}.news-foot b{color:#dce7f1;letter-spacing:.15px}.news-foot span{margin-left:auto;width:28px;height:28px;border-radius:50%;border:1px solid rgba(199,215,230,.52);background:rgba(4,13,22,.48);display:grid;place-items:center;color:#fff;font-size:18px;line-height:1;backdrop-filter:blur(6px)}
+.news-card .badge{box-shadow:0 5px 14px rgba(0,0,0,.24)}
 
 .empty{border:1px dashed #294157;border-radius:12px;padding:35px;text-align:center;color:#778b9d}
 .skeleton{animation:sk 1.2s ease-in-out infinite alternate}@keyframes sk{from{opacity:.45}to{opacity:.9}}
@@ -118,7 +121,7 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
   .nav{padding:0 14px;gap:10px}.brand{min-width:0}.brandcopy small{display:none}.brandcopy strong{font-size:16px}.search{width:160px}
   .ticker,.categories,.main{padding-left:12px;padding-right:12px}
   .topgrid{grid-template-columns:1fr}.hero{min-height:340px}.side-stack{grid-template-columns:1fr 1fr 1fr;grid-template-rows:none}.small-story{grid-template-columns:1fr;min-height:210px}.thumb{height:92px}
-  .live-list{grid-template-columns:1fr 1fr}.latest-grid{grid-template-columns:repeat(2,1fr)}
+  .live-list{grid-template-columns:1fr 1fr}.latest-grid{grid-template-columns:repeat(2,1fr)}.news-card{min-height:235px}
 }
 @media(max-width:580px){
   .topbar{height:auto;position:relative}.nav{min-height:64px;height:auto;flex-wrap:wrap;padding-top:9px;padding-bottom:9px}.logo{width:68px;height:36px;padding:4px 6px}.brand{flex:1}.live{order:3}.search{order:4;width:100%;height:40px}
@@ -126,7 +129,7 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
   .categories{padding-top:8px}.cat{padding:7px 12px}
   .main{padding-top:10px}.hero{min-height:320px}.hero-content{padding:18px}.hero h1{font-size:24px;max-width:100%}.hero p{font-size:11px;max-width:100%}
   .side-stack{display:grid;grid-template-columns:1fr;gap:8px}.small-story{grid-template-columns:94px 1fr;min-height:108px}.thumb{height:auto}.small-story h3{font-size:13px}
-  .live-list{grid-template-columns:1fr}.lower{margin-top:10px}.latest-panel,.latest-grid{grid-template-columns:1fr}.news-card{min-height:130px;display:grid;grid-template-columns:110px 1fr}.news-media{height:100%}.news-card h3{-webkit-line-clamp:3}
+  .live-list{grid-template-columns:1fr}.lower{margin-top:10px}.latest-panel,.latest-grid{grid-template-columns:1fr}.news-card{min-height:215px;display:flex}.news-media{height:auto}.news-body{padding:14px 14px 13px;min-height:140px}.news-card h3{font-size:15px;-webkit-line-clamp:3}
   
 }
 </style>
@@ -386,6 +389,6 @@ function clock(){
 clock();setInterval(clock,1000);restoreLocal();load();setInterval(load,15000);
 })();
 </script>
-<!-- NEWS build: smooth-live-v4 -->
+<!-- NEWS build: visual-cards-v5 -->
 </body>
 </html>
