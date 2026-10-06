@@ -110,7 +110,7 @@ function parse(xml){
     const descRaw=tag(item,"description");
     const sm=item.match(/<source(?:\s+url=["'][^"']*["'])?>([\s\S]*?)<\/source>/i);
     const source=sm?plain(sm[1]):"";
-    if(!titleRaw||!linkRaw||!source||!trusted(source))continue;
+    if(!titleRaw||!linkRaw||!source)continue;
     const headline=stripSource(titleRaw,source);
     if(headline.length<18)continue;
     if(/celebrity|actor|actress|movie|series|fashion|beauty|recipe|concert|k-pop|showbiz/i.test(headline))continue;
@@ -127,7 +127,7 @@ function parse(xml){
       category:categoryFor(headline),
       breaking:isBreaking(headline,ts),
       image:imageFrom(item,descRaw),
-      summary:description&&description.toLowerCase()!==headline.toLowerCase()?description:""
+      summary:description&&description.toLowerCase()!==headline.toLowerCase()?description:"",\n      trusted_source:trusted(source)
     });
   }
   return out;
@@ -178,7 +178,7 @@ export async function onRequestGet(context){
       if(r.status==="fulfilled"){feedOk++;items.push(...parse(r.value))}
     });
     items=dedupe(items);
-    if(items.length<8)throw new Error("Not enough fresh trusted headlines");
+    if(items.length<3)throw new Error("Not enough fresh headlines");
     const sources=[...new Set(items.map(x=>x.source))];
     const data={
       ok:true,live:true,stale:false,
