@@ -24,14 +24,38 @@ const CATEGORY_GOOGLE_FEEDS = [
 ];
 
 const RSS_SOURCES = [
-  {name:"INQUIRER",url:"https://newsinfo.inquirer.net/feed/"},
+  {name:"GMA NEWS",url:"https://data.gmanews.tv/gno/rss/news/feed.xml"},
+  {name:"INQUIRER",url:"https://www.inquirer.net/fullfeed"},
   {name:"RAPPLER",url:"https://www.rappler.com/feed/"},
   {name:"BUSINESSWORLD",url:"https://www.bworldonline.com/feed/"},
+  {name:"SUNSTAR",url:"https://www.sunstar.com.ph/rssFeed/selected"},
+  {name:"MANILA STANDARD",url:"https://manilastandard.net/feed/all"},
+  {name:"ABS-CBN",url:"https://www.abs-cbn.com/feed2"},
   {name:"MINDANEWS",url:"https://mindanews.com/feed/"},
   {name:"BUSINESSMIRROR",url:"https://businessmirror.com.ph/feed/"},
   {name:"PNA",url:"https://www.pna.gov.ph/rss"},
-  {name:"MANILA BULLETIN",url:"https://mb.com.ph/rss"},
-  {name:"MANILA TIMES",url:"https://www.manilatimes.net/rss"}
+  {name:"MANILA TIMES",url:"https://www.manilatimes.net/news/feed/"}
+];
+
+const CATEGORY_DIRECT_SOURCES = [
+  {name:"GMA SPORTS",source:"GMA NEWS",category:"Sports",kind:"gmahtml",url:"https://www.gmanetwork.com/news/sports/"},
+  {name:"GMA MONEY",source:"GMA NEWS",category:"Business",kind:"gmahtml",url:"https://www.gmanetwork.com/news/money/"},
+  {name:"GMA WEATHER",source:"GMA NEWS",category:"Weather",kind:"gmahtml",url:"https://www.gmanetwork.com/news/scitech/weather/"},
+  {name:"GMA TECHNOLOGY",source:"GMA NEWS",category:"Technology",kind:"gmahtml",url:"https://www.gmanetwork.com/news/scitech/technology/"},
+  {name:"GMA HEALTH",source:"GMA NEWS",category:"Health",kind:"gmahtml",url:"https://www.gmanetwork.com/news/lifestyle/healthandwellness/"},
+  {name:"GMA TRAVEL",source:"GMA NEWS",category:"Travel",kind:"gmahtml",url:"https://www.gmanetwork.com/news/lifestyle/travel/"},
+  {name:"GMA NATION",source:"GMA NEWS",category:"Nation",kind:"gmahtml",url:"https://www.gmanetwork.com/news/topstories/nation/"},
+  {name:"GMA METRO",source:"GMA NEWS",category:"Metro Manila",kind:"gmahtml",url:"https://www.gmanetwork.com/news/topstories/metro/"},
+  {name:"PHILSTAR SPORTS",source:"PHILSTAR",category:"Sports",kind:"philstarhtml",url:"https://www.philstar.com/sports"},
+  {name:"PHILSTAR BUSINESS",source:"PHILSTAR",category:"Business",kind:"philstarhtml",url:"https://www.philstar.com/business"},
+  {name:"PHILSTAR NATION",source:"PHILSTAR",category:"Nation",kind:"philstarhtml",url:"https://www.philstar.com/nation"},
+  {name:"PHILSTAR HEALTH",source:"PHILSTAR",category:"Health",kind:"philstarhtml",url:"https://www.philstar.com/lifestyle/health-and-family"},
+  {name:"RAPPLER SPORTS",source:"RAPPLER",category:"Sports",kind:"rsscat",url:"https://www.rappler.com/sports/feed/"},
+  {name:"RAPPLER BUSINESS",source:"RAPPLER",category:"Business",kind:"rsscat",url:"https://www.rappler.com/business/feed/"},
+  {name:"RAPPLER TECHNOLOGY",source:"RAPPLER",category:"Technology",kind:"rsscat",url:"https://www.rappler.com/technology/feed/"},
+  {name:"RAPPLER WEATHER",source:"RAPPLER",category:"Weather",kind:"rsscat",url:"https://www.rappler.com/philippines/weather/feed/"},
+  {name:"RAPPLER HEALTH",source:"RAPPLER",category:"Health",kind:"rsscat",url:"https://www.rappler.com/life-and-style/health-and-wellness/feed/"},
+  {name:"MANILA TIMES SPORTS",source:"MANILA TIMES",category:"Sports",kind:"rsscat",url:"https://www.manilatimes.net/sports/feed/"}
 ];
 
 function gdeltUrl(query){
@@ -54,7 +78,7 @@ const PAGE_SOURCES = [
 const TRUSTED_DOMAINS = [
   "gmanetwork.com","philstar.com","inquirer.net","abs-cbn.com","pna.gov.ph","manilabulletin.com.ph","mb.com.ph",
   "rappler.com","bworldonline.com","news.tv5.com.ph","tv5.com.ph","onenews.ph","businessmirror.com.ph",
-  "sunstar.com.ph","mindanews.com","manilatimes.net","reuters.com","apnews.com"
+  "sunstar.com.ph","mindanews.com","manilatimes.net","manilastandard.net","interaksyon.com","reuters.com","apnews.com"
 ];
 
 const TRUSTED = [
@@ -167,6 +191,8 @@ function sourceFromDomain(domain){
   if(/sunstar\.com\.ph$/.test(d))return"SUNSTAR";
   if(/mindanews\.com$/.test(d))return"MINDANEWS";
   if(/manilatimes\.net$/.test(d))return"MANILA TIMES";
+  if(/manilastandard\.net$/.test(d))return"MANILA STANDARD";
+  if(/interaksyon\.com$/.test(d))return"INTERAKSYON";
   if(/reuters\.com$/.test(d))return"REUTERS";
   if(/apnews\.com$/.test(d))return"AP";
   return"";
@@ -197,6 +223,13 @@ function categoryFor(title){
   if(/pnp|police|arrest|robber|robbery|shooting|murder|killed|crime|drug bust|kidnap|raid|suspect|nbi/.test(t))return"Crime";
   if(/senate|senator|house|congress|president|marcos|duterte|malacañang|malacanang|election|impeach|government|palace|amla|amlc|ombudsman|politic/.test(t))return"Politics";
   return"Nation";
+}
+
+function categoryMatchesTitle(title,cat){
+  const inferred=categoryFor(title);
+  if(cat==="Metro Manila")return /metro manila|manila|quezon city|makati|pasay|taguig|mandaluyong|pasig|caloocan/i.test(title||"");
+  if(cat==="Breaking")return true;
+  return inferred===cat;
 }
 
 function excluded(title){
@@ -268,6 +301,7 @@ function parseGoogleRss(xml,forcedCategory){
     const h=stripSource(title,source);
     const obj=makeItem(h,sourceLabel(source),plain(link),Date.parse(plain(pub))||0,desc);
     if(obj){
+      if(forcedCategory&&!categoryMatchesTitle(obj.headline,forcedCategory))continue;
       if(forcedCategory)obj.category=forcedCategory;
       out.push(obj);
     }
@@ -289,7 +323,7 @@ function rssImage(block,description){
   }
   return"";
 }
-function parseGenericRss(xml,sourceHint){
+function parseGenericRss(xml,sourceHint,forcedCategory){
   const out=[];
   const src=String(xml||"");
   const blocks=[
@@ -319,7 +353,10 @@ function parseGenericRss(xml,sourceHint){
     const ts=Date.parse(plain(pub))||0;
     if(!h||!url||!ts)continue;
     const obj=makeItem(h,sourceHint,url,ts,desc,rssImage(block,desc));
-    if(obj&&philippinesRelevant(obj.headline))out.push(obj);
+    if(obj&&philippinesRelevant(obj.headline)){
+      if(forcedCategory)obj.category=forcedCategory;
+      out.push(obj);
+    }
   }
   return out;
 }
@@ -371,7 +408,7 @@ function parseJinaPage(text,source,domain){
   }
   return out;
 }
-function parsePhilstarDirectHtml(text){
+function parsePhilstarDirectHtml(text,forcedCategory){
   const src=String(text||"");
   const out=[];
   const re=/<h[1-4]\b[^>]*>([\s\S]*?)<\/h[1-4]>/gi;
@@ -391,7 +428,10 @@ function parsePhilstarDirectHtml(text){
     if(!ts)continue;
     const image=nearestImage(around,focus,url);
     const obj=makeItem(title,"PHILSTAR",url,ts,"",image);
-    if(obj)out.push(obj);
+    if(obj){
+      if(forcedCategory)obj.category=forcedCategory;
+      out.push(obj);
+    }
   }
   return out;
 }
@@ -486,7 +526,7 @@ function nearestImage(snippet,focus,base){
   return candidates.length?candidates[0].u:"";
 }
 
-function parseDirectHtml(text,source,domain){
+function parseDirectHtml(text,source,domain,forcedCategory){
   const src=String(text||"");
   const out=[];
   const re=/<a\b[^>]*href=["'](https?:\/\/[^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
@@ -503,7 +543,10 @@ function parseDirectHtml(text,source,domain){
     if(!ts)continue;
     const image=nearestImage(around,focus,url);
     const obj=makeItem(title,source,url,ts,"",image);
-    if(obj)out.push(obj);
+    if(obj){
+      if(forcedCategory)obj.category=forcedCategory;
+      out.push(obj);
+    }
   }
   return out;
 }
@@ -582,9 +625,8 @@ async function collect(){
   const primary=PAGE_SOURCES.filter(s=>s.kind==="gmahtml"||s.kind==="philstarhtml");
   const firstWave=[
     ...primary.map(s=>({...s,timeout:3200})),
-    ...RSS_SOURCES.map(s=>({kind:"rssdirect",name:s.name,url:s.url,timeout:2200})),
-    ...CATEGORY_GOOGLE_FEEDS.map(s=>({kind:"catrss",name:s.name,url:s.url,category:s.category,timeout:1900})),
-    ...GDELT_FEEDS.map(s=>({kind:"gdelt",name:s.name,url:s.url,timeout:2800}))
+    ...RSS_SOURCES.map(s=>({kind:"rssdirect",name:s.name,url:s.url,timeout:2400})),
+    ...CATEGORY_DIRECT_SOURCES.map(s=>({...s,timeout:2600}))
   ];
 
   const settled=await Promise.allSettled(firstWave.map(j=>fetchText(j.url,j.timeout)));
@@ -596,11 +638,10 @@ async function collect(){
     }
     let parsed=[];
     try{
-      if(job.kind==="gmahtml")parsed=parseDirectHtml(r.value,"GMA NEWS","gmanetwork.com").filter(x=>philippinesRelevant(x.headline));
-      else if(job.kind==="philstarhtml")parsed=parsePhilstarDirectHtml(r.value);
+      if(job.kind==="gmahtml")parsed=parseDirectHtml(r.value,job.source||"GMA NEWS","gmanetwork.com",job.category).filter(x=>job.category||philippinesRelevant(x.headline));
+      else if(job.kind==="philstarhtml")parsed=parsePhilstarDirectHtml(r.value,job.category);
       else if(job.kind==="rssdirect")parsed=parseGenericRss(r.value,job.name);
-      else if(job.kind==="catrss")parsed=parseGoogleRss(r.value,job.category);
-      else if(job.kind==="gdelt")parsed=parseGdeltJson(r.value);
+      else if(job.kind==="rsscat")parsed=parseGenericRss(r.value,job.source||job.name,job.category);
       diagnostics.push({name:job.name,ok:true,items:parsed.length});
       items.push(...parsed);
     }catch(e){
@@ -615,7 +656,9 @@ async function collect(){
   // Emergency fallback only if breadth or volume is still thin.
   if(fresh.length<14||sourceCount<4){
     const fallbacks=[
-      ...GOOGLE_FEEDS.map((url,i)=>({kind:"rss",name:"GOOGLE PH "+(i+1),url,timeout:1800})),
+      ...GOOGLE_FEEDS.map((url,i)=>({kind:"rss",name:"GOOGLE PH "+(i+1),url,timeout:1900})),
+      ...CATEGORY_GOOGLE_FEEDS.map(s=>({kind:"catrss",name:s.name,url:s.url,category:s.category,timeout:1900})),
+      ...GDELT_FEEDS.map(s=>({kind:"gdelt",name:s.name,url:s.url,timeout:2200})),
       ...PAGE_SOURCES.filter(s=>s.kind==="gma"||s.kind==="philstar").map(s=>({...s,timeout:1800}))
     ];
     const second=await Promise.allSettled(fallbacks.map(j=>fetchText(j.url,j.timeout)));
@@ -628,6 +671,8 @@ async function collect(){
       let parsed=[];
       try{
         if(job.kind==="rss")parsed=parseGoogleRss(r.value);
+        else if(job.kind==="catrss")parsed=parseGoogleRss(r.value,job.category);
+        else if(job.kind==="gdelt")parsed=parseGdeltJson(r.value);
         else if(job.kind==="gma")parsed=parseGmaJina(r.value).filter(x=>philippinesRelevant(x.headline));
         else if(job.kind==="philstar")parsed=parsePhilstarJina(r.value);
         diagnostics.push({name:job.name,ok:true,items:parsed.length});
@@ -654,8 +699,8 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v15");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v14");
+  const freshKey=new Request(origin+"/api/news-cache-v16");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v15");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
@@ -667,8 +712,13 @@ export async function onRequestGet(context){
 
     const topToday=selectTopToday(result.items,10);
     const topTodayByCategory=buildTopByCategory(result.items);
+    const categoryItems={};
+    const allCats=["Nation","Weather","Earthquake","Crime","Business","Transport","Politics","Travel","Sports","Technology","Health"];
+    for(const cat of allCats)categoryItems[cat]=items.filter(x=>x.category===cat);
+    categoryItems.Breaking=items.filter(x=>x.breaking);
+    categoryItems["Metro Manila"]=items.filter(x=>/metro manila|manila|quezon city|makati|pasay|taguig|mandaluyong|pasig|caloocan/i.test(x.headline||""));
     const categoryCounts={};
-    for(const x of items)categoryCounts[x.category]=(categoryCounts[x.category]||0)+1;
+    for(const cat of Object.keys(categoryItems))categoryCounts[cat]=categoryItems[cat].length;
     const sources=[...new Set(items.map(x=>x.source))];
     const data={
       ok:true,
@@ -684,6 +734,7 @@ export async function onRequestGet(context){
       freshness_window_minutes:180,
       top_today:topToday,
       top_today_by_category:topTodayByCategory,
+      category_items:categoryItems,
       category_counts:categoryCounts,
       sources,
       diagnostics:result.diagnostics,
