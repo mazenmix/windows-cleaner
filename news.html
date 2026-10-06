@@ -183,7 +183,6 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
   <button class="cat" data-cat="Politics">Politics</button>
   <button class="cat" data-cat="Travel">Travel</button>
   <button class="cat" data-cat="Sports">Sports</button>
-  <button class="cat" data-cat="Technology">Technology</button>
   <button class="cat" data-cat="Health">Health</button>
 </div>
 
@@ -276,7 +275,7 @@ function syncCategories(){
  var counts=categoryCounts(),valid=true;
  document.querySelectorAll("#categories .cat").forEach(function(btn){
    var key=btn.dataset.cat;
-   var pinned=/^(All|Nation|Weather|Crime|Business|Transport|Politics|Travel|Sports|Technology|Health)$/.test(key);
+   var pinned=/^(All|Nation|Weather|Crime|Business|Transport|Politics|Travel|Sports|Health)$/.test(key);
    var show=pinned||Number(counts[key]||0)>0;
    btn.hidden=!show;
    if(key===state.cat&&!show)valid=false;
@@ -557,6 +556,6 @@ function clock(){
 clock();setInterval(clock,1000);restoreLocal();load();setInterval(load,15000);
 })();
 </script>
-<!-- NEWS build: health-official-slider-polish-v14 -->
+<!-- NEWS build: no-technology-section-v15 -->
 </body>
 </html>
