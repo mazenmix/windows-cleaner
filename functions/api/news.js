@@ -8,9 +8,13 @@ const GOOGLE_FEEDS = [
 ];
 
 const PAGE_SOURCES = [
+  {name:"GMA DIRECT", url:"https://www.gmanetwork.com/news/", kind:"gmahtml"},
+  {name:"PHILSTAR DIRECT", url:"https://www.philstar.com/headlines", kind:"philstarhtml"},
   {name:"GMA NEWS", url:"https://r.jina.ai/https://www.gmanetwork.com/news/", kind:"gma"},
   {name:"PHILSTAR", url:"https://r.jina.ai/https://www.philstar.com/headlines", kind:"philstar"}
 ];
+
+const GDELT_URL = "https://api.gdeltproject.org/api/v2/doc/doc?query=Philippines&mode=ArtList&maxrecords=75&format=json&sort=datedesc&timespan=1d";
 
 const TRUSTED = [
   "GMA News Online","GMA News","INQUIRER.net","Philippine Daily Inquirer","Philstar.com","The Philippine Star",
@@ -244,6 +248,58 @@ function parsePhilstarJina(text){
   return parseJinaPage(section,"PHILSTAR","philstar.com");
 }
 
+
+function parseGdeltJson(text){
+  const out=[];
+  let j;
+  try{j=JSON.parse(String(text||""))}catch(e){return out}
+  const arr=Array.isArray(j&&j.articles)?j.articles:[];
+  for(const a of arr){
+    const title=cleanTitle(a&&a.title);
+    const url=normalizeUrl(a&&a.url);
+    const domain=String(a&&a.domain||"").toLowerCase();
+    const country=String(a&&a.sourcecountry||"").toLowerCase();
+    if(!title||!url||excluded(title))continue;
+    if(!/philippines|manila|filipino|duterte|marcos|pagasa|phivolcs|senate|pnp|bsp|peso|cebu|davao/i.test(title) && country!=="philippines")continue;
+    let raw=String(a&&a.seendate||"");
+    let ts=Date.parse(raw);
+    if(!Number.isFinite(ts)){
+      const m=raw.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z?$/);
+      if(m)ts=Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]);
+    }
+    if(!Number.isFinite(ts)||!ts)continue;
+    let src=domain?domain.replace(/^www\./,"").toUpperCase():"GDELT";
+    if(/gmanetwork/.test(domain))src="GMA NEWS";
+    else if(/philstar/.test(domain))src="PHILSTAR";
+    else if(/inquirer/.test(domain))src="INQUIRER";
+    else if(/abs-cbn/.test(domain))src="ABS-CBN";
+    else if(/pna\.gov\.ph/.test(domain))src="PNA";
+    else if(/manilabulletin/.test(domain))src="MANILA BULLETIN";
+    else if(/rappler/.test(domain))src="RAPPLER";
+    const obj=makeItem(title,src,url,ts,"",normalizeUrl(a&&a.socialimage));
+    if(obj)out.push(obj);
+  }
+  return out;
+}
+function parseDirectHtml(text,source,domain){
+  const src=String(text||"");
+  const out=[];
+  const re=/<a\b[^>]*href=["'](https?:\/\/[^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  let m;
+  while((m=re.exec(src))){
+    const url=decode(m[1]);
+    const title=plain(m[2]);
+    if(!validNewsLink(title,url,domain))continue;
+    const around=src.slice(Math.max(0,m.index-350),Math.min(src.length,re.lastIndex+350));
+    const am=around.match(/(?:just now|moments? ago|\d+\s*(?:s|sec|secs|seconds?|m|min|mins|minutes?|h|hr|hrs|hours?)\s*ago)/i);
+    const ts=relativeToTs(am&&am[0]);
+    if(!ts)continue;
+    const obj=makeItem(title,source,url,ts,"");
+    if(obj)out.push(obj);
+  }
+  return out;
+}
+
 function dedupe(items){
   const seen=new Set(),out=[],perSource=new Map();
   items.sort((a,b)=>b.ts-a.ts);
@@ -262,6 +318,7 @@ function dedupe(items){
 
 async function collect(){
   const jobs=[];
+  jobs.push({kind:"gdelt",name:"GDELT",url:GDELT_URL,p:fetchText(GDELT_URL,12000)});
   for(const u of GOOGLE_FEEDS)jobs.push({kind:"rss",name:"Google News",url:u,p:fetchText(u)});
   for(const s of PAGE_SOURCES)jobs.push({...s,p:fetchText(s.url)});
   const settled=await Promise.allSettled(jobs.map(j=>j.p));
@@ -275,9 +332,12 @@ async function collect(){
     }
     let parsed=[];
     try{
-      if(job.kind==="rss")parsed=parseGoogleRss(r.value);
+      if(job.kind==="gdelt")parsed=parseGdeltJson(r.value);
+      else if(job.kind==="rss")parsed=parseGoogleRss(r.value);
       else if(job.kind==="gma")parsed=parseGmaJina(r.value);
       else if(job.kind==="philstar")parsed=parsePhilstarJina(r.value);
+      else if(job.kind==="gmahtml")parsed=parseDirectHtml(r.value,"GMA NEWS","gmanetwork.com");
+      else if(job.kind==="philstarhtml")parsed=parseDirectHtml(r.value,"PHILSTAR","philstar.com");
     }catch(e){
       diagnostics.push({name:job.name||job.kind,ok:false,error:"parse: "+String(e)});
       return;
@@ -291,8 +351,8 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v4");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v3");
+  const freshKey=new Request(origin+"/api/news-cache-v5");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v4");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
@@ -308,7 +368,7 @@ export async function onRequestGet(context){
       live:true,
       stale:false,
       source:"MX Rapid Feed",
-      method:"direct Philippine sources + RSS fallback",
+      method:"GDELT + direct Philippine sources + RSS fallback",
       checked_at:new Date().toISOString(),
       feed_count:GOOGLE_FEEDS.length+PAGE_SOURCES.length,
       feeds_ok:result.diagnostics.filter(x=>x.ok).length,
