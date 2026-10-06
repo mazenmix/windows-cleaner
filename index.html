@@ -486,6 +486,15 @@
 /* MX tiny visitor note */
 .visitor-estimated{font-size:.5px!important;opacity:.02!important;letter-spacing:-.45px!important;line-height:.5!important;transform:scale(.45)!important;transform-origin:left center!important;margin-left:0!important;max-width:10px!important;overflow:hidden!important;white-space:nowrap!important}
 </style>
+
+<style id="mx-news-button-v1">
+.news-main-btn{height:46px;display:inline-flex;align-items:center;gap:9px;padding:0 20px;border-radius:24px;border:1px solid #c74d16;background:linear-gradient(180deg,#fa6d1c,#d94a0d);color:#fff;font-size:12.5px;font-weight:950;letter-spacing:.35px;white-space:nowrap;box-shadow:0 10px 28px rgba(0,0,0,.18),0 0 18px rgba(255,107,22,.12),inset 0 1px 0 rgba(255,255,255,.10);transition:.18s}
+.news-main-btn span{width:7px;height:7px;border-radius:50%;background:#ffeded;box-shadow:0 0 10px rgba(255,255,255,.8);animation:mxNewsPulse 1.15s ease-in-out infinite}
+.news-main-btn:hover{border-color:#ff8b4c;background:linear-gradient(180deg,#ff7c2d,#e65310);transform:translateY(-1px)}
+@keyframes mxNewsPulse{50%{transform:scale(1.25);opacity:.7}}
+@media(max-width:720px){.news-main-btn{order:4;height:42px;padding:0 15px;font-size:11px}}
+@media(max-width:520px){.news-main-btn{width:100%;justify-content:center;order:6}}
+</style>
 </head>
 <body>
 <div class="site">
@@ -496,6 +505,7 @@
 <div class="navright">
 <a class="weather-now-btn" href="./weather-now.html">Weather Now <span>☁</span></a>
 <a class="daily-cost-btn" href="./daily-cost-watch.html">Daily Cost <span>→</span></a>
+<a class="news-main-btn" href="./news.html">NEWS <span></span></a>
 <div class="livebadge"><span class="livedot"></span><span class="livecopy"><b id="liveLabel">Live</b><span id="clockLabel">Loading current time…</span><span id="updatedLabel" style="display:none"></span></span></div>
 
 <button class="iconbtn alert-btn" id="alertButton" aria-label="Price alerts">
