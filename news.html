@@ -99,14 +99,9 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
 .live-mini{display:inline-flex;align-items:center;gap:6px;color:#6ff0a6!important;font-size:9px!important;font-weight:900;letter-spacing:.55px;text-shadow:0 0 10px rgba(72,255,150,.34)}
 .live-mini-dot{width:7px;height:7px;border-radius:50%;background:#34f58a;box-shadow:0 0 7px rgba(52,245,138,.92),0 0 14px rgba(52,245,138,.55);animation:liveMiniPulse 1.25s ease-in-out infinite}
 @keyframes liveMiniPulse{0%,100%{transform:scale(.86);opacity:.72;box-shadow:0 0 5px rgba(52,245,138,.72),0 0 10px rgba(52,245,138,.34)}50%{transform:scale(1.18);opacity:1;box-shadow:0 0 9px rgba(52,245,138,1),0 0 18px rgba(52,245,138,.68)}}
-.live-list{display:grid;position:relative;overflow:hidden;isolation:isolate}
-.live-row{display:grid;grid-template-columns:82px 1fr;gap:10px;padding:11px 0;border-bottom:1px solid rgba(31,49,66,.76);will-change:transform,opacity}
-.live-row.live-new{z-index:2}
-.live-ghost{position:absolute!important;left:0;right:0;z-index:1;pointer-events:none;margin:0!important;background:#07131f}
-@keyframes liveDropIn{0%{opacity:0;transform:translateY(-28px) scale(.985)}100%{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes liveExitDown{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(30px)}}
-
-.live-row:last-child{border-bottom:0}.live-time{font-size:9.5px;line-height:1.35;font-weight:850;transition:color .35s ease,text-shadow .35s ease}
+.live-list{display:grid}
+.live-row{display:grid;grid-template-columns:82px 1fr;gap:10px;padding:11px 0;border-bottom:1px solid rgba(31,49,66,.76)}
+.live-row:last-child{border-bottom:0}.live-time{font-size:9.5px;line-height:1.35;font-weight:850}
 .live-time.live-fresh{color:#73e9a7;text-shadow:0 0 8px rgba(76,240,145,.18)}
 .live-time.live-warm{color:#f2d15c;text-shadow:0 0 8px rgba(242,209,92,.13)}
 .live-time.live-old{color:#f29a4a;text-shadow:0 0 8px rgba(242,154,74,.13)}
@@ -482,101 +477,74 @@ function liveRowHtml(i){
 function liveEmptyHtml(){
  return '<div class="live-row"><span class="live-time">—</span><span class="live-title">No matching live updates.</span></div>';
 }
+function makeLiveRow(i){
+ var a=document.createElement("a"),ts=itemTs(i);
+ a.className="live-row";
+ a.setAttribute("data-live-key",liveKey(i));
+ a.href=safeUrl(i.url);a.target="_blank";a.rel="noopener";
+ var time=document.createElement("span");
+ time.className="live-time "+liveAgeClass(ts);
+ time.setAttribute("data-news-ts",String(ts));
+ time.textContent=ago(i);
+ var title=document.createElement("span");
+ title.className="live-title";
+ title.textContent=i.headline||"";
+ a.appendChild(time);a.appendChild(title);
+ return a;
+}
+function updateLiveRow(el,i){
+ var ts=itemTs(i),time=el.querySelector(".live-time"),title=el.querySelector(".live-title");
+ el.href=safeUrl(i.url);
+ if(time){
+   time.setAttribute("data-news-ts",String(ts));
+   time.textContent=ago(i);
+   time.classList.remove("live-fresh","live-warm","live-old");
+   time.classList.add(liveAgeClass(ts));
+ }
+ if(title&&title.textContent!==(i.headline||""))title.textContent=i.headline||"";
+}
 function renderLive(items){
  var arr=(items||[]).slice(0,9);
  var viewKey=state.cat+"|"+state.query.trim().toLowerCase();
- var current=Array.from(els.liveList.querySelectorAll("[data-live-key]"));
 
  if(!arr.length){
-   if(els.liveList.querySelector("[data-live-key]")||state.liveViewKey!==viewKey)els.liveList.innerHTML=liveEmptyHtml();
-   state.liveViewKey=viewKey;
-   return;
- }
-
- var nextKeys=arr.map(liveKey);
- var currentKeys=current.map(function(el){return el.getAttribute("data-live-key")||""});
-
- // First paint/category/search change: quiet replacement, never animate.
- if(!current.length||state.liveViewKey!==viewKey){
-   els.liveList.innerHTML=arr.map(liveRowHtml).join("");
-   state.liveViewKey=viewKey;
-   return;
- }
-
- // Identical list: nothing to do.
- if(nextKeys.length===currentKeys.length&&nextKeys.every(function(k,i){return k===currentKeys[i]})){
-   state.liveViewKey=viewKey;
-   return;
- }
-
- var currentSet=new Set(currentKeys);
- var nextSet=new Set(nextKeys);
- var trulyNew=nextKeys.filter(function(k){return !currentSet.has(k)});
-
- // If there is NO new story, do not animate or rebuild the list.
- // Quietly remove rows that disappeared, and leave reorder-only changes alone.
- if(!trulyNew.length){
-   current.forEach(function(el){
-     var key=el.getAttribute("data-live-key")||"";
-     if(!nextSet.has(key))el.remove();
-   });
-   state.liveViewKey=viewKey;
-   return;
- }
-
- var oldTop=new Map();
- current.forEach(function(el){
-   oldTop.set(el.getAttribute("data-live-key")||"",el.offsetTop);
- });
-
- var exiting=current.filter(function(el){
-   return !nextSet.has(el.getAttribute("data-live-key")||"");
- }).map(function(el){
-   return {top:el.offsetTop,height:el.offsetHeight,clone:el.cloneNode(true)};
- });
-
- // A real new headline arrived: update ordering and animate only this genuine update.
- els.liveList.innerHTML=arr.map(liveRowHtml).join("");
- state.liveViewKey=viewKey;
-
- var newRows=Array.from(els.liveList.querySelectorAll("[data-live-key]"));
- newRows.forEach(function(el){
-   var key=el.getAttribute("data-live-key")||"";
-   if(oldTop.has(key)){
-     var dy=oldTop.get(key)-el.offsetTop;
-     if(Math.abs(dy)>1&&el.animate){
-       el.animate(
-         [{transform:"translateY("+dy+"px)",opacity:1},{transform:"translateY(0)",opacity:1}],
-         {duration:500,easing:"cubic-bezier(.22,.82,.22,1)"}
-       );
-     }
-   }else if(trulyNew.indexOf(key)>=0){
-     el.classList.add("live-new");
-     if(el.animate){
-       el.animate(
-         [{opacity:0,transform:"translateY(-28px) scale(.99)"},{opacity:1,transform:"translateY(0) scale(1)"}],
-         {duration:540,easing:"cubic-bezier(.18,.86,.24,1)"}
-       );
-     }
-     setTimeout(function(){el.classList.remove("live-new")},580);
+   if(state.liveViewKey!==viewKey||els.liveList.querySelector("[data-live-key]")){
+     els.liveList.innerHTML=liveEmptyHtml();
    }
+   state.liveViewKey=viewKey;
+   return;
+ }
+
+ // First paint or category/search change: replace once, silently.
+ if(state.liveViewKey!==viewKey||!els.liveList.querySelector("[data-live-key]")){
+   els.liveList.innerHTML="";
+   arr.forEach(function(i){els.liveList.appendChild(makeLiveRow(i))});
+   state.liveViewKey=viewKey;
+   return;
+ }
+
+ // Same view: reconcile existing DOM nodes in place. No animation, no fade, no flash.
+ var existing=new Map();
+ Array.from(els.liveList.querySelectorAll("[data-live-key]")).forEach(function(el){
+   existing.set(el.getAttribute("data-live-key")||"",el);
  });
 
- exiting.forEach(function(x){
-   var ghost=x.clone;
-   ghost.classList.add("live-ghost");
-   ghost.removeAttribute("data-live-key");
-   ghost.style.top=x.top+"px";
-   ghost.style.height=x.height+"px";
-   els.liveList.appendChild(ghost);
-   if(ghost.animate){
-     var anim=ghost.animate(
-       [{opacity:1,transform:"translateY(0)"},{opacity:0,transform:"translateY(28px)"}],
-       {duration:420,easing:"cubic-bezier(.32,.08,.44,1)"}
-     );
-     anim.onfinish=function(){ghost.remove()};
-   }else setTimeout(function(){ghost.remove()},440);
+ arr.forEach(function(i,index){
+   var key=liveKey(i);
+   var el=existing.get(key);
+   if(el){
+     updateLiveRow(el,i);
+     existing.delete(key);
+   }else{
+     el=makeLiveRow(i);
+   }
+   var at=els.liveList.children[index];
+   if(at!==el)els.liveList.insertBefore(el,at||null);
  });
+
+ // Remove headlines no longer in the current feed.
+ existing.forEach(function(el){el.remove()});
+ state.liveViewKey=viewKey;
 }
 function latestItemsForView(items){
  var heroUrls=new Set((state.heroItems||[]).slice(0,1).map(function(i){return safeUrl(i.url)}));
@@ -781,6 +749,6 @@ function clock(){
 clock();setInterval(clock,1000);restoreLocal();load();setInterval(load,15000);
 })();
 </script>
-<!-- NEWS build: live-age-colors-v24 -->
+<!-- NEWS build: live-updates-no-animation-v25 -->
 </body>
 </html>
