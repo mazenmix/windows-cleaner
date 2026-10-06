@@ -96,6 +96,9 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
 .section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #203243;padding-bottom:10px}
 .section-head strong{font-size:13.5px;letter-spacing:.25px}.section-head strong span{color:var(--red)}
 .section-head small{font-size:8.5px;color:#5bc6ff}
+.live-mini{display:inline-flex;align-items:center;gap:6px;color:#6ff0a6!important;font-size:9px!important;font-weight:900;letter-spacing:.55px;text-shadow:0 0 10px rgba(72,255,150,.34)}
+.live-mini-dot{width:7px;height:7px;border-radius:50%;background:#34f58a;box-shadow:0 0 7px rgba(52,245,138,.92),0 0 14px rgba(52,245,138,.55);animation:liveMiniPulse 1.25s ease-in-out infinite}
+@keyframes liveMiniPulse{0%,100%{transform:scale(.86);opacity:.72;box-shadow:0 0 5px rgba(52,245,138,.72),0 0 10px rgba(52,245,138,.34)}50%{transform:scale(1.18);opacity:1;box-shadow:0 0 9px rgba(52,245,138,1),0 0 18px rgba(52,245,138,.68)}}
 .live-list{display:grid;position:relative;overflow:hidden;isolation:isolate}
 .live-row{display:grid;grid-template-columns:82px 1fr;gap:10px;padding:11px 0;border-bottom:1px solid rgba(31,49,66,.76);will-change:transform,opacity}
 .live-row.live-new{z-index:2}
@@ -229,7 +232,7 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
     </a>
     <div class="side-stack" id="sideStack"></div>
     <section class="card live-panel">
-      <div class="section-head"><strong><span>●</span> LIVE UPDATES</strong><small id="viewAll">AUTO</small></div>
+      <div class="section-head"><strong><span>●</span> LIVE UPDATES</strong><small id="viewAll" class="live-mini"><i class="live-mini-dot"></i>LIVE</small></div>
       <div class="live-list" id="liveList"><div class="live-row"><span class="live-time">checking</span><span class="live-title">Connecting to rapid feed…</span></div></div>
     </section>
   </section>
@@ -722,6 +725,6 @@ function clock(){
 clock();setInterval(clock,1000);restoreLocal();load();setInterval(load,15000);
 })();
 </script>
-<!-- NEWS build: live-updates-flow-v20 -->
+<!-- NEWS build: live-updates-livebadge-v21 -->
 </body>
 </html>
