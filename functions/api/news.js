@@ -264,11 +264,14 @@ function parsePhilstarDirectHtml(text){
     const url=normalizeUrl(a[1]);
     const title=cleanTitle(a[2]);
     if(!validNewsLink(title,url,"philstar.com"))continue;
-    const around=src.slice(Math.max(0,m.index-500),Math.min(src.length,re.lastIndex+160));
+    const start=Math.max(0,m.index-1400),end=Math.min(src.length,re.lastIndex+700);
+    const around=src.slice(start,end);
+    const focus=m.index-start;
     const am=around.match(/(?:just now|moments? ago|\d+\s*(?:s|sec|secs|seconds?|m|min|mins|minutes?|h|hr|hrs|hours?)\s*ago)/i);
     const ts=relativeToTs(am&&am[0]);
     if(!ts)continue;
-    const obj=makeItem(title,"PHILSTAR",url,ts,"");
+    const image=nearestImage(around,focus,url);
+    const obj=makeItem(title,"PHILSTAR",url,ts,"",image);
     if(obj)out.push(obj);
   }
   return out;
@@ -332,6 +335,42 @@ function parseGdeltJson(text){
   }
   return out;
 }
+function resolveImage(raw,base){
+  let u=decode(String(raw||"").trim());
+  if(!u)return "";
+  // srcset may contain multiple candidates; prefer the last/largest candidate.
+  if(/\s+\d+(?:w|x)(?:\s*,|$)/i.test(u)){
+    const parts=u.split(",").map(x=>x.trim().split(/\s+/)[0]).filter(Boolean);
+    if(parts.length)u=parts[parts.length-1];
+  }
+  if(/^data:/i.test(u)||/logo|sprite|favicon|avatar|icon|placeholder|blank\.gif|tracking|pixel/i.test(u))return "";
+  try{
+    if(u.startsWith("//"))u="https:"+u;
+    u=new URL(u,base).href;
+    if(!/^https?:\/\//i.test(u))return "";
+    return u;
+  }catch(_){return ""}
+}
+function nearestImage(snippet,focus,base){
+  const src=String(snippet||"");
+  const candidates=[];
+  const attrRe=/(?:data-original|data-lazy-src|data-src|srcset|src)=["']([^"']+)["']/gi;
+  let m;
+  while((m=attrRe.exec(src))){
+    const u=resolveImage(m[1],base);
+    if(!u)continue;
+    candidates.push({u,dist:Math.abs((m.index||0)-Number(focus||0))});
+  }
+  const bgRe=/background-image\s*:\s*url\((?:["']?)([^)"']+)(?:["']?)\)/gi;
+  while((m=bgRe.exec(src))){
+    const u=resolveImage(m[1],base);
+    if(!u)continue;
+    candidates.push({u,dist:Math.abs((m.index||0)-Number(focus||0))});
+  }
+  candidates.sort((a,b)=>a.dist-b.dist);
+  return candidates.length?candidates[0].u:"";
+}
+
 function parseDirectHtml(text,source,domain){
   const src=String(text||"");
   const out=[];
@@ -341,11 +380,14 @@ function parseDirectHtml(text,source,domain){
     const url=decode(m[1]);
     const title=plain(m[2]);
     if(!validNewsLink(title,url,domain))continue;
-    const around=src.slice(Math.max(0,m.index-350),Math.min(src.length,re.lastIndex+350));
+    const start=Math.max(0,m.index-1000),end=Math.min(src.length,re.lastIndex+1000);
+    const around=src.slice(start,end);
+    const focus=m.index-start;
     const am=around.match(/(?:just now|moments? ago|\d+\s*(?:s|sec|secs|seconds?|m|min|mins|minutes?|h|hr|hrs|hours?)\s*ago)/i);
     const ts=relativeToTs(am&&am[0]);
     if(!ts)continue;
-    const obj=makeItem(title,source,url,ts,"");
+    const image=nearestImage(around,focus,url);
+    const obj=makeItem(title,source,url,ts,"",image);
     if(obj)out.push(obj);
   }
   return out;
@@ -429,8 +471,8 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v9");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v8");
+  const freshKey=new Request(origin+"/api/news-cache-v10");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v9");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
