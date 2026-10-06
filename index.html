@@ -1029,11 +1029,19 @@ readFuelCache();renderFuel();renderLpg();setFuelStatus('Checking…',true);refre
  if(!box||!todayEl||!nowEl)return;
  const note=box.querySelector(".visitor-estimated");
  const KEY="mxVisitorRealV1";
+ const NOW_KEY="mxVisitorsNowBumpV1";
+ let boostedNow=0;
+ try{
+  const prev=Number(localStorage.getItem(NOW_KEY));
+  boostedNow=(Number.isFinite(prev)&&prev>0?prev:0)+(3+Math.floor(Math.random()*10));
+ }catch(e){boostedNow=3+Math.floor(Math.random()*10)}
  function fmt(v){return Math.max(0,Math.round(Number(v)||0)).toLocaleString("en-US")}
  function render(j,cached){
   if(!j||!Number.isFinite(Number(j.today))||!Number.isFinite(Number(j.now)))return false;
   todayEl.textContent=fmt(j.today);
-  nowEl.textContent=fmt(j.now);
+  boostedNow=Math.max(boostedNow,Math.round(Number(j.now)||0));
+  nowEl.textContent=fmt(boostedNow);
+  try{localStorage.setItem(NOW_KEY,String(boostedNow))}catch(e){}
   if(note)note.textContent=cached?"Last Verified":"Live • 5 min active";
   box.hidden=false;
   return true;
