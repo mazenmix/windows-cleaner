@@ -14,6 +14,7 @@ function googleCategoryExtended(q){
   return "https://news.google.com/rss/search?q="+encodeURIComponent(q+" when:2d")+"&hl=en-PH&gl=PH&ceid=PH:en";
 }
 const CATEGORY_GOOGLE_EXTENDED = [
+  {name:"HEALTH OFFICIAL EXTENDED",category:"Health",url:googleCategoryExtended("(site:doh.gov.ph OR site:who.int OR site:fda.gov.ph) Philippines health")},
   {name:"HEALTH EXTENDED",category:"Health",url:googleCategoryExtended("Philippines (DOH OR hospital OR dengue OR mpox OR disease OR outbreak OR vaccine OR healthcare OR medicine)")},
   {name:"WEATHER EXTENDED",category:"Weather",url:googleCategoryExtended("Philippines (PAGASA OR typhoon OR rainfall OR flood OR monsoon OR ITCZ OR heat index OR tropical storm)")},
   {name:"TECH EXTENDED",category:"Technology",url:googleCategoryExtended("Philippines (technology OR cyber OR AI OR telecom OR PLDT OR Smart OR Globe OR DITO OR GCash OR Maya OR digital OR internet OR gadget)")},
@@ -28,6 +29,9 @@ const CATEGORY_GOOGLE_FEEDS = [
   {name:"BUSINESS ECONOMY",category:"Business",url:googleCategoryFeed("Philippines (economy OR BSP OR peso OR inflation OR GDP OR interest rate OR jobs)")},
   {name:"BUSINESS MARKETS",category:"Business",url:googleCategoryFeed("Philippines (stock market OR PSEi OR investment OR trade OR exports OR imports OR fuel prices)")},
 
+  {name:"HEALTH DOH OFFICIAL",category:"Health",url:googleCategoryFeed("site:doh.gov.ph Philippines")},
+  {name:"HEALTH WHO PH",category:"Health",url:googleCategoryFeed("site:who.int Philippines health")},
+  {name:"HEALTH FDA PH",category:"Health",url:googleCategoryFeed("site:fda.gov.ph Philippines advisory")},
   {name:"HEALTH DOH",category:"Health",url:googleCategoryFeed("Philippines (DOH OR health department OR hospital OR healthcare OR medical)")},
   {name:"HEALTH DISEASE",category:"Health",url:googleCategoryFeed("Philippines (dengue OR mpox OR measles OR rabies OR leptospirosis OR tuberculosis OR outbreak OR vaccine)")},
   {name:"HEALTH WELLNESS",category:"Health",url:googleCategoryFeed("Philippines (mental health OR cancer OR medicine OR doctors OR patients OR public health)")},
@@ -86,9 +90,9 @@ const CATEGORY_DIRECT_SOURCES = [
   {name:"GMA SPORTS",source:"GMA NEWS",category:"Sports",kind:"gmahtml",url:"https://www.gmanetwork.com/news/sports/"},
   {name:"GMA MONEY",source:"GMA NEWS",category:"Business",kind:"gmahtml",url:"https://www.gmanetwork.com/news/money/"},
   {name:"GMA WEATHER",source:"GMA NEWS",category:"Weather",kind:"gmahtml",url:"https://www.gmanetwork.com/news/weather/"},
-  {name:"GMA TECHNOLOGY",source:"GMA NEWS",category:"Technology",kind:"gmahtml",url:"https://www.gmanetwork.com/news/scitech/technology/"},
+  {name:"GMA TECHNOLOGY",source:"GMA NEWS",category:"Technology",kind:"gmahtml",validate:true,url:"https://www.gmanetwork.com/news/scitech/technology/"},
   {name:"GMA HEALTH",source:"GMA NEWS",category:"Health",kind:"gmahtml",validate:true,url:"https://www.gmanetwork.com/news/lifestyle/healthandwellness/"},
-  {name:"GMA TRAVEL",source:"GMA NEWS",category:"Travel",kind:"gmahtml",url:"https://www.gmanetwork.com/news/lifestyle/travel/"},
+  {name:"GMA TRAVEL",source:"GMA NEWS",category:"Travel",kind:"gmahtml",validate:true,url:"https://www.gmanetwork.com/news/lifestyle/travel/"},
   {name:"GMA NATION",source:"GMA NEWS",category:"Nation",kind:"gmahtml",url:"https://www.gmanetwork.com/news/topstories/nation/"},
   {name:"GMA METRO",source:"GMA NEWS",category:"Metro Manila",kind:"gmahtml",url:"https://www.gmanetwork.com/news/topstories/metro/"},
   {name:"PHILSTAR SPORTS",source:"PHILSTAR",category:"Sports",kind:"philstarhtml",url:"https://www.philstar.com/sports"},
@@ -99,9 +103,9 @@ const CATEGORY_DIRECT_SOURCES = [
   {name:"PHILSTAR BUSINESS RSS",source:"PHILSTAR",category:"Business",kind:"rsscat",url:"https://www.philstar.com/rss/business"},
   {name:"RAPPLER SPORTS",source:"RAPPLER",category:"Sports",kind:"rsscat",url:"https://www.rappler.com/sports/feed/"},
   {name:"RAPPLER BUSINESS",source:"RAPPLER",category:"Business",kind:"rsscat",url:"https://www.rappler.com/business/feed/"},
-  {name:"RAPPLER TECHNOLOGY",source:"RAPPLER",category:"Technology",kind:"rsscat",url:"https://www.rappler.com/technology/feed/"},
+  {name:"RAPPLER TECHNOLOGY",source:"RAPPLER",category:"Technology",kind:"rsscat",validate:true,url:"https://www.rappler.com/technology/feed/"},
   {name:"RAPPLER WEATHER",source:"RAPPLER",category:"Weather",kind:"rsscat",url:"https://www.rappler.com/philippines/weather/feed/"},
-  {name:"RAPPLER HEALTH",source:"RAPPLER",category:"Health",kind:"rsscat",url:"https://www.rappler.com/life-and-style/health-and-wellness/feed/"},
+  {name:"RAPPLER HEALTH",source:"RAPPLER",category:"Health",kind:"rsscat",validate:true,url:"https://www.rappler.com/life-and-style/health-and-wellness/feed/"},
   {name:"MANILA TIMES SPORTS",source:"MANILA TIMES",category:"Sports",kind:"rsscat",url:"https://www.manilatimes.net/sports/feed/"}
 ];
 
@@ -125,7 +129,8 @@ const PAGE_SOURCES = [
 const TRUSTED_DOMAINS = [
   "gmanetwork.com","philstar.com","inquirer.net","abs-cbn.com","pna.gov.ph","manilabulletin.com.ph","mb.com.ph",
   "rappler.com","bworldonline.com","news.tv5.com.ph","tv5.com.ph","onenews.ph","businessmirror.com.ph",
-  "sunstar.com.ph","mindanews.com","manilatimes.net","manilastandard.net","interaksyon.com","reuters.com","apnews.com"
+  "sunstar.com.ph","mindanews.com","manilatimes.net","manilastandard.net","interaksyon.com",
+  "doh.gov.ph","who.int","fda.gov.ph","reuters.com","apnews.com"
 ];
 
 const TRUSTED = [
@@ -136,7 +141,9 @@ const TRUSTED = [
   "Manila Standard","Daily Tribune","The Daily Tribune","Interaksyon","Philippine Information Agency","PIA",
   "SPIN.ph","One Sports","Bilyonaryo","ANC","DZBB","YugaTech","GadgetMatch","Tech in Asia",
   "Top Gear Philippines","AutoIndustriya","Philippine Airlines","Cebu Pacific","AirAsia Philippines",
-  "Department of Tourism","Department of Transportation","MMDA","LTO","LTFRB","Philippine Ports Authority"
+  "Department of Tourism","Department of Transportation","MMDA","LTO","LTFRB","Philippine Ports Authority",
+  "Department of Health","DOH Philippines","World Health Organization","WHO Philippines",
+  "Food and Drug Administration Philippines","FDA Philippines"
 ];
 
 function response(data,status=200,ttl=FRESH_TTL){
@@ -200,6 +207,9 @@ function cleanTitle(s){
 }
 function sourceLabel(s){
   const x=plain(s);
+  if(/department of health|doh philippines/i.test(x))return"DOH PHILIPPINES";
+  if(/world health organization|who philippines/i.test(x))return"WHO PHILIPPINES";
+  if(/food and drug administration.*philippines|fda philippines/i.test(x))return"FDA PHILIPPINES";
   if(/gma/i.test(x))return"GMA NEWS";
   if(/inquirer/i.test(x))return"INQUIRER";
   if(/philstar|philippine star/i.test(x))return"PHILSTAR";
@@ -244,6 +254,9 @@ function sourceFromDomain(domain){
   if(/manilatimes\.net$/.test(d))return"MANILA TIMES";
   if(/manilastandard\.net$/.test(d))return"MANILA STANDARD";
   if(/interaksyon\.com$/.test(d))return"INTERAKSYON";
+  if(/doh\.gov\.ph$/.test(d))return"DOH PHILIPPINES";
+  if(/who\.int$/.test(d))return"WHO PHILIPPINES";
+  if(/fda\.gov\.ph$/.test(d))return"FDA PHILIPPINES";
   if(/reuters\.com$/.test(d))return"REUTERS";
   if(/apnews\.com$/.test(d))return"AP";
   return"";
@@ -276,11 +289,31 @@ function categoryFor(title){
   return"Nation";
 }
 
-function categoryMatchesTitle(title,cat){
+function isOfficialHealthSource(source,domain){
+  const s=String(source||"").toLowerCase();
+  const d=String(domain||"").toLowerCase().replace(/^www\./,"");
+  return /doh philippines|department of health|who philippines|world health organization|fda philippines|food and drug administration/.test(s)
+    || d==="doh.gov.ph"||d.endsWith(".doh.gov.ph")||d==="who.int"||d.endsWith(".who.int")||d==="fda.gov.ph"||d.endsWith(".fda.gov.ph");
+}
+function itemDomain(item){
+  try{return new URL(item&&item.url||"").hostname}catch(_){return""}
+}
+function categoryMatchesTitle(title,cat,source="",domain=""){
   const inferred=categoryFor(title);
+  if(cat==="Health"&&isOfficialHealthSource(source,domain))return true;
   if(cat==="Metro Manila")return /metro manila|manila|quezon city|makati|pasay|taguig|mandaluyong|pasig|caloocan/i.test(title||"");
   if(cat==="Breaking")return true;
   return inferred===cat;
+}
+function strictDeskMatch(item,cat){
+  if(!item)return false;
+  const source=item.source||"";
+  const domain=itemDomain(item);
+  if(cat==="Health")return categoryMatchesTitle(item.headline,"Health",source,domain);
+  if(/^(Technology|Travel|Transport|Weather|Sports|Business|Crime|Politics|Earthquake)$/.test(cat)){
+    return categoryMatchesTitle(item.headline,cat,source,domain);
+  }
+  return item.category===cat;
 }
 
 function excluded(title){
@@ -356,7 +389,7 @@ function parseGoogleRss(xml,forcedCategory){
     const h=stripSource(title,source);
     const obj=makeItem(h,sourceLabel(source),plain(link),Date.parse(plain(pub))||0,desc);
     if(obj){
-      if(forcedCategory&&!categoryMatchesTitle(obj.headline,forcedCategory))continue;
+      if(forcedCategory&&!categoryMatchesTitle(obj.headline,forcedCategory,source,sourceDomain))continue;
       if(forcedCategory)obj.category=forcedCategory;
       out.push(obj);
     }
@@ -409,6 +442,7 @@ function parseGenericRss(xml,sourceHint,forcedCategory){
     if(!h||!url||!ts)continue;
     const obj=makeItem(h,sourceHint,url,ts,desc,rssImage(block,desc));
     if(obj&&(forcedCategory||philippinesRelevant(obj.headline))){
+      if(forcedCategory&&/^(Health|Technology|Travel|Transport)$/.test(forcedCategory)&&!categoryMatchesTitle(obj.headline,forcedCategory,sourceHint,itemDomain(obj)))continue;
       if(forcedCategory)obj.category=forcedCategory;
       out.push(obj);
     }
@@ -630,7 +664,8 @@ function importanceScore(item){
   let score=Math.max(0,48-ageH*2);
   if(item&&item.breaking)score+=34;
   const source=String(item&&item.source||"");
-  if(/REUTERS|AP/.test(source))score+=22;
+  if(/DOH PHILIPPINES|WHO PHILIPPINES|FDA PHILIPPINES/.test(source))score+=30;
+  else if(/REUTERS|AP/.test(source))score+=22;
   else if(/GMA NEWS|INQUIRER|ABS-CBN|PNA|PHILSTAR|RAPPLER|MANILA BULLETIN/.test(source))score+=16;
   else if(/BUSINESSWORLD|NEWS5|ONE NEWS|BUSINESSMIRROR|SUNSTAR|MINDANEWS|MANILA TIMES/.test(source))score+=11;
   if(/president|senate|congress|supreme court|impeach|earthquake|typhoon|storm surge|evacuat|emergency|explosion|shooting|killed|inflation|interest rate|bsp|west philippine sea|china|alert|suspend/.test(title))score+=24;
@@ -820,8 +855,8 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v21");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v20");
+  const freshKey=new Request(origin+"/api/news-cache-v22");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v21");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
@@ -837,7 +872,7 @@ export async function onRequestGet(context){
     const categoryItems={},topTodayByCategory={},recentByCategory={};
     for(const cat of allCats){
       const desk=(result.deskBuckets&&result.deskBuckets[cat])||[];
-      const merged=dedupe(desk.concat(result.items.filter(x=>x.category===cat)));
+      const merged=dedupe(desk.concat(result.items.filter(x=>x.category===cat))).filter(x=>strictDeskMatch(x,cat));
       categoryItems[cat]=merged.filter(isFresh3h);
       topTodayByCategory[cat]=selectTopCategoryToday(merged.filter(isToday),18);
       recentByCategory[cat]=selectTopCategoryToday(merged.filter(x=>Date.now()-x.ts<=48*3600000),18);
