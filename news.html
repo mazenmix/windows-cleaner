@@ -106,7 +106,7 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
 .latest-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .latest-head h2{font-size:14px;margin:0}.latest-head h2 span{color:var(--orange)}
 .latest-head .count{font-size:9px;color:#718496}
-.latest-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.latest-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.latest-subhead{grid-column:1/-1;margin:4px 0 0;padding:10px 2px 2px;border-top:1px solid rgba(48,75,98,.55);color:#90a5b9;font-size:10px;font-weight:900;letter-spacing:.5px}
 .news-card{position:relative;isolation:isolate;border:1px solid rgba(45,72,98,.92);border-radius:16px;background:#081420;min-height:245px;overflow:hidden;display:flex;align-items:flex-end;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;box-shadow:0 9px 26px rgba(0,0,0,.16)}
 .news-card:hover{transform:translateY(-2px);border-color:#45617a;box-shadow:0 16px 34px rgba(0,0,0,.24)}
 .news-card:after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(2,7,12,.02) 0%,rgba(2,7,12,.08) 30%,rgba(2,7,12,.58) 63%,rgba(2,7,12,.96) 100%)}
@@ -210,7 +210,7 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
 
   <section class="lower">
     <div class="latest-panel">
-      <div class="latest-head"><h2><span>●</span> LATEST NEWS</h2><span class="count" id="resultCount">LAST 3 HOURS</span></div>
+      <div class="latest-head"><h2 id="latestTitle"><span>●</span> LATEST NEWS</h2><span class="count" id="resultCount">LAST 3 HOURS</span></div>
       <div class="latest-grid" id="latestGrid"></div>
     </div>
   </section>
@@ -219,14 +219,14 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
 <script>
 (function(){
 "use strict";
-var state={items:[],topToday:[],topByCategory:{},cat:"All",query:"",meta:null,signature:"",latestSignature:"",heroItems:[],heroIndex:0,heroTimer:null};
+var state={items:[],categoryItems:{},topToday:[],topByCategory:{},cat:"All",query:"",meta:null,signature:"",latestSignature:"",heroItems:[],heroIndex:0,heroTimer:null};
 var LATEST_MAX_AGE_MS=3*60*60*1000;
 var els={
  hero:document.getElementById("hero"),heroBg:document.getElementById("heroBg"),heroContent:document.getElementById("heroContent"),heroBadge:document.getElementById("heroBadge"),
  heroAge:document.getElementById("heroAge"),heroTitle:document.getElementById("heroTitle"),heroSummary:document.getElementById("heroSummary"),
  heroSource:document.getElementById("heroSource"),heroPublished:document.getElementById("heroPublished"),heroPrev:document.getElementById("heroPrev"),heroNext:document.getElementById("heroNext"),heroCounter:document.getElementById("heroCounter"),sideStack:document.getElementById("sideStack"),
  liveList:document.getElementById("liveList"),latestGrid:document.getElementById("latestGrid"),tickerMove:document.getElementById("tickerMove"),
- tickerLabel:document.getElementById("tickerLabel"),tickerAge:document.getElementById("tickerAge"),resultCount:document.getElementById("resultCount"),
+ tickerLabel:document.getElementById("tickerLabel"),tickerAge:document.getElementById("tickerAge"),latestTitle:document.getElementById("latestTitle"),resultCount:document.getElementById("resultCount"),
  liveText:document.getElementById("liveText"),liveDot:document.getElementById("liveDot"),searchInput:document.getElementById("searchInput")
 };
 var icons={Nation:"🇵🇭","Metro Manila":"🏙️",Weather:"🌧️",Earthquake:"◉",Crime:"🚨",Business:"₱",Transport:"🚆",Politics:"🏛️",Travel:"✈️",Sports:"🏀",Technology:"⌘",Health:"✚"};
@@ -252,26 +252,32 @@ function datePHT(i){
 function category(i){return i.category||"Nation"}
 function badgeClass(c){return String(c||"").toLowerCase().replace(/[^a-z]+/g,"")}
 function summary(i){return i.summary||("Rapid headline from "+(i.source||"a trusted source")+". Open the original report for full details.")}
-function matchesView(i){
+function queryMatches(i){
  var q=state.query.trim().toLowerCase();
- var catOk=state.cat==="All"||(state.cat==="Breaking"&&i.breaking)||category(i)===state.cat||(state.cat==="Metro Manila"&&/metro manila|manila|quezon city|makati|pasay|taguig|mandaluyong|pasig|caloocan/i.test(i.headline||""));
- var qOk=!q||String((i.headline||"")+" "+(i.source||"")+" "+category(i)).toLowerCase().indexOf(q)>=0;
- return catOk&&qOk;
+ return !q||String((i.headline||"")+" "+(i.source||"")+" "+category(i)).toLowerCase().indexOf(q)>=0;
 }
-function filtered(){return state.items.filter(matchesView)}
+function baseForCategory(){
+ if(state.cat==="All")return state.items||[];
+ var exact=(state.categoryItems||{})[state.cat];
+ return Array.isArray(exact)?exact:[];
+}
+function filtered(){
+ return baseForCategory().filter(queryMatches);
+}
 function categoryCounts(){
- var counts={All:state.items.length,Breaking:0,"Metro Manila":0};
- state.items.forEach(function(i){
-   var key=category(i);counts[key]=(counts[key]||0)+1;
-   if(i.breaking)counts.Breaking++;
-   if(/metro manila|manila|quezon city|makati|pasay|taguig|mandaluyong|pasig|caloocan/i.test(i.headline||""))counts["Metro Manila"]++;
+ var counts={All:(state.items||[]).length};
+ var ci=state.categoryItems||{},tb=state.topByCategory||{};
+ ["Breaking","Nation","Metro Manila","Weather","Earthquake","Crime","Business","Transport","Politics","Travel","Sports","Technology","Health"].forEach(function(cat){
+   counts[cat]=Math.max((ci[cat]||[]).length,(tb[cat]||[]).length);
  });
  return counts;
 }
 function syncCategories(){
  var counts=categoryCounts(),valid=true;
  document.querySelectorAll("#categories .cat").forEach(function(btn){
-   var key=btn.dataset.cat,pinned=/^(All|Nation|Weather|Business|Politics|Sports|Technology|Health)$/.test(key),show=pinned||Number(counts[key]||0)>0;
+   var key=btn.dataset.cat;
+   var pinned=/^(All|Nation|Weather|Crime|Business|Transport|Politics|Travel|Sports|Technology|Health)$/.test(key);
+   var show=pinned||Number(counts[key]||0)>0;
    btn.hidden=!show;
    if(key===state.cat&&!show)valid=false;
  });
@@ -290,10 +296,8 @@ function imgHtml(i){
 }
 function hydrateImages(){}
 function topPoolForView(){
- var base=[];
- if(state.cat==="All")base=(state.topToday||[]).slice();
- else base=((state.topByCategory||{})[state.cat]||[]).slice();
- base=base.filter(matchesView);
+ var base=state.cat==="All"?(state.topToday||[]).slice():(((state.topByCategory||{})[state.cat]||[]).slice());
+ base=base.filter(queryMatches);
  var seen=new Set(base.map(function(i){return safeUrl(i.url)}));
  filtered().forEach(function(i){
    var u=safeUrl(i.url);
@@ -324,7 +328,7 @@ function stopHeroAuto(){if(state.heroTimer){clearInterval(state.heroTimer);state
 function startHeroAuto(){
  stopHeroAuto();
  if(state.heroItems.length<2)return;
- state.heroTimer=setInterval(function(){showHero(state.heroIndex+1,1)},7000);
+ state.heroTimer=setInterval(function(){showHero(state.heroIndex+1,1)},5000);
 }
 function resetHeroSlider(){
  state.heroItems=topPoolForView();
@@ -375,34 +379,62 @@ function latestSignature(items){
 }
 function renderLatestOnly(items){
  var fresh=latestItemsForView(items||filtered());
- var sig=latestSignature(fresh);
+ var heroUrl=state.heroItems[state.heroIndex]?safeUrl(state.heroItems[state.heroIndex].url):"";
+ var today=topPoolForView().filter(function(i){
+   return safeUrl(i.url)!==heroUrl&&!isLatestFresh(i);
+ }).slice(0,9);
+ var sig=latestSignature(fresh)+"##"+latestSignature(today)+"##"+state.cat;
  if(sig===state.latestSignature){
-   els.resultCount.textContent=fresh.length+" fresh • last 3 hours";
    return;
  }
  state.latestSignature=sig;
- els.resultCount.textContent=fresh.length+" fresh • last 3 hours";
- if(!fresh.length){
-   els.latestGrid.innerHTML='<div class="empty">No new headlines in the last 3 hours yet. Checking live sources automatically…</div>';
+
+ if(fresh.length){
+   els.latestTitle.innerHTML='<span>●</span> LATEST NEWS';
+   els.resultCount.textContent=fresh.length+" fresh • last 3 hours";
+   var html=fresh.map(newsCard).join("");
+   if(today.length&&fresh.length<6){
+     html+='<div class="latest-subhead">MORE IMPORTANT '+esc(state.cat==="All"?"PHILIPPINE":state.cat.toUpperCase())+' STORIES TODAY</div>'+today.map(newsCard).join("");
+   }
+   els.latestGrid.innerHTML=html;
    return;
  }
- els.latestGrid.innerHTML=fresh.map(newsCard).join("");
+
+ if(today.length){
+   els.latestTitle.innerHTML='<span>●</span> TOP STORIES TODAY';
+   els.resultCount.textContent="No new story < 3h • "+today.length+" important today";
+   els.latestGrid.innerHTML=today.map(newsCard).join("");
+   return;
+ }
+
+ els.latestTitle.innerHTML='<span>●</span> LATEST NEWS';
+ els.resultCount.textContent="0 fresh • last 3 hours";
+ els.latestGrid.innerHTML='<div class="empty">No verified '+esc(state.cat==="All"?"news":state.cat)+' story is available right now. Sources are checked automatically.</div>';
 }
 function render(){
  syncCategories();
- var items=filtered();
+ var fresh=filtered();
  resetHeroSlider();
- if(!items.length){
-   els.resultCount.textContent="0 fresh • last 3 hours";
-   els.latestGrid.innerHTML='<div class="empty">No fresh '+esc(state.cat==="All"?"news":state.cat)+' headlines in the last 3 hours yet. Checking multiple trusted sources automatically…</div>';
+ var today=topPoolForView();
+ var display=[];
+ var seen=new Set();
+ fresh.concat(today).forEach(function(i){
+   var u=safeUrl(i.url);if(!seen.has(u)){seen.add(u);display.push(i)}
+ });
+
+ if(!display.length){
+   els.resultCount.textContent="0 current stories";
+   els.latestTitle.innerHTML='<span>●</span> LATEST NEWS';
+   els.latestGrid.innerHTML='<div class="empty">No verified '+esc(state.cat==="All"?"news":state.cat)+' story is available right now. Sources are checked automatically.</div>';
    els.sideStack.innerHTML="";renderLive([]);renderTicker([]);return;
  }
+
  var heroUrl=state.heroItems[0]?safeUrl(state.heroItems[0].url):"";
- var side=items.filter(function(i){return safeUrl(i.url)!==heroUrl}).slice(0,3);
+ var side=display.filter(function(i){return safeUrl(i.url)!==heroUrl}).slice(0,3);
  els.sideStack.innerHTML=side.map(smallCard).join("");
- renderLive(items.slice(0,10));
- renderLatestOnly(items);
- renderTicker(items);
+ renderLive((fresh.length?fresh:display).slice(0,10));
+ renderLatestOnly(fresh);
+ renderTicker((fresh.length?fresh:display));
 }
 function renderMeta(data){
  if(data.stale){
@@ -421,8 +453,8 @@ function updateTimeLabels(){
  });
  if(state.items[0])els.tickerAge.textContent=ago(state.items[0]);
  if(state.items.length){
-   var view=filtered(),fresh=latestItemsForView(view),sig=latestSignature(fresh);
-   if(sig!==state.latestSignature)renderLatestOnly(view);
+   var view=filtered();
+   renderLatestOnly(view);
  }
 }
 function saveLocal(data){
@@ -432,7 +464,7 @@ function restoreLocal(){
  try{
   var x=JSON.parse(localStorage.getItem("mxNewsCacheV1")||"null");
   if(!x||!x.data||!Array.isArray(x.data.items)||!x.data.items.length||Date.now()-x.saved>21600000)return false;
-  state.items=x.data.items.filter(isLatestFresh);state.topToday=Array.isArray(x.data.top_today)?x.data.top_today:[];state.topByCategory=x.data.top_today_by_category||{};state.meta=x.data;
+  state.items=x.data.items.filter(isLatestFresh);state.categoryItems=x.data.category_items||{};state.topToday=Array.isArray(x.data.top_today)?x.data.top_today:[];state.topByCategory=x.data.top_today_by_category||{};state.meta=x.data;
   if(!state.items.length)return false;
   state.signature=dataSignature(state.items)+"##"+dataSignature(state.topToday);state.latestSignature="";
   renderMeta(Object.assign({},x.data,{stale:true}));render();
@@ -452,7 +484,7 @@ async function load(){
   j.items=strictItems;
   var topToday=Array.isArray(j.top_today)?j.top_today:[];
   var sig=dataSignature(strictItems)+"##"+dataSignature(topToday),changed=sig!==state.signature;
-  state.items=strictItems;state.topToday=topToday;state.topByCategory=j.top_today_by_category||{};state.meta=j;renderMeta(j);saveLocal(j);
+  state.items=strictItems;state.categoryItems=j.category_items||{};state.topToday=topToday;state.topByCategory=j.top_today_by_category||{};state.meta=j;renderMeta(j);saveLocal(j);
 
   if(changed){
     state.signature=sig;
@@ -478,7 +510,7 @@ async function load(){
 }
 document.getElementById("categories").addEventListener("click",function(e){
  var b=e.target.closest("[data-cat]");if(!b)return;
- document.querySelectorAll(".cat").forEach(function(x){x.classList.remove("active")});b.classList.add("active");state.cat=b.dataset.cat;state.latestSignature="";state.heroIndex=0;render();
+ document.querySelectorAll(".cat").forEach(function(x){x.classList.remove("active")});b.classList.add("active");state.cat=b.dataset.cat;state.latestSignature="";state.heroIndex=0;els.latestGrid.innerHTML="";render();
 });
 els.searchInput.addEventListener("input",function(){state.query=this.value||"";state.latestSignature="";state.heroIndex=0;render()});
 function heroControl(el,delta){
@@ -495,6 +527,6 @@ function clock(){
 clock();setInterval(clock,1000);restoreLocal();load();setInterval(load,15000);
 })();
 </script>
-<!-- NEWS build: newsroom-slider-v8 -->
+<!-- NEWS build: strict-desks-slider5-v9 -->
 </body>
 </html>
