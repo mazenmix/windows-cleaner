@@ -8,7 +8,7 @@ const GOOGLE_FEEDS = [
 ];
 
 function googleCategoryFeed(q){
-  return "https://news.google.com/rss/search?q="+encodeURIComponent(q+" when:3h")+"&hl=en-PH&gl=PH&ceid=PH:en";
+  return "https://news.google.com/rss/search?q="+encodeURIComponent(q+" when:1d")+"&hl=en-PH&gl=PH&ceid=PH:en";
 }
 const CATEGORY_GOOGLE_FEEDS = [
   {name:"SPORTS DESK",category:"Sports",url:googleCategoryFeed("Philippines (Gilas OR PBA OR UAAP OR NCAA OR boxing OR volleyball OR football OR sports)")},
@@ -61,7 +61,7 @@ const CATEGORY_DIRECT_SOURCES = [
 ];
 
 function gdeltUrl(query){
-  return "https://api.gdeltproject.org/api/v2/doc/doc?query="+encodeURIComponent(query)+"&mode=ArtList&maxrecords=150&format=json&sort=datedesc&timespan=3h";
+  return "https://api.gdeltproject.org/api/v2/doc/doc?query="+encodeURIComponent(query)+"&mode=ArtList&maxrecords=150&format=json&sort=datedesc&timespan=1d";
 }
 const GDELT_FEEDS = [
   {name:"GDELT PH",url:gdeltUrl("Philippines")},
@@ -87,7 +87,9 @@ const TRUSTED = [
   "GMA News Online","GMA News","INQUIRER.net","Philippine Daily Inquirer","Philstar.com","The Philippine Star",
   "ABS-CBN","ABS-CBN News","Philippine News Agency","PNA","Manila Bulletin","Rappler","Reuters",
   "BusinessWorld Online","BusinessWorld","The Manila Times","News5","One News","BusinessMirror","SunStar",
-  "Cebu Daily News","MindaNews","DZRH","PTV","Associated Press","AP News","Agence France-Presse","AFP"
+  "Cebu Daily News","MindaNews","DZRH","PTV","Associated Press","AP News","Agence France-Presse","AFP",
+  "Manila Standard","Daily Tribune","The Daily Tribune","Interaksyon","Philippine Information Agency","PIA",
+  "SPIN.ph","One Sports","Bilyonaryo","ANC","DZBB"
 ];
 
 function response(data,status=200,ttl=FRESH_TTL){
@@ -603,12 +605,29 @@ function selectTopToday(items,limit=10){
   }
   return out;
 }
+function selectTopCategoryToday(items,limit=12){
+  const ranked=(items||[]).filter(isToday).slice().sort((a,b)=>importanceScore(b)-importanceScore(a)||b.ts-a.ts);
+  const out=[],perSource=new Map();
+  for(const x of ranked){
+    const sn=perSource.get(x.source)||0;
+    if(sn>=4)continue;
+    out.push(x);perSource.set(x.source,sn+1);
+    if(out.length>=limit)break;
+  }
+  if(out.length<limit){
+    for(const x of ranked){
+      if(out.some(y=>y.url===x.url))continue;
+      out.push(x);if(out.length>=limit)break;
+    }
+  }
+  return out;
+}
 function buildTopByCategory(items){
   const cats=["Nation","Weather","Earthquake","Crime","Business","Transport","Politics","Travel","Sports","Technology","Health"];
   const out={};
-  for(const cat of cats)out[cat]=selectTopToday((items||[]).filter(x=>x.category===cat),10);
-  out.Breaking=selectTopToday((items||[]).filter(x=>x.breaking),10);
-  out["Metro Manila"]=selectTopToday((items||[]).filter(x=>/metro manila|manila|quezon city|makati|pasay|taguig|mandaluyong|pasig|caloocan/i.test(x.headline||"")),10);
+  for(const cat of cats)out[cat]=selectTopCategoryToday((items||[]).filter(x=>x.category===cat),12);
+  out.Breaking=selectTopCategoryToday((items||[]).filter(x=>x.breaking),12);
+  out["Metro Manila"]=selectTopCategoryToday((items||[]).filter(x=>/metro manila|manila|quezon city|makati|pasay|taguig|mandaluyong|pasig|caloocan/i.test(x.headline||"")),12);
   return out;
 }
 
@@ -620,10 +639,10 @@ function dedupe(items){
     const short=key.split(" ").slice(0,11).join(" ");
     if(!key||seen.has(key)||seen.has(short)||(x.url&&seenUrls.has(x.url)))continue;
     const n=perSource.get(x.source)||0;
-    if(n>=8)continue;
+    if(n>=12)continue;
     seen.add(key);seen.add(short);if(x.url)seenUrls.add(x.url);perSource.set(x.source,n+1);
     out.push(x);
-    if(out.length>=80)break;
+    if(out.length>=160)break;
   }
   return out;
 }
@@ -636,7 +655,9 @@ async function collect(){
   const firstWave=[
     ...primary.map(s=>({...s,timeout:3200})),
     ...RSS_SOURCES.map(s=>({kind:"rssdirect",name:s.name,url:s.url,timeout:2400})),
-    ...CATEGORY_DIRECT_SOURCES.map(s=>({...s,timeout:2600}))
+    ...CATEGORY_DIRECT_SOURCES.map(s=>({...s,timeout:2600})),
+    ...CATEGORY_GOOGLE_FEEDS.map(s=>({kind:"catrss",name:s.name,url:s.url,category:s.category,timeout:2100})),
+    ...GDELT_FEEDS.map(s=>({kind:"gdelt",name:s.name,url:s.url,timeout:2400}))
   ];
 
   const settled=await Promise.allSettled(firstWave.map(j=>fetchText(j.url,j.timeout)));
@@ -652,6 +673,8 @@ async function collect(){
       else if(job.kind==="philstarhtml")parsed=parsePhilstarDirectHtml(r.value,job.category).filter(x=>!job.validate||categoryMatchesTitle(x.headline,job.category));
       else if(job.kind==="rssdirect")parsed=parseGenericRss(r.value,job.name);
       else if(job.kind==="rsscat")parsed=parseGenericRss(r.value,job.source||job.name,job.category).filter(x=>!job.validate||categoryMatchesTitle(x.headline,job.category));
+      else if(job.kind==="catrss")parsed=parseGoogleRss(r.value,job.category);
+      else if(job.kind==="gdelt")parsed=parseGdeltJson(r.value);
       diagnostics.push({name:job.name,ok:true,items:parsed.length});
       items.push(...parsed);
     }catch(e){
@@ -667,8 +690,6 @@ async function collect(){
   if(fresh.length<14||sourceCount<4){
     const fallbacks=[
       ...GOOGLE_FEEDS.map((url,i)=>({kind:"rss",name:"GOOGLE PH "+(i+1),url,timeout:1900})),
-      ...CATEGORY_GOOGLE_FEEDS.map(s=>({kind:"catrss",name:s.name,url:s.url,category:s.category,timeout:1900})),
-      ...GDELT_FEEDS.map(s=>({kind:"gdelt",name:s.name,url:s.url,timeout:2200})),
       ...PAGE_SOURCES.filter(s=>s.kind==="gma"||s.kind==="philstar").map(s=>({...s,timeout:1800}))
     ];
     const second=await Promise.allSettled(fallbacks.map(j=>fetchText(j.url,j.timeout)));
@@ -709,8 +730,8 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v17");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v16");
+  const freshKey=new Request(origin+"/api/news-cache-v18");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v17");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
