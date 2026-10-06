@@ -173,7 +173,6 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
 <div class="categories" id="categories">
   <button class="cat active" data-cat="All">All News</button>
   <button class="cat" data-cat="Breaking">Breaking</button>
-  <button class="cat" data-cat="Nation">Nation</button>
   <button class="cat" data-cat="Metro Manila">Metro Manila</button>
   <button class="cat" data-cat="Weather">Weather</button>
   <button class="cat" data-cat="Earthquake">Earthquake</button>
@@ -181,7 +180,6 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
   <button class="cat" data-cat="Business">Business</button>
   <button class="cat" data-cat="Transport">Transport</button>
   <button class="cat" data-cat="Politics">Politics</button>
-  <button class="cat" data-cat="Travel">Travel</button>
   <button class="cat" data-cat="Sports">Sports</button>
   <button class="cat" data-cat="Health">Health</button>
 </div>
@@ -275,7 +273,7 @@ function syncCategories(){
  var counts=categoryCounts(),valid=true;
  document.querySelectorAll("#categories .cat").forEach(function(btn){
    var key=btn.dataset.cat;
-   var pinned=/^(All|Nation|Weather|Crime|Business|Transport|Politics|Travel|Sports|Health)$/.test(key);
+   var pinned=/^(All|Weather|Crime|Business|Transport|Politics|Sports|Health)$/.test(key);
    var show=pinned||Number(counts[key]||0)>0;
    btn.hidden=!show;
    if(key===state.cat&&!show)valid=false;
@@ -556,6 +554,6 @@ function clock(){
 clock();setInterval(clock,1000);restoreLocal();load();setInterval(load,15000);
 })();
 </script>
-<!-- NEWS build: no-technology-section-v15 -->
+<!-- NEWS build: slim-sections-v16 -->
 </body>
 </html>
