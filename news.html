@@ -345,6 +345,19 @@ function shiftHero(delta){
  showHero(state.heroIndex+delta,delta<0?-1:1);
  startHeroAuto();
 }
+function clearHero(){
+ stopHeroAuto();
+ state.heroItems=[];state.heroIndex=0;
+ els.hero.removeAttribute("href");
+ els.heroBg.innerHTML="";
+ els.heroBadge.textContent=state.cat==="All"?"NEWS":state.cat.toUpperCase();
+ els.heroBadge.className="badge "+badgeClass(state.cat==="All"?"Nation":state.cat);
+ els.heroAge.textContent="checking…";els.heroAge.removeAttribute("data-news-ts");
+ els.heroTitle.textContent="No verified "+(state.cat==="All"?"news":state.cat)+" story available right now";
+ els.heroSummary.textContent="Sources are checked automatically. New stories appear here as soon as they are verified.";
+ els.heroSource.textContent="LIVE";els.heroPublished.textContent="";
+ els.heroCounter.textContent="0 / 0";
+}
 
 function smallCard(i){
  return '<a class="card small-story" href="'+esc(safeUrl(i.url))+'" target="_blank" rel="noopener">'+
@@ -423,6 +436,7 @@ function render(){
  });
 
  if(!display.length){
+   clearHero();
    els.resultCount.textContent="0 current stories";
    els.latestTitle.innerHTML='<span>●</span> LATEST NEWS';
    els.latestGrid.innerHTML='<div class="empty">No verified '+esc(state.cat==="All"?"news":state.cat)+' story is available right now. Sources are checked automatically.</div>';
@@ -527,6 +541,6 @@ function clock(){
 clock();setInterval(clock,1000);restoreLocal();load();setInterval(load,15000);
 })();
 </script>
-<!-- NEWS build: strict-desks-slider5-v9 -->
+<!-- NEWS build: strict-desks-slider5-v10 -->
 </body>
 </html>
