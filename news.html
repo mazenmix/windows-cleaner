@@ -248,7 +248,7 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
 <script>
 (function(){
 "use strict";
-var state={items:[],categoryItems:{},topToday:[],breakingGlobal:[],topByCategory:{},recentByCategory:{},cat:"All",query:"",meta:null,signature:"",latestSignature:"",heroItems:[],heroIndex:0,heroTimer:null,liveViewKey:""};
+var state={items:[],categoryItems:{},topToday:[],breakingGlobal:[],topByCategory:{},recentByCategory:{},cat:"All",query:"",meta:null,signature:"",latestSignature:"",heroItems:[],heroIndex:0,heroTimer:null,liveViewKey:"",heroSignature:"",sideSignature:"",tickerSignature:""};
 var LATEST_MAX_AGE_MS=3*60*60*1000;
 var els={
  hero:document.getElementById("hero"),heroBg:document.getElementById("heroBg"),heroContent:document.getElementById("heroContent"),heroBadge:document.getElementById("heroBadge"),
@@ -362,12 +362,35 @@ function startHeroAuto(){
  state.heroTimer=setInterval(function(){showHero(state.heroIndex+1,1)},5000);
 }
 function resetHeroSlider(){
- state.heroItems=heroTopPool();
- state.heroIndex=0;
- if(state.heroItems.length)showHero(0,1);
- else{
+ var next=heroTopPool();
+ if(!next.length){
    var fallback=(state.items||[])[0];
-   if(fallback){state.heroItems=[fallback];showHero(0,1)}
+   if(fallback)next=[fallback];
+ }
+ var sig=urlHeadlineSignature(next);
+ var currentUrl=state.heroItems[state.heroIndex]?safeUrl(state.heroItems[state.heroIndex].url):"";
+
+ // If the global Top 10 is unchanged, do not touch the hero DOM at all.
+ if(sig&&sig===state.heroSignature&&state.heroItems.length){
+   state.heroItems=next;
+   if(!state.heroTimer)startHeroAuto();
+   return;
+ }
+
+ state.heroItems=next;
+ state.heroSignature=sig;
+
+ if(!state.heroItems.length)return;
+
+ // Preserve the currently visible story whenever it still exists.
+ var keepIndex=currentUrl?state.heroItems.findIndex(function(i){return safeUrl(i.url)===currentUrl}):-1;
+ if(keepIndex>=0){
+   state.heroIndex=keepIndex;
+   els.heroCounter.textContent=(state.heroIndex+1)+" / "+state.heroItems.length;
+ }else{
+   state.heroIndex=Math.min(state.heroIndex,state.heroItems.length-1);
+   if(state.heroIndex<0)state.heroIndex=0;
+   setHero(state.heroItems[state.heroIndex],1);
  }
  startHeroAuto();
 }
@@ -429,8 +452,12 @@ function newsCard(i){
 }
 function renderTicker(){
  var arr=(state.breakingGlobal&&state.breakingGlobal.length?state.breakingGlobal:state.topToday||[]).slice(0,12);
+ var sig=urlHeadlineSignature(arr);
  els.tickerLabel.textContent="BREAKING NEWS";
- els.tickerMove.innerHTML=arr.concat(arr).map(function(i){return'<a class="ticker-item" href="'+esc(safeUrl(i.url))+'" target="_blank" rel="noopener">'+esc(i.headline)+'</a>'}).join("");
+ if(sig!==state.tickerSignature){
+   state.tickerSignature=sig;
+   els.tickerMove.innerHTML=arr.concat(arr).map(function(i){return'<a class="ticker-item" href="'+esc(safeUrl(i.url))+'" target="_blank" rel="noopener">'+esc(i.headline)+'</a>'}).join("");
+ }
  els.tickerAge.textContent=arr[0]?ago(arr[0]):"checking…";
 }
 function liveKey(i){
@@ -450,7 +477,7 @@ function renderLive(items){
  var current=Array.from(els.liveList.querySelectorAll("[data-live-key]"));
 
  if(!arr.length){
-   els.liveList.innerHTML=liveEmptyHtml();
+   if(els.liveList.querySelector("[data-live-key]")||state.liveViewKey!==viewKey)els.liveList.innerHTML=liveEmptyHtml();
    state.liveViewKey=viewKey;
    return;
  }
@@ -458,39 +485,46 @@ function renderLive(items){
  var nextKeys=arr.map(liveKey);
  var currentKeys=current.map(function(el){return el.getAttribute("data-live-key")||""});
 
- // First paint, category/search change, or placeholder: replace quietly.
+ // First paint/category/search change: quiet replacement, never animate.
  if(!current.length||state.liveViewKey!==viewKey){
    els.liveList.innerHTML=arr.map(liveRowHtml).join("");
    state.liveViewKey=viewKey;
    return;
  }
 
- // Same stories: don't animate. Time labels are updated elsewhere.
+ // Identical list: nothing to do.
  if(nextKeys.length===currentKeys.length&&nextKeys.every(function(k,i){return k===currentKeys[i]})){
    state.liveViewKey=viewKey;
    return;
  }
 
- var oldTop=new Map(),oldHeight=new Map();
+ var currentSet=new Set(currentKeys);
+ var nextSet=new Set(nextKeys);
+ var trulyNew=nextKeys.filter(function(k){return !currentSet.has(k)});
+
+ // If there is NO new story, do not animate or rebuild the list.
+ // Quietly remove rows that disappeared, and leave reorder-only changes alone.
+ if(!trulyNew.length){
+   current.forEach(function(el){
+     var key=el.getAttribute("data-live-key")||"";
+     if(!nextSet.has(key))el.remove();
+   });
+   state.liveViewKey=viewKey;
+   return;
+ }
+
+ var oldTop=new Map();
  current.forEach(function(el){
-   var key=el.getAttribute("data-live-key")||"";
-   oldTop.set(key,el.offsetTop);
-   oldHeight.set(key,el.offsetHeight);
+   oldTop.set(el.getAttribute("data-live-key")||"",el.offsetTop);
  });
 
- var nextSet=new Set(nextKeys);
  var exiting=current.filter(function(el){
    return !nextSet.has(el.getAttribute("data-live-key")||"");
  }).map(function(el){
-   return {
-     key:el.getAttribute("data-live-key")||"",
-     top:el.offsetTop,
-     height:el.offsetHeight,
-     clone:el.cloneNode(true)
-   };
+   return {top:el.offsetTop,height:el.offsetHeight,clone:el.cloneNode(true)};
  });
 
- // Put the new ordered list in place immediately, then animate from old positions.
+ // A real new headline arrived: update ordering and animate only this genuine update.
  els.liveList.innerHTML=arr.map(liveRowHtml).join("");
  state.liveViewKey=viewKey;
 
@@ -502,22 +536,21 @@ function renderLive(items){
      if(Math.abs(dy)>1&&el.animate){
        el.animate(
          [{transform:"translateY("+dy+"px)",opacity:1},{transform:"translateY(0)",opacity:1}],
-         {duration:520,easing:"cubic-bezier(.22,.82,.22,1)"}
+         {duration:500,easing:"cubic-bezier(.22,.82,.22,1)"}
        );
      }
-   }else{
+   }else if(trulyNew.indexOf(key)>=0){
      el.classList.add("live-new");
      if(el.animate){
        el.animate(
-         [{opacity:0,transform:"translateY(-30px) scale(.985)"},{opacity:1,transform:"translateY(0) scale(1)"}],
-         {duration:580,easing:"cubic-bezier(.18,.86,.24,1)"}
+         [{opacity:0,transform:"translateY(-28px) scale(.99)"},{opacity:1,transform:"translateY(0) scale(1)"}],
+         {duration:540,easing:"cubic-bezier(.18,.86,.24,1)"}
        );
      }
-     setTimeout(function(){el.classList.remove("live-new")},620);
+     setTimeout(function(){el.classList.remove("live-new")},580);
    }
  });
 
- // Keep dropped rows as temporary ghosts so they visibly slide down and fade away.
  exiting.forEach(function(x){
    var ghost=x.clone;
    ghost.classList.add("live-ghost");
@@ -527,13 +560,11 @@ function renderLive(items){
    els.liveList.appendChild(ghost);
    if(ghost.animate){
      var anim=ghost.animate(
-       [{opacity:1,transform:"translateY(0)"},{opacity:0,transform:"translateY(32px)"}],
-       {duration:460,easing:"cubic-bezier(.32,.08,.44,1)"}
+       [{opacity:1,transform:"translateY(0)"},{opacity:0,transform:"translateY(28px)"}],
+       {duration:420,easing:"cubic-bezier(.32,.08,.44,1)"}
      );
      anim.onfinish=function(){ghost.remove()};
-   }else{
-     setTimeout(function(){ghost.remove()},480);
-   }
+   }else setTimeout(function(){ghost.remove()},440);
  });
 }
 function latestItemsForView(items){
@@ -544,6 +575,13 @@ function latestItemsForView(items){
 }
 function latestSignature(items){
  return (items||[]).map(function(i){return [safeUrl(i.url),itemTs(i)].join("|")}).join("||");
+}
+function renderSideCards(items){
+ var arr=(items||[]).slice(0,3);
+ var sig=urlHeadlineSignature(arr);
+ if(sig===state.sideSignature)return;
+ state.sideSignature=sig;
+ els.sideStack.innerHTML=arr.map(smallCard).join("");
 }
 function renderLatestOnly(items){
  var fresh=latestItemsForView(items||filtered());
@@ -601,12 +639,12 @@ function render(){
    els.resultCount.textContent="0 current stories";
    els.latestTitle.innerHTML='<span>●</span> LATEST NEWS';
    els.latestGrid.innerHTML='<div class="empty">No verified '+esc(state.cat==="All"?"news":state.cat)+' story is available right now. Sources are checked automatically.</div>';
-   els.sideStack.innerHTML="";renderLive([]);renderTicker();return;
+   if(state.sideSignature){state.sideSignature="";els.sideStack.innerHTML=""}renderLive([]);renderTicker();return;
  }
 
  var heroUrl=state.heroItems[0]?safeUrl(state.heroItems[0].url):"";
  var side=display.filter(function(i){return safeUrl(i.url)!==heroUrl}).slice(0,3);
- els.sideStack.innerHTML=side.map(smallCard).join("");
+ renderSideCards(side);
  var scoped=(fresh.length?fresh:(today.length?today:recent));
  renderLive(scoped.slice(0,10));
  renderLatestOnly(fresh);
@@ -621,6 +659,9 @@ function renderMeta(data){
 }
 function dataSignature(items){
  return (items||[]).map(function(i){return [i.url,i.headline,i.published_at,i.category,i.breaking?1:0].join("|")}).join("||");
+}
+function urlHeadlineSignature(items){
+ return (items||[]).map(function(i){return [safeUrl(i.url),i.headline||"",i.source||"",i.category||"",i.breaking?1:0].join("|")}).join("||");
 }
 function updateTimeLabels(){
  document.querySelectorAll("[data-news-ts]").forEach(function(el){
@@ -688,9 +729,9 @@ async function load(){
 }
 document.getElementById("categories").addEventListener("click",function(e){
  var b=e.target.closest("[data-cat]");if(!b)return;
- document.querySelectorAll(".cat").forEach(function(x){x.classList.remove("active")});b.classList.add("active");state.cat=b.dataset.cat;state.latestSignature="";state.heroIndex=0;els.latestGrid.innerHTML="";render();
+ document.querySelectorAll(".cat").forEach(function(x){x.classList.remove("active")});b.classList.add("active");state.cat=b.dataset.cat;state.latestSignature="";render();
 });
-els.searchInput.addEventListener("input",function(){state.query=this.value||"";state.latestSignature="";state.heroIndex=0;render()});
+els.searchInput.addEventListener("input",function(){state.query=this.value||"";state.latestSignature="";render()});
 function heroControl(el,delta){
  el.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();shiftHero(delta)});
  el.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();e.stopPropagation();shiftHero(delta)}});
@@ -725,6 +766,6 @@ function clock(){
 clock();setInterval(clock,1000);restoreLocal();load();setInterval(load,15000);
 })();
 </script>
-<!-- NEWS build: live-updates-livebadge-v21 -->
+<!-- NEWS build: silent-diff-updates-v22 -->
 </body>
 </html>
