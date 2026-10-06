@@ -106,7 +106,11 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
 @keyframes liveDropIn{0%{opacity:0;transform:translateY(-28px) scale(.985)}100%{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes liveExitDown{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(30px)}}
 
-.live-row:last-child{border-bottom:0}.live-time{font-size:9.5px;line-height:1.35;color:#73e9a7;font-weight:850}.live-title{font-size:12px;line-height:1.42;color:#e1e9f0}
+.live-row:last-child{border-bottom:0}.live-time{font-size:9.5px;line-height:1.35;font-weight:850;transition:color .35s ease,text-shadow .35s ease}
+.live-time.live-fresh{color:#73e9a7;text-shadow:0 0 8px rgba(76,240,145,.18)}
+.live-time.live-warm{color:#f2d15c;text-shadow:0 0 8px rgba(242,209,92,.13)}
+.live-time.live-old{color:#f29a4a;text-shadow:0 0 8px rgba(242,154,74,.13)}
+.live-title{font-size:12px;line-height:1.42;color:#e1e9f0}
 .live-title:hover{color:#fff}
 
 .lower{display:block;margin-top:12px}
@@ -463,9 +467,16 @@ function renderTicker(){
 function liveKey(i){
  return safeUrl(i.url)+"|"+itemTs(i);
 }
+function liveAgeClass(ts){
+ var ageMin=Math.max(0,Date.now()-Number(ts||0))/60000;
+ if(ageMin>20)return"live-old";
+ if(ageMin>10)return"live-warm";
+ return"live-fresh";
+}
 function liveRowHtml(i){
+ var ts=itemTs(i);
  return '<a class="live-row" data-live-key="'+esc(liveKey(i))+'" href="'+esc(safeUrl(i.url))+'" target="_blank" rel="noopener">'+
- '<span class="live-time" data-news-ts="'+itemTs(i)+'">'+esc(ago(i))+'</span>'+
+ '<span class="live-time '+liveAgeClass(ts)+'" data-news-ts="'+ts+'">'+esc(ago(i))+'</span>'+
  '<span class="live-title">'+esc(i.headline)+'</span></a>';
 }
 function liveEmptyHtml(){
@@ -666,7 +677,12 @@ function urlHeadlineSignature(items){
 function updateTimeLabels(){
  document.querySelectorAll("[data-news-ts]").forEach(function(el){
    var ts=Number(el.getAttribute("data-news-ts")||0);
-   if(ts)el.textContent=agoFromTs(ts);
+   if(!ts)return;
+   el.textContent=agoFromTs(ts);
+   if(el.classList.contains("live-time")){
+     el.classList.remove("live-fresh","live-warm","live-old");
+     el.classList.add(liveAgeClass(ts));
+   }
  });
  var tickerFirst=(state.breakingGlobal&&state.breakingGlobal[0])||(state.topToday&&state.topToday[0]);if(tickerFirst)els.tickerAge.textContent=ago(tickerFirst);
  if(state.items.length){
@@ -765,6 +781,6 @@ function clock(){
 clock();setInterval(clock,1000);restoreLocal();load();setInterval(load,15000);
 })();
 </script>
-<!-- NEWS build: zero-flicker-diff-v23 -->
+<!-- NEWS build: live-age-colors-v24 -->
 </body>
 </html>
