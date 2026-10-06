@@ -127,7 +127,8 @@ function parse(xml){
       category:categoryFor(headline),
       breaking:isBreaking(headline,ts),
       image:imageFrom(item,descRaw),
-      summary:description&&description.toLowerCase()!==headline.toLowerCase()?description:"",\n      trusted_source:trusted(source)
+      summary:description&&description.toLowerCase()!==headline.toLowerCase()?description:"",
+      trusted_source:trusted(source)
     });
   }
   return out;
