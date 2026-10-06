@@ -1,7 +1,7 @@
 const ALLOWED_DOMAINS = [
   "gmanetwork.com","philstar.com","inquirer.net","abs-cbn.com","pna.gov.ph","manilabulletin.com.ph","mb.com.ph",
   "rappler.com","bworldonline.com","tv5.com.ph","onenews.ph","businessmirror.com.ph","sunstar.com.ph",
-  "mindanews.com","manilatimes.net","reuters.com","apnews.com"
+  "mindanews.com","manilatimes.net","doh.gov.ph","who.int","fda.gov.ph","reuters.com","apnews.com"
 ];
 function allowedHost(host){
   const h=String(host||"").toLowerCase();
