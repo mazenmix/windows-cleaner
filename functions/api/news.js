@@ -14,15 +14,19 @@ function googleCategoryExtended(q){
   return "https://news.google.com/rss/search?q="+encodeURIComponent(q+" when:2d")+"&hl=en-PH&gl=PH&ceid=PH:en";
 }
 const CATEGORY_GOOGLE_EXTENDED = [
-  {name:"HEALTH EXTENDED",category:"Health",url:googleCategoryExtended("Philippines (DOH OR health OR hospital OR dengue OR mpox OR disease OR outbreak OR vaccine OR healthcare)")},
+  {name:"HEALTH EXTENDED",category:"Health",url:googleCategoryExtended("Philippines (DOH OR hospital OR dengue OR mpox OR disease OR outbreak OR vaccine OR healthcare OR medicine)")},
   {name:"WEATHER EXTENDED",category:"Weather",url:googleCategoryExtended("Philippines (PAGASA OR typhoon OR rainfall OR flood OR monsoon OR ITCZ OR heat index OR tropical storm)")},
-  {name:"TECH EXTENDED",category:"Technology",url:googleCategoryExtended("Philippines (technology OR cyber OR AI OR telecom OR PLDT OR Globe OR DITO OR GCash OR Maya OR digital OR internet)")},
-  {name:"TRAVEL EXTENDED",category:"Travel",url:googleCategoryExtended("Philippines (tourism OR travel OR tourist arrivals OR hotel OR resort OR visa OR passport OR destination OR vacation)")}
-];
+  {name:"TECH EXTENDED",category:"Technology",url:googleCategoryExtended("Philippines (technology OR cyber OR AI OR telecom OR PLDT OR Smart OR Globe OR DITO OR GCash OR Maya OR digital OR internet OR gadget)")},
+  {name:"TRAVEL EXTENDED",category:"Travel",url:googleCategoryExtended("Philippines (tourism OR tourist arrivals OR hotel OR resort OR visa OR passport OR Boracay OR Palawan OR Cebu OR Siargao)")},
+  {name:"TRANSPORT EXTENDED",category:"Transport",url:googleCategoryExtended("Philippines (DOTr OR MMDA OR MRT OR LRT OR PNR OR LTO OR LTFRB OR jeepney OR bus OR airport OR flight OR ferry OR NLEX OR SLEX)")}
+]
 
 const CATEGORY_GOOGLE_FEEDS = [
-  {name:"SPORTS DESK",category:"Sports",url:googleCategoryFeed("Philippines (Gilas OR PBA OR UAAP OR NCAA OR boxing OR volleyball OR football OR sports)")},
-  {name:"BUSINESS DESK",category:"Business",url:googleCategoryFeed("Philippines (business OR economy OR BSP OR peso OR inflation OR stock market OR jobs OR fuel prices)")},
+  {name:"SPORTS GENERAL",category:"Sports",url:googleCategoryFeed("Philippines (Gilas OR PBA OR UAAP OR NCAA OR boxing OR volleyball OR football OR sports)")},
+  {name:"SPORTS ATHLETES",category:"Sports",url:googleCategoryFeed("Philippines (Filipino athlete OR Olympics OR SEA Games OR Asian Games OR FIBA OR volleyball)")},
+
+  {name:"BUSINESS ECONOMY",category:"Business",url:googleCategoryFeed("Philippines (economy OR BSP OR peso OR inflation OR GDP OR interest rate OR jobs)")},
+  {name:"BUSINESS MARKETS",category:"Business",url:googleCategoryFeed("Philippines (stock market OR PSEi OR investment OR trade OR exports OR imports OR fuel prices)")},
 
   {name:"HEALTH DOH",category:"Health",url:googleCategoryFeed("Philippines (DOH OR health department OR hospital OR healthcare OR medical)")},
   {name:"HEALTH DISEASE",category:"Health",url:googleCategoryFeed("Philippines (dengue OR mpox OR measles OR rabies OR leptospirosis OR tuberculosis OR outbreak OR vaccine)")},
@@ -32,18 +36,36 @@ const CATEGORY_GOOGLE_FEEDS = [
   {name:"WEATHER RAIN",category:"Weather",url:googleCategoryFeed("Philippines (heavy rain OR rainfall OR flood OR monsoon OR ITCZ OR thunderstorm)")},
   {name:"WEATHER HEAT",category:"Weather",url:googleCategoryFeed("Philippines (heat index OR weather advisory OR gale warning OR storm surge)")},
 
-  {name:"TECH CYBER",category:"Technology",url:googleCategoryFeed("Philippines (cybersecurity OR cyberattack OR hacking OR data breach OR phishing OR digital security)")},
-  {name:"TECH TELECOM",category:"Technology",url:googleCategoryFeed("Philippines (PLDT OR Globe OR DITO OR telecom OR 5G OR internet OR satellite)")},
-  {name:"TECH AI FINTECH",category:"Technology",url:googleCategoryFeed("Philippines (AI OR artificial intelligence OR GCash OR Maya OR fintech OR startup OR technology)")},
+  {name:"TECH CYBER",category:"Technology",url:googleCategoryFeed("Philippines (cybersecurity OR cyberattack OR hacking OR ransomware OR data breach OR phishing OR digital security)")},
+  {name:"TECH TELECOM",category:"Technology",url:googleCategoryFeed("Philippines (PLDT OR Smart OR Globe OR DITO OR telecom OR 5G OR broadband OR internet OR Starlink)")},
+  {name:"TECH AI",category:"Technology",url:googleCategoryFeed("Philippines (AI OR artificial intelligence OR OpenAI OR ChatGPT OR automation OR machine learning)")},
+  {name:"TECH FINTECH",category:"Technology",url:googleCategoryFeed("Philippines (GCash OR Maya OR fintech OR e-wallet OR digital bank OR online payments)")},
+  {name:"TECH GADGETS",category:"Technology",url:googleCategoryFeed("Philippines (Apple OR iPhone OR Android OR Samsung OR smartphone OR gadget OR laptop OR device)")},
+  {name:"TECH PLATFORMS",category:"Technology",url:googleCategoryFeed("Philippines (Facebook OR Meta OR TikTok OR Google OR Microsoft OR YouTube OR social media)")},
+  {name:"TECH STARTUPS",category:"Technology",url:googleCategoryFeed("Philippines (startup OR technology company OR software OR cloud OR semiconductor OR data center)")},
 
-  {name:"TRAVEL TOURISM",category:"Travel",url:googleCategoryFeed("Philippines (tourism OR tourist arrivals OR travel destination OR resort OR hotel OR beach)")},
+  {name:"TRAVEL TOURISM",category:"Travel",url:googleCategoryFeed("Philippines (tourism OR tourist arrivals OR Department of Tourism OR travel destination OR vacation)")},
+  {name:"TRAVEL HOTELS",category:"Travel",url:googleCategoryFeed("Philippines (hotel OR resort OR hospitality OR tourism investment OR travel booking)")},
+  {name:"TRAVEL ISLANDS",category:"Travel",url:googleCategoryFeed("Philippines (Boracay OR Palawan OR Siargao OR Bohol OR Cebu tourism OR El Nido OR Coron)")},
   {name:"TRAVEL VISA",category:"Travel",url:googleCategoryFeed("Philippines (visa OR passport OR immigration OR travel advisory OR overseas travel)")},
-  {name:"TRAVEL DESTINATION",category:"Travel",url:googleCategoryFeed("Philippines (Boracay OR Palawan OR Cebu tourism OR Siargao OR Bohol tourism OR destination)")},
+  {name:"TRAVEL AIRLINES",category:"Travel",url:googleCategoryFeed("Philippines tourism (Philippine Airlines OR Cebu Pacific OR AirAsia OR airport OR flight)")},
+  {name:"TRAVEL CRUISE",category:"Travel",url:googleCategoryFeed("Philippines (cruise OR heritage site OR tourist spot OR travel expo OR tourism campaign)")},
 
-  {name:"POLITICS DESK",category:"Politics",url:googleCategoryFeed("Philippines (Senate OR Congress OR Marcos OR Duterte OR Malacanang OR election OR impeachment OR government)")},
-  {name:"TRANSPORT DESK",category:"Transport",url:googleCategoryFeed("Philippines (DOTr OR MMDA OR MRT OR LRT OR traffic OR transport OR airport OR flight OR road)")},
-  {name:"CRIME DESK",category:"Crime",url:googleCategoryFeed("Philippines (PNP OR police OR arrest OR crime OR robbery OR shooting OR kidnapping)")},
-  {name:"NATION DESK",category:"Nation",url:googleCategoryFeed("Philippines (Supreme Court OR education OR agriculture OR national OR local government)")}
+  {name:"TRANSPORT DOTR",category:"Transport",url:googleCategoryFeed("Philippines (DOTr OR Department of Transportation OR MMDA OR transport)")},
+  {name:"TRANSPORT RAIL",category:"Transport",url:googleCategoryFeed("Philippines (MRT OR LRT OR PNR OR subway OR railway OR train)")},
+  {name:"TRANSPORT ROAD",category:"Transport",url:googleCategoryFeed("Philippines (LTO OR LTFRB OR jeepney OR bus OR traffic OR road closure)")},
+  {name:"TRANSPORT AIR",category:"Transport",url:googleCategoryFeed("Philippines transport (airport OR flight OR airline OR NAIA OR Clark Airport OR Mactan Airport)")},
+  {name:"TRANSPORT SEA",category:"Transport",url:googleCategoryFeed("Philippines (ferry OR port OR Philippine Ports Authority OR shipping OR sea transport)")},
+  {name:"TRANSPORT EXPRESSWAY",category:"Transport",url:googleCategoryFeed("Philippines (NLEX OR SLEX OR Skyway OR tollway OR expressway OR road project)")},
+
+  {name:"POLITICS SENATE",category:"Politics",url:googleCategoryFeed("Philippines (Senate OR House OR Congress OR Malacanang OR Marcos OR Duterte)")},
+  {name:"POLITICS ELECTION",category:"Politics",url:googleCategoryFeed("Philippines (election OR impeachment OR ombudsman OR Supreme Court OR politics)")},
+
+  {name:"CRIME PNP",category:"Crime",url:googleCategoryFeed("Philippines (PNP OR police OR arrest OR crime OR robbery OR shooting OR kidnapping)")},
+  {name:"CRIME NBI",category:"Crime",url:googleCategoryFeed("Philippines (NBI OR drug bust OR raid OR suspect OR murder OR cybercrime)")},
+
+  {name:"NATION GOVERNMENT",category:"Nation",url:googleCategoryFeed("Philippines (education OR agriculture OR local government OR public service OR national government)")},
+  {name:"NATION REGIONS",category:"Nation",url:googleCategoryFeed("Philippines (Luzon OR Visayas OR Mindanao OR province OR city government OR barangay)")}
 ]
 
 const RSS_SOURCES = [
@@ -112,7 +134,9 @@ const TRUSTED = [
   "BusinessWorld Online","BusinessWorld","The Manila Times","News5","One News","BusinessMirror","SunStar",
   "Cebu Daily News","MindaNews","DZRH","PTV","Associated Press","AP News","Agence France-Presse","AFP",
   "Manila Standard","Daily Tribune","The Daily Tribune","Interaksyon","Philippine Information Agency","PIA",
-  "SPIN.ph","One Sports","Bilyonaryo","ANC","DZBB"
+  "SPIN.ph","One Sports","Bilyonaryo","ANC","DZBB","YugaTech","GadgetMatch","Tech in Asia",
+  "Top Gear Philippines","AutoIndustriya","Philippine Airlines","Cebu Pacific","AirAsia Philippines",
+  "Department of Tourism","Department of Transportation","MMDA","LTO","LTFRB","Philippine Ports Authority"
 ];
 
 function response(data,status=200,ttl=FRESH_TTL){
@@ -244,9 +268,9 @@ function categoryFor(title){
   if(/doh|department of health|health|hospital|disease|outbreak|vaccine|virus|medical|medicine|doctor|patient|dengue|measles|covid|mpox|mental health|hiv|tuberculosis|rabies|leptospirosis|flu|influenza|cancer|healthcare|health care|pharma|pharmaceutical/.test(t))return"Health";
   if(/basketball|pba|gilas|volleyball|football|boxing|sports|athlete|fiba|uaap|ncaa|olympic|sea games|asian games|tennis|golf|swimming|yulo|hidilyn/.test(t))return"Sports";
   if(/peso|inflation|economy|business|stock|market|bank|fuel price|oil price|interest rate|bsp|trade|investment|gdp|jobs|employment|company|earnings|tariff|export|import/.test(t))return"Business";
-  if(/technology|cyber|digital|\bai\b|artificial intelligence|internet|telecom|smart communications|globe telecom|dito|pldt|smartphone|software|data breach|phishing|hack|ict|5g|satellite|startup|fintech|e-wallet|gcash|maya|cloud|semiconductor|robot|space tech/.test(t))return"Technology";
-  if(/tourism|travel|tourist|resort|beach|destination|hotel|vacation|passport|visa|immigration|tour package|tour operator|cruise|heritage site|tourism arrivals|visitor arrivals/.test(t))return"Travel";
-  if(/lrt|mrt|mmda|traffic|transport|airport|flight|airline|road|bus|jeep|train|nlex|slex|dotr|ltfrb|lto|ferry|port/.test(t))return"Transport";
+  if(/technology|cyber|digital|\bai\b|artificial intelligence|openai|chatgpt|internet|telecom|smart communications|globe telecom|dito|pldt|smartphone|iphone|android|samsung|apple|gadget|device|software|data breach|phishing|hack|ransomware|ict|5g|satellite|starlink|startup|fintech|e-wallet|gcash|maya|cloud|semiconductor|data center|robot|facebook|meta|tiktok|google|microsoft|youtube/.test(t))return"Technology";
+  if(/tourism|department of tourism|travel|tourist|resort|beach|destination|hotel|vacation|passport|visa|immigration|tour package|tour operator|cruise|heritage site|tourism arrivals|visitor arrivals|boracay|palawan|siargao|el nido|coron|bohol tourism|cebu tourism/.test(t))return"Travel";
+  if(/dotr|department of transportation|lrt|mrt|pnr|mmda|traffic|transport|airport|flight|airline|naia|clark airport|mactan airport|road|bus|jeep|jeepney|train|railway|subway|nlex|slex|skyway|tollway|expressway|ltfrb|lto|ferry|port|shipping|philippine ports authority/.test(t))return"Transport";
   if(/pnp|police|arrest|robber|robbery|shooting|murder|killed|crime|drug bust|kidnap|raid|suspect|nbi/.test(t))return"Crime";
   if(/senate|senator|house|congress|president|marcos|duterte|malacañang|malacanang|election|impeach|government|palace|amla|amlc|ombudsman|politic/.test(t))return"Politics";
   return"Nation";
@@ -632,12 +656,12 @@ function selectTopToday(items,limit=10){
   }
   return out;
 }
-function selectTopCategoryToday(items,limit=12){
+function selectTopCategoryToday(items,limit=18){
   const ranked=(items||[]).filter(isToday).slice().sort((a,b)=>importanceScore(b)-importanceScore(a)||b.ts-a.ts);
   const out=[],perSource=new Map();
   for(const x of ranked){
     const sn=perSource.get(x.source)||0;
-    if(sn>=4)continue;
+    if(sn>=5)continue;
     out.push(x);perSource.set(x.source,sn+1);
     if(out.length>=limit)break;
   }
@@ -652,9 +676,27 @@ function selectTopCategoryToday(items,limit=12){
 function buildTopByCategory(items){
   const cats=["Nation","Weather","Earthquake","Crime","Business","Transport","Politics","Travel","Sports","Technology","Health"];
   const out={};
-  for(const cat of cats)out[cat]=selectTopCategoryToday((items||[]).filter(x=>x.category===cat),12);
+  for(const cat of cats)out[cat]=selectTopCategoryToday((items||[]).filter(x=>x.category===cat),18);
   out.Breaking=selectTopCategoryToday((items||[]).filter(x=>x.breaking),12);
   out["Metro Manila"]=selectTopCategoryToday((items||[]).filter(x=>/metro manila|manila|quezon city|makati|pasay|taguig|mandaluyong|pasig|caloocan/i.test(x.headline||"")),12);
+  return out;
+}
+
+function selectGlobalBreaking(items,topToday,limit=12){
+  const pool=[...(items||[]),...(topToday||[])].slice();
+  pool.sort((a,b)=>b.ts-a.ts);
+  const urgent=pool.filter(x=>x.breaking);
+  const important=pool.filter(x=>{
+    const age=Date.now()-Number(x.ts||0);
+    return age>=0&&age<=6*3600000&&/breaking|live:|alert|earthquake|typhoon|storm|flood|fire|explosion|shooting|emergency|evacuat|suspend|senate|supreme court|amla|inflation|bsp|west philippine sea|china|airport|flight|traffic|doh|outbreak/i.test(x.headline||"");
+  }).sort((a,b)=>importanceScore(b)-importanceScore(a)||b.ts-a.ts);
+  const out=[],seen=new Set();
+  for(const x of urgent.concat(important).concat(topToday||[])){
+    const key=x.url||x.headline;
+    if(!key||seen.has(key))continue;
+    seen.add(key);out.push(x);
+    if(out.length>=limit)break;
+  }
   return out;
 }
 
@@ -778,8 +820,8 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v20");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v19");
+  const freshKey=new Request(origin+"/api/news-cache-v21");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v20");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
@@ -790,14 +832,15 @@ export async function onRequestGet(context){
     if(items.length<3)throw Object.assign(new Error("Not enough headlines inside the strict 3-hour window"),{diagnostics:result.diagnostics});
 
     const topToday=selectTopToday(result.items,10);
+    const breakingGlobal=selectGlobalBreaking(result.items,topToday,12);
     const allCats=["Nation","Weather","Earthquake","Crime","Business","Transport","Politics","Travel","Sports","Technology","Health"];
     const categoryItems={},topTodayByCategory={},recentByCategory={};
     for(const cat of allCats){
       const desk=(result.deskBuckets&&result.deskBuckets[cat])||[];
       const merged=dedupe(desk.concat(result.items.filter(x=>x.category===cat)));
       categoryItems[cat]=merged.filter(isFresh3h);
-      topTodayByCategory[cat]=selectTopCategoryToday(merged.filter(isToday),12);
-      recentByCategory[cat]=selectTopCategoryToday(merged.filter(x=>Date.now()-x.ts<=48*3600000),12);
+      topTodayByCategory[cat]=selectTopCategoryToday(merged.filter(isToday),18);
+      recentByCategory[cat]=selectTopCategoryToday(merged.filter(x=>Date.now()-x.ts<=48*3600000),18);
     }
     categoryItems.Breaking=items.filter(x=>x.breaking);
     categoryItems["Metro Manila"]=items.filter(x=>/metro manila|manila|quezon city|makati|pasay|taguig|mandaluyong|pasig|caloocan/i.test(x.headline||""));
@@ -821,6 +864,7 @@ export async function onRequestGet(context){
       fresh_3h_count:items.length,
       freshness_window_minutes:180,
       top_today:topToday,
+      breaking_global:breakingGlobal,
       top_today_by_category:topTodayByCategory,
       recent_by_category:recentByCategory,
       category_items:categoryItems,
