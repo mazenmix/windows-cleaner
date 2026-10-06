@@ -131,7 +131,11 @@ function categoryFor(title){
   return"Nation";
 }
 function excluded(title){
-  return /celebrity|actor|actress|movie|series|fashion|beauty|recipe|concert|k-pop|showbiz|horoscope|lotto/i.test(title);
+  return /celebrity|actor|actress|movie|series|fashion|beauty|recipe|concert|k-pop|showbiz|horoscope|lotto|\bnba\b|nfl|mlb|premier league/i.test(title);
+}
+function philippinesRelevant(title){
+  const t=String(title||"").toLowerCase();
+  return /philippin|filipino|pinoy|metro manila|manila|luzon|visayas|mindanao|cebu|davao|batangas|cavite|laguna|bulacan|rizal|pampanga|tarlac|bicol|palawan|iloilo|bacolod|negros|leyte|samar|bohol|baguio|la union|zamboanga|cagayan|quezon city|makati|taguig|pasay|pasig|caloocan|marcos|duterte|malacañang|senate|senator|congress|house of representatives|amla|amlc|bsp|peso|pagasa|phivolcs|ndrrmc|pnp|doh|dotr|mmda|deped|department of|gilas|pba|uaap|ncaa|ofw|west philippine sea|bajo de masinloc|spratly|ayungin|edsa|nlex|slex|lrt|mrt|jeepney|barangay|mayor|governor|palace|government|inflation|fuel price|rice price|el niño|la niña|asean|sb19/i.test(t);
 }
 function isBreaking(title,ts){
   const age=Date.now()-Number(ts||0);
@@ -336,7 +340,7 @@ async function collect(){
       else if(job.kind==="rss")parsed=parseGoogleRss(r.value);
       else if(job.kind==="gma")parsed=parseGmaJina(r.value);
       else if(job.kind==="philstar")parsed=parsePhilstarJina(r.value);
-      else if(job.kind==="gmahtml")parsed=parseDirectHtml(r.value,"GMA NEWS","gmanetwork.com");
+      else if(job.kind==="gmahtml")parsed=parseDirectHtml(r.value,"GMA NEWS","gmanetwork.com").filter(x=>philippinesRelevant(x.headline));
       else if(job.kind==="philstarhtml")parsed=parseDirectHtml(r.value,"PHILSTAR","philstar.com");
     }catch(e){
       diagnostics.push({name:job.name||job.kind,ok:false,error:"parse: "+String(e)});
@@ -351,8 +355,8 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v5");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v4");
+  const freshKey=new Request(origin+"/api/news-cache-v6");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v5");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
