@@ -1,4 +1,12 @@
-const ALLOWED = new Set(["www.gmanetwork.com","gmanetwork.com","www.philstar.com","philstar.com"]);
+const ALLOWED_DOMAINS = [
+  "gmanetwork.com","philstar.com","inquirer.net","abs-cbn.com","pna.gov.ph","manilabulletin.com.ph","mb.com.ph",
+  "rappler.com","bworldonline.com","tv5.com.ph","onenews.ph","businessmirror.com.ph","sunstar.com.ph",
+  "mindanews.com","manilatimes.net","reuters.com","apnews.com"
+];
+function allowedHost(host){
+  const h=String(host||"").toLowerCase();
+  return ALLOWED_DOMAINS.some(d=>h===d||h.endsWith("."+d));
+}
 
 function json(data,status=200){
   return new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
@@ -36,7 +44,7 @@ export async function onRequestGet(context){
   const article=reqUrl.searchParams.get("url")||"";
   let target;
   try{target=new URL(article)}catch(_){return json({ok:false,error:"bad url"},400)}
-  if(target.protocol!=="https:"||!ALLOWED.has(target.hostname))return json({ok:false,error:"host not allowed"},400);
+  if(target.protocol!=="https:"||!allowedHost(target.hostname))return json({ok:false,error:"host not allowed"},400);
 
   const cache=caches.default;
   const key=new Request(reqUrl.origin+"/api/news-image-cache?url="+encodeURIComponent(target.href));
