@@ -295,15 +295,12 @@ function imgHtml(i){
  return '<img src="'+esc(src)+'" alt="" loading="lazy" onload="this.parentElement.classList.add(\'has-real-image\')" onerror="this.style.display=\'none\'"><span class="fallback">'+esc(icon)+'</span>';
 }
 function hydrateImages(){}
-function topPoolForView(){
+function heroTopPool(){
+ return (state.topToday||[]).slice(0,10);
+}
+function categoryTodayPool(){
  var base=state.cat==="All"?(state.topToday||[]).slice():(((state.topByCategory||{})[state.cat]||[]).slice());
- base=base.filter(queryMatches);
- var seen=new Set(base.map(function(i){return safeUrl(i.url)}));
- filtered().forEach(function(i){
-   var u=safeUrl(i.url);
-   if(base.length<10&&!seen.has(u)){base.push(i);seen.add(u)}
- });
- return base.slice(0,10);
+ return base.filter(queryMatches).slice(0,12);
 }
 function setHero(i,dir){
  if(!i)return;
@@ -331,11 +328,11 @@ function startHeroAuto(){
  state.heroTimer=setInterval(function(){showHero(state.heroIndex+1,1)},5000);
 }
 function resetHeroSlider(){
- state.heroItems=topPoolForView();
+ state.heroItems=heroTopPool();
  state.heroIndex=0;
  if(state.heroItems.length)showHero(0,1);
  else{
-   var fallback=filtered()[0];
+   var fallback=(state.items||[])[0];
    if(fallback){state.heroItems=[fallback];showHero(0,1)}
  }
  startHeroAuto();
@@ -393,7 +390,7 @@ function latestSignature(items){
 function renderLatestOnly(items){
  var fresh=latestItemsForView(items||filtered());
  var heroUrl=state.heroItems[state.heroIndex]?safeUrl(state.heroItems[state.heroIndex].url):"";
- var today=topPoolForView().filter(function(i){
+ var today=categoryTodayPool().filter(function(i){
    return safeUrl(i.url)!==heroUrl&&!isLatestFresh(i);
  }).slice(0,9);
  var sig=latestSignature(fresh)+"##"+latestSignature(today)+"##"+state.cat;
@@ -428,7 +425,7 @@ function render(){
  syncCategories();
  var fresh=filtered();
  resetHeroSlider();
- var today=topPoolForView();
+ var today=categoryTodayPool();
  var display=[];
  var seen=new Set();
  fresh.concat(today).forEach(function(i){
@@ -436,7 +433,6 @@ function render(){
  });
 
  if(!display.length){
-   clearHero();
    els.resultCount.textContent="0 current stories";
    els.latestTitle.innerHTML='<span>●</span> LATEST NEWS';
    els.latestGrid.innerHTML='<div class="empty">No verified '+esc(state.cat==="All"?"news":state.cat)+' story is available right now. Sources are checked automatically.</div>';
@@ -541,6 +537,6 @@ function clock(){
 clock();setInterval(clock,1000);restoreLocal();load();setInterval(load,15000);
 })();
 </script>
-<!-- NEWS build: strict-desks-slider5-v10 -->
+<!-- NEWS build: global-hero-rich-desks-v11 -->
 </body>
 </html>
