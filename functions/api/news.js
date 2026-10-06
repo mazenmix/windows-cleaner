@@ -4,8 +4,23 @@ const FRESH_WINDOW_MS = 3 * 60 * 60 * 1000;
 
 const GOOGLE_FEEDS = [
   "https://news.google.com/rss?hl=en-PH&gl=PH&ceid=PH:en",
-  "https://news.google.com/rss/search?q=Philippines%20breaking%20when%3A3h&hl=en-PH&gl=PH&ceid=PH%3Aen",
-  "https://news.google.com/rss/search?q=Philippines%20(PAGASA%20OR%20PHIVOLCS%20OR%20weather%20OR%20earthquake)%20when%3A3h&hl=en-PH&gl=PH&ceid=PH%3Aen"
+  "https://news.google.com/rss/search?q=Philippines%20breaking%20when%3A3h&hl=en-PH&gl=PH&ceid=PH%3Aen"
+];
+
+function googleCategoryFeed(q){
+  return "https://news.google.com/rss/search?q="+encodeURIComponent(q+" when:3h")+"&hl=en-PH&gl=PH&ceid=PH:en";
+}
+const CATEGORY_GOOGLE_FEEDS = [
+  {name:"SPORTS DESK",category:"Sports",url:googleCategoryFeed("Philippines (Gilas OR PBA OR UAAP OR NCAA OR boxing OR volleyball OR football OR sports)")},
+  {name:"BUSINESS DESK",category:"Business",url:googleCategoryFeed("Philippines (business OR economy OR BSP OR peso OR inflation OR stock market OR jobs OR fuel prices)")},
+  {name:"HEALTH DESK",category:"Health",url:googleCategoryFeed("Philippines (DOH OR health OR hospital OR disease OR outbreak OR medical OR medicine OR vaccine)")},
+  {name:"WEATHER DESK",category:"Weather",url:googleCategoryFeed("Philippines (PAGASA OR typhoon OR weather OR flood OR storm OR monsoon OR heat index)")},
+  {name:"POLITICS DESK",category:"Politics",url:googleCategoryFeed("Philippines (Senate OR Congress OR Marcos OR Duterte OR Malacanang OR election OR impeachment OR government)")},
+  {name:"TECH DESK",category:"Technology",url:googleCategoryFeed("Philippines (technology OR cyber OR AI OR telecom OR digital OR internet OR data breach)")},
+  {name:"TRAVEL DESK",category:"Travel",url:googleCategoryFeed("Philippines (tourism OR travel OR airport OR airline OR destination OR resort)")},
+  {name:"TRANSPORT DESK",category:"Transport",url:googleCategoryFeed("Philippines (DOTr OR MMDA OR MRT OR LRT OR traffic OR transport OR airport OR flight OR road)")},
+  {name:"CRIME DESK",category:"Crime",url:googleCategoryFeed("Philippines (PNP OR police OR arrest OR crime OR robbery OR shooting OR kidnapping)")},
+  {name:"NATION DESK",category:"Nation",url:googleCategoryFeed("Philippines (Supreme Court OR government OR education OR agriculture OR national OR local government)")}
 ];
 
 const RSS_SOURCES = [
@@ -172,17 +187,18 @@ function stripSource(title,source){
 function categoryFor(title){
   const t=String(title||"").toLowerCase();
   if(/earthquake|quake|phivolcs|tremor|aftershock/.test(t))return"Earthquake";
-  if(/pagasa|typhoon|bagyo|storm|rain|flood|weather|heat index|monsoon|itcz|landslide|el niño|la niña/.test(t))return"Weather";
-  if(/pnp|police|arrest|robber|robbery|shooting|murder|killed|crime|drug bust|kidnap/.test(t))return"Crime";
-  if(/lrt|mrt|mmda|traffic|transport|airport|flight|airline|road|bus|jeep|train|nlex|slex/.test(t))return"Transport";
-  if(/peso|inflation|economy|business|stock|market|bank|fuel price|oil price|interest rate|bsp|trade/.test(t))return"Business";
-  if(/senate|senator|house|congress|president|marcos|duterte|malacañang|election|impeach|government|palace|amla|amlc/.test(t))return"Politics";
-  if(/tourism|travel|tourist|resort|beach|destination/.test(t))return"Travel";
-  if(/basketball|pba|gilas|volleyball|football|boxing|sports|athlete|fiba|uaap|ncaa|nba/.test(t))return"Sports";
-  if(/technology|cyber|digital|\bai\b|internet|telecom|smartphone|software|data breach/.test(t))return"Technology";
-  if(/doh|health|hospital|disease|vaccine|virus|medical|medicine/.test(t))return"Health";
+  if(/pagasa|typhoon|bagyo|storm|rain|flood|weather|heat index|monsoon|itcz|landslide|el niño|la niña|storm surge/.test(t))return"Weather";
+  if(/doh|department of health|health|hospital|disease|outbreak|vaccine|virus|medical|medicine|doctor|patient|dengue|measles|covid|mpox|mental health|hiv|tuberculosis/.test(t))return"Health";
+  if(/basketball|pba|gilas|volleyball|football|boxing|sports|athlete|fiba|uaap|ncaa|olympic|sea games|asian games|tennis|golf|swimming|yulo|hidilyn/.test(t))return"Sports";
+  if(/peso|inflation|economy|business|stock|market|bank|fuel price|oil price|interest rate|bsp|trade|investment|gdp|jobs|employment|company|earnings|tariff|export|import/.test(t))return"Business";
+  if(/technology|cyber|digital|\bai\b|internet|telecom|smartphone|software|data breach|phishing|hack|ict|5g|satellite/.test(t))return"Technology";
+  if(/tourism|travel|tourist|resort|beach|destination|hotel|vacation/.test(t))return"Travel";
+  if(/lrt|mrt|mmda|traffic|transport|airport|flight|airline|road|bus|jeep|train|nlex|slex|dotr|ltfrb|lto/.test(t))return"Transport";
+  if(/pnp|police|arrest|robber|robbery|shooting|murder|killed|crime|drug bust|kidnap|raid|suspect|nbi/.test(t))return"Crime";
+  if(/senate|senator|house|congress|president|marcos|duterte|malacañang|malacanang|election|impeach|government|palace|amla|amlc|ombudsman|politic/.test(t))return"Politics";
   return"Nation";
 }
+
 function excluded(title){
   return /celebrity|actor|actress|movie|series|fashion|beauty|recipe|concert|k-pop|showbiz|horoscope|lotto|\bnba\b|nfl|mlb|premier league/i.test(title);
 }
@@ -238,7 +254,7 @@ function makeItem(headline,source,url,ts,summary="",image=""){
   };
 }
 
-function parseGoogleRss(xml){
+function parseGoogleRss(xml,forcedCategory){
   const out=[];
   const blocks=String(xml||"").match(/<item>[\s\S]*?<\/item>/gi)||[];
   for(const item of blocks){
@@ -251,7 +267,10 @@ function parseGoogleRss(xml){
     if(!title||!link||!source||!trusted(source))continue;
     const h=stripSource(title,source);
     const obj=makeItem(h,sourceLabel(source),plain(link),Date.parse(plain(pub))||0,desc);
-    if(obj)out.push(obj);
+    if(obj){
+      if(forcedCategory)obj.category=forcedCategory;
+      out.push(obj);
+    }
   }
   return out;
 }
@@ -494,6 +513,43 @@ function isFresh3h(item){
   const age=Date.now()-ts;
   return ts>0&&age>=0&&age<=FRESH_WINDOW_MS;
 }
+function isToday(item){
+  const ts=Number(item&&item.ts||Date.parse(item&&item.published_at||0)||0);
+  const age=Date.now()-ts;
+  return ts>0&&age>=0&&age<=24*60*60*1000;
+}
+function importanceScore(item){
+  const title=String(item&&item.headline||"").toLowerCase();
+  const ageH=Math.max(0,(Date.now()-Number(item&&item.ts||0))/3600000);
+  let score=Math.max(0,48-ageH*2);
+  if(item&&item.breaking)score+=34;
+  const source=String(item&&item.source||"");
+  if(/REUTERS|AP/.test(source))score+=22;
+  else if(/GMA NEWS|INQUIRER|ABS-CBN|PNA|PHILSTAR|RAPPLER|MANILA BULLETIN/.test(source))score+=16;
+  else if(/BUSINESSWORLD|NEWS5|ONE NEWS|BUSINESSMIRROR|SUNSTAR|MINDANEWS|MANILA TIMES/.test(source))score+=11;
+  if(/president|senate|congress|supreme court|impeach|earthquake|typhoon|storm surge|evacuat|emergency|explosion|shooting|killed|inflation|interest rate|bsp|west philippine sea|china|alert|suspend/.test(title))score+=24;
+  if(/doh|outbreak|hospital|dengue|mpox|health emergency/.test(title))score+=18;
+  if(/gilas|pba|uaap|fiba|boxing|olympic|gold medal|champion/.test(title))score+=12;
+  if(/live:|breaking|just in/.test(title))score+=14;
+  return score;
+}
+function selectTopToday(items,limit=10){
+  const ranked=(items||[]).filter(isToday).slice().sort((a,b)=>importanceScore(b)-importanceScore(a)||b.ts-a.ts);
+  const out=[],perSource=new Map(),perCategory=new Map();
+  for(const x of ranked){
+    const sn=perSource.get(x.source)||0,cn=perCategory.get(x.category)||0;
+    if(sn>=3||cn>=4)continue;
+    out.push(x);perSource.set(x.source,sn+1);perCategory.set(x.category,cn+1);
+    if(out.length>=limit)break;
+  }
+  if(out.length<limit){
+    for(const x of ranked){
+      if(out.some(y=>y.url===x.url))continue;
+      out.push(x);if(out.length>=limit)break;
+    }
+  }
+  return out;
+}
 
 function dedupe(items){
   const seen=new Set(),seenUrls=new Set(),out=[],perSource=new Map();
@@ -519,6 +575,7 @@ async function collect(){
   const firstWave=[
     ...primary.map(s=>({...s,timeout:3200})),
     ...RSS_SOURCES.map(s=>({kind:"rssdirect",name:s.name,url:s.url,timeout:2200})),
+    ...CATEGORY_GOOGLE_FEEDS.map(s=>({kind:"catrss",name:s.name,url:s.url,category:s.category,timeout:1900})),
     ...GDELT_FEEDS.map(s=>({kind:"gdelt",name:s.name,url:s.url,timeout:2800}))
   ];
 
@@ -534,6 +591,7 @@ async function collect(){
       if(job.kind==="gmahtml")parsed=parseDirectHtml(r.value,"GMA NEWS","gmanetwork.com").filter(x=>philippinesRelevant(x.headline));
       else if(job.kind==="philstarhtml")parsed=parsePhilstarDirectHtml(r.value);
       else if(job.kind==="rssdirect")parsed=parseGenericRss(r.value,job.name);
+      else if(job.kind==="catrss")parsed=parseGoogleRss(r.value,job.category);
       else if(job.kind==="gdelt")parsed=parseGdeltJson(r.value);
       diagnostics.push({name:job.name,ok:true,items:parsed.length});
       items.push(...parsed);
@@ -588,8 +646,8 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v13");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v12");
+  const freshKey=new Request(origin+"/api/news-cache-v14");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v13");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
@@ -599,6 +657,9 @@ export async function onRequestGet(context){
     const items=result.items.filter(isFresh3h).sort((a,b)=>b.ts-a.ts);
     if(items.length<3)throw Object.assign(new Error("Not enough headlines inside the strict 3-hour window"),{diagnostics:result.diagnostics});
 
+    const topToday=selectTopToday(result.items,10);
+    const categoryCounts={};
+    for(const x of items)categoryCounts[x.category]=(categoryCounts[x.category]||0)+1;
     const sources=[...new Set(items.map(x=>x.source))];
     const data={
       ok:true,
@@ -612,6 +673,8 @@ export async function onRequestGet(context){
       source_count:sources.length,
       fresh_3h_count:items.length,
       freshness_window_minutes:180,
+      top_today:topToday,
+      category_counts:categoryCounts,
       sources,
       diagnostics:result.diagnostics,
       items
@@ -632,9 +695,11 @@ export async function onRequestGet(context){
         if(j&&Array.isArray(j.items)&&j.items.length){
           const stillFresh=j.items.filter(isFresh3h).sort((a,b)=>b.ts-a.ts);
           if(!stillFresh.length)throw new Error("Last verified headlines have expired beyond 3 hours");
+          const stillTop=Array.isArray(j.top_today)?j.top_today.filter(isToday):[];
           return response({
             ...j,
             items:stillFresh,
+            top_today:stillTop,
             fresh_3h_count:stillFresh.length,
             ok:true,live:false,stale:true,last_verified:true,
             checked_at:new Date().toISOString(),
