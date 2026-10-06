@@ -550,6 +550,14 @@ function selectTopToday(items,limit=10){
   }
   return out;
 }
+function buildTopByCategory(items){
+  const cats=["Nation","Weather","Earthquake","Crime","Business","Transport","Politics","Travel","Sports","Technology","Health"];
+  const out={};
+  for(const cat of cats)out[cat]=selectTopToday((items||[]).filter(x=>x.category===cat),10);
+  out.Breaking=selectTopToday((items||[]).filter(x=>x.breaking),10);
+  out["Metro Manila"]=selectTopToday((items||[]).filter(x=>/metro manila|manila|quezon city|makati|pasay|taguig|mandaluyong|pasig|caloocan/i.test(x.headline||"")),10);
+  return out;
+}
 
 function dedupe(items){
   const seen=new Set(),seenUrls=new Set(),out=[],perSource=new Map();
@@ -646,8 +654,8 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v14");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v13");
+  const freshKey=new Request(origin+"/api/news-cache-v15");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v14");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
@@ -658,6 +666,7 @@ export async function onRequestGet(context){
     if(items.length<3)throw Object.assign(new Error("Not enough headlines inside the strict 3-hour window"),{diagnostics:result.diagnostics});
 
     const topToday=selectTopToday(result.items,10);
+    const topTodayByCategory=buildTopByCategory(result.items);
     const categoryCounts={};
     for(const x of items)categoryCounts[x.category]=(categoryCounts[x.category]||0)+1;
     const sources=[...new Set(items.map(x=>x.source))];
@@ -674,6 +683,7 @@ export async function onRequestGet(context){
       fresh_3h_count:items.length,
       freshness_window_minutes:180,
       top_today:topToday,
+      top_today_by_category:topTodayByCategory,
       category_counts:categoryCounts,
       sources,
       diagnostics:result.diagnostics,
