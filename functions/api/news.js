@@ -1,5 +1,6 @@
 const FRESH_TTL = 15;
 const LAST_GOOD_TTL = 21600;
+const FRESH_WINDOW_MS = 3 * 60 * 60 * 1000;
 
 const GOOGLE_FEEDS = [
   "https://news.google.com/rss?hl=en-PH&gl=PH&ceid=PH:en",
@@ -393,6 +394,12 @@ function parseDirectHtml(text,source,domain){
   return out;
 }
 
+function isFresh3h(item){
+  const ts=Number(item&&item.ts||Date.parse(item&&item.published_at||0)||0);
+  const age=Date.now()-ts;
+  return ts>0&&age>=0&&age<=FRESH_WINDOW_MS;
+}
+
 function dedupe(items){
   const seen=new Set(),seenUrls=new Set(),out=[],perSource=new Map();
   items.sort((a,b)=>b.ts-a.ts);
@@ -436,8 +443,9 @@ async function collect(){
   });
 
   items=dedupe(items);
-  if(items.length>=3){
-    return {items,diagnostics,feedCount:primary.length,fastPath:true};
+  const freshPrimary=items.filter(isFresh3h);
+  if(items.length>=3&&freshPrimary.length>=6){
+    return {items,diagnostics,feedCount:primary.length,fastPath:true,fresh3h:freshPrimary.length};
   }
 
   // Fallback path is only used when both direct publisher pages are weak/down.
@@ -465,14 +473,15 @@ async function collect(){
       diagnostics.push({name:job.name,ok:false,error:"parse: "+String(e)});
     }
   });
-  return {items:dedupe(items),diagnostics,feedCount:primary.length+fallbacks.length,fastPath:false};
+  const combined=dedupe(items);
+  return {items:combined,diagnostics,feedCount:primary.length+fallbacks.length,fastPath:false,fresh3h:combined.filter(isFresh3h).length};
 }
 
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v10");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v9");
+  const freshKey=new Request(origin+"/api/news-cache-v11");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v10");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
@@ -493,6 +502,8 @@ export async function onRequestGet(context){
       feed_count:result.feedCount||2,
       feeds_ok:result.diagnostics.filter(x=>x.ok).length,
       source_count:sources.length,
+      fresh_3h_count:Number(result.fresh3h!=null?result.fresh3h:items.filter(isFresh3h).length),
+      freshness_window_minutes:180,
       sources,
       diagnostics:result.diagnostics,
       items
