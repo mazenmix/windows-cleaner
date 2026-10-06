@@ -40,16 +40,18 @@ const RSS_SOURCES = [
 const CATEGORY_DIRECT_SOURCES = [
   {name:"GMA SPORTS",source:"GMA NEWS",category:"Sports",kind:"gmahtml",url:"https://www.gmanetwork.com/news/sports/"},
   {name:"GMA MONEY",source:"GMA NEWS",category:"Business",kind:"gmahtml",url:"https://www.gmanetwork.com/news/money/"},
-  {name:"GMA WEATHER",source:"GMA NEWS",category:"Weather",kind:"gmahtml",url:"https://www.gmanetwork.com/news/scitech/weather/"},
+  {name:"GMA WEATHER",source:"GMA NEWS",category:"Weather",kind:"gmahtml",url:"https://www.gmanetwork.com/news/weather/"},
   {name:"GMA TECHNOLOGY",source:"GMA NEWS",category:"Technology",kind:"gmahtml",url:"https://www.gmanetwork.com/news/scitech/technology/"},
-  {name:"GMA HEALTH",source:"GMA NEWS",category:"Health",kind:"gmahtml",url:"https://www.gmanetwork.com/news/lifestyle/healthandwellness/"},
+  {name:"GMA HEALTH",source:"GMA NEWS",category:"Health",kind:"gmahtml",validate:true,url:"https://www.gmanetwork.com/news/lifestyle/healthandwellness/"},
   {name:"GMA TRAVEL",source:"GMA NEWS",category:"Travel",kind:"gmahtml",url:"https://www.gmanetwork.com/news/lifestyle/travel/"},
   {name:"GMA NATION",source:"GMA NEWS",category:"Nation",kind:"gmahtml",url:"https://www.gmanetwork.com/news/topstories/nation/"},
   {name:"GMA METRO",source:"GMA NEWS",category:"Metro Manila",kind:"gmahtml",url:"https://www.gmanetwork.com/news/topstories/metro/"},
   {name:"PHILSTAR SPORTS",source:"PHILSTAR",category:"Sports",kind:"philstarhtml",url:"https://www.philstar.com/sports"},
   {name:"PHILSTAR BUSINESS",source:"PHILSTAR",category:"Business",kind:"philstarhtml",url:"https://www.philstar.com/business"},
   {name:"PHILSTAR NATION",source:"PHILSTAR",category:"Nation",kind:"philstarhtml",url:"https://www.philstar.com/nation"},
-  {name:"PHILSTAR HEALTH",source:"PHILSTAR",category:"Health",kind:"philstarhtml",url:"https://www.philstar.com/lifestyle/health-and-family"},
+  {name:"PHILSTAR HEALTH",source:"PHILSTAR",category:"Health",kind:"philstarhtml",validate:true,url:"https://www.philstar.com/lifestyle/health-and-family"},
+  {name:"PHILSTAR SPORTS RSS",source:"PHILSTAR",category:"Sports",kind:"rsscat",url:"https://www.philstar.com/rss/sports"},
+  {name:"PHILSTAR BUSINESS RSS",source:"PHILSTAR",category:"Business",kind:"rsscat",url:"https://www.philstar.com/rss/business"},
   {name:"RAPPLER SPORTS",source:"RAPPLER",category:"Sports",kind:"rsscat",url:"https://www.rappler.com/sports/feed/"},
   {name:"RAPPLER BUSINESS",source:"RAPPLER",category:"Business",kind:"rsscat",url:"https://www.rappler.com/business/feed/"},
   {name:"RAPPLER TECHNOLOGY",source:"RAPPLER",category:"Technology",kind:"rsscat",url:"https://www.rappler.com/technology/feed/"},
@@ -408,6 +410,14 @@ function parseJinaPage(text,source,domain){
   }
   return out;
 }
+function dateFromArticleUrl(url){
+  try{
+    const p=new URL(url).pathname;
+    const m=p.match(/\/20(\d{2})\/(\d{1,2})\/(\d{1,2})\//);
+    if(!m)return 0;
+    return Date.UTC(2000+Number(m[1]),Number(m[2])-1,Number(m[3]),0,0,0);
+  }catch(_){return 0}
+}
 function parsePhilstarDirectHtml(text,forcedCategory){
   const src=String(text||"");
   const out=[];
@@ -424,7 +434,7 @@ function parsePhilstarDirectHtml(text,forcedCategory){
     const around=src.slice(start,end);
     const focus=m.index-start;
     const am=around.match(/(?:just now|moments? ago|\d+\s*(?:s|sec|secs|seconds?|m|min|mins|minutes?|h|hr|hrs|hours?)\s*ago)/i);
-    const ts=relativeToTs(am&&am[0]);
+    const ts=relativeToTs(am&&am[0])||dateFromArticleUrl(url);
     if(!ts)continue;
     const image=nearestImage(around,focus,url);
     const obj=makeItem(title,"PHILSTAR",url,ts,"",image);
@@ -638,10 +648,10 @@ async function collect(){
     }
     let parsed=[];
     try{
-      if(job.kind==="gmahtml")parsed=parseDirectHtml(r.value,job.source||"GMA NEWS","gmanetwork.com",job.category).filter(x=>job.category||philippinesRelevant(x.headline));
-      else if(job.kind==="philstarhtml")parsed=parsePhilstarDirectHtml(r.value,job.category);
+      if(job.kind==="gmahtml")parsed=parseDirectHtml(r.value,job.source||"GMA NEWS","gmanetwork.com",job.category).filter(x=>(job.category||philippinesRelevant(x.headline))&&(!job.validate||categoryMatchesTitle(x.headline,job.category)));
+      else if(job.kind==="philstarhtml")parsed=parsePhilstarDirectHtml(r.value,job.category).filter(x=>!job.validate||categoryMatchesTitle(x.headline,job.category));
       else if(job.kind==="rssdirect")parsed=parseGenericRss(r.value,job.name);
-      else if(job.kind==="rsscat")parsed=parseGenericRss(r.value,job.source||job.name,job.category);
+      else if(job.kind==="rsscat")parsed=parseGenericRss(r.value,job.source||job.name,job.category).filter(x=>!job.validate||categoryMatchesTitle(x.headline,job.category));
       diagnostics.push({name:job.name,ok:true,items:parsed.length});
       items.push(...parsed);
     }catch(e){
@@ -699,8 +709,8 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v16");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v15");
+  const freshKey=new Request(origin+"/api/news-cache-v17");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v16");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
