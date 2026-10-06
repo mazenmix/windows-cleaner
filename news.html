@@ -707,7 +707,6 @@ async function load(){
 
   if(changed){
     state.signature=sig;
-    state.latestSignature="";
     render();
   }else{
     syncCategories();
@@ -766,6 +765,6 @@ function clock(){
 clock();setInterval(clock,1000);restoreLocal();load();setInterval(load,15000);
 })();
 </script>
-<!-- NEWS build: silent-diff-updates-v22 -->
+<!-- NEWS build: zero-flicker-diff-v23 -->
 </body>
 </html>
