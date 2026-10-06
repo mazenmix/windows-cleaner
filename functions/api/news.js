@@ -10,6 +10,16 @@ const GOOGLE_FEEDS = [
 function googleCategoryFeed(q){
   return "https://news.google.com/rss/search?q="+encodeURIComponent(q+" when:1d")+"&hl=en-PH&gl=PH&ceid=PH:en";
 }
+function googleCategoryExtended(q){
+  return "https://news.google.com/rss/search?q="+encodeURIComponent(q+" when:2d")+"&hl=en-PH&gl=PH&ceid=PH:en";
+}
+const CATEGORY_GOOGLE_EXTENDED = [
+  {name:"HEALTH EXTENDED",category:"Health",url:googleCategoryExtended("Philippines (DOH OR health OR hospital OR dengue OR mpox OR disease OR outbreak OR vaccine OR healthcare)")},
+  {name:"WEATHER EXTENDED",category:"Weather",url:googleCategoryExtended("Philippines (PAGASA OR typhoon OR rainfall OR flood OR monsoon OR ITCZ OR heat index OR tropical storm)")},
+  {name:"TECH EXTENDED",category:"Technology",url:googleCategoryExtended("Philippines (technology OR cyber OR AI OR telecom OR PLDT OR Globe OR DITO OR GCash OR Maya OR digital OR internet)")},
+  {name:"TRAVEL EXTENDED",category:"Travel",url:googleCategoryExtended("Philippines (tourism OR travel OR tourist arrivals OR hotel OR resort OR visa OR passport OR destination OR vacation)")}
+];
+
 const CATEGORY_GOOGLE_FEEDS = [
   {name:"SPORTS DESK",category:"Sports",url:googleCategoryFeed("Philippines (Gilas OR PBA OR UAAP OR NCAA OR boxing OR volleyball OR football OR sports)")},
   {name:"BUSINESS DESK",category:"Business",url:googleCategoryFeed("Philippines (business OR economy OR BSP OR peso OR inflation OR stock market OR jobs OR fuel prices)")},
@@ -217,13 +227,13 @@ function stripSource(title,source){
 function categoryFor(title){
   const t=String(title||"").toLowerCase();
   if(/earthquake|quake|phivolcs|tremor|aftershock/.test(t))return"Earthquake";
-  if(/pagasa|typhoon|bagyo|storm|rain|flood|weather|heat index|monsoon|itcz|landslide|el niño|la niña|storm surge/.test(t))return"Weather";
-  if(/doh|department of health|health|hospital|disease|outbreak|vaccine|virus|medical|medicine|doctor|patient|dengue|measles|covid|mpox|mental health|hiv|tuberculosis/.test(t))return"Health";
+  if(/pagasa|typhoon|bagyo|storm|rainfall|heavy rain|flood|weather|heat index|monsoon|itcz|landslide|el niño|la niña|storm surge|tropical depression|tropical storm|low pressure area|\blpa\b|gale warning|thunderstorm/.test(t))return"Weather";
+  if(/doh|department of health|health|hospital|disease|outbreak|vaccine|virus|medical|medicine|doctor|patient|dengue|measles|covid|mpox|mental health|hiv|tuberculosis|rabies|leptospirosis|flu|influenza|cancer|healthcare|health care|pharma|pharmaceutical/.test(t))return"Health";
   if(/basketball|pba|gilas|volleyball|football|boxing|sports|athlete|fiba|uaap|ncaa|olympic|sea games|asian games|tennis|golf|swimming|yulo|hidilyn/.test(t))return"Sports";
   if(/peso|inflation|economy|business|stock|market|bank|fuel price|oil price|interest rate|bsp|trade|investment|gdp|jobs|employment|company|earnings|tariff|export|import/.test(t))return"Business";
-  if(/technology|cyber|digital|\bai\b|internet|telecom|smartphone|software|data breach|phishing|hack|ict|5g|satellite/.test(t))return"Technology";
-  if(/tourism|travel|tourist|resort|beach|destination|hotel|vacation/.test(t))return"Travel";
-  if(/lrt|mrt|mmda|traffic|transport|airport|flight|airline|road|bus|jeep|train|nlex|slex|dotr|ltfrb|lto/.test(t))return"Transport";
+  if(/technology|cyber|digital|\bai\b|artificial intelligence|internet|telecom|smart communications|globe telecom|dito|pldt|smartphone|software|data breach|phishing|hack|ict|5g|satellite|startup|fintech|e-wallet|gcash|maya|cloud|semiconductor|robot|space tech/.test(t))return"Technology";
+  if(/tourism|travel|tourist|resort|beach|destination|hotel|vacation|passport|visa|immigration|tour package|tour operator|cruise|heritage site|tourism arrivals|visitor arrivals/.test(t))return"Travel";
+  if(/lrt|mrt|mmda|traffic|transport|airport|flight|airline|road|bus|jeep|train|nlex|slex|dotr|ltfrb|lto|ferry|port/.test(t))return"Transport";
   if(/pnp|police|arrest|robber|robbery|shooting|murder|killed|crime|drug bust|kidnap|raid|suspect|nbi/.test(t))return"Crime";
   if(/senate|senator|house|congress|president|marcos|duterte|malacañang|malacanang|election|impeach|government|palace|amla|amlc|ombudsman|politic/.test(t))return"Politics";
   return"Nation";
@@ -299,9 +309,13 @@ function parseGoogleRss(xml,forcedCategory){
     const link=(item.match(/<link>([\s\S]*?)<\/link>/i)||[])[1]||"";
     const pub=(item.match(/<pubDate>([\s\S]*?)<\/pubDate>/i)||[])[1]||"";
     const desc=(item.match(/<description>([\s\S]*?)<\/description>/i)||[])[1]||"";
-    const sm=item.match(/<source(?:\s+url=["'][^"']*["'])?>([\s\S]*?)<\/source>/i);
-    const source=sm?plain(sm[1]):"";
-    if(!title||!link||!source||!trusted(source))continue;
+    const sm=item.match(/<source(?:\s+url=["']([^"']*)["'])?>([\s\S]*?)<\/source>/i);
+    const source=sm?plain(sm[2]):"";
+    const sourceUrl=sm?plain(sm[1]):"";
+    let sourceDomain="";
+    try{sourceDomain=sourceUrl?new URL(sourceUrl).hostname:""}catch(_){}
+    const categorySourceOk=/GMA|Philstar|Philippine Star|Inquirer|ABS-CBN|Philippine News Agency|PNA|Manila Bulletin|Rappler|BusinessWorld|BusinessMirror|Manila Times|Manila Standard|SunStar|MindaNews|News5|One News|Daily Tribune|Interaksyon|Philippine Information Agency|PIA|SPIN\.ph|One Sports|Reuters|Associated Press|AP News|ANC|DZBB|PTV/i.test(source);
+    if(!title||!link||!source||(!trusted(source)&&!trustedDomain(sourceDomain)&&!(forcedCategory&&categorySourceOk)))continue;
     const h=stripSource(title,source);
     const obj=makeItem(h,sourceLabel(source),plain(link),Date.parse(plain(pub))||0,desc);
     if(obj){
@@ -357,7 +371,7 @@ function parseGenericRss(xml,sourceHint,forcedCategory){
     const ts=Date.parse(plain(pub))||0;
     if(!h||!url||!ts)continue;
     const obj=makeItem(h,sourceHint,url,ts,desc,rssImage(block,desc));
-    if(obj&&philippinesRelevant(obj.headline)){
+    if(obj&&(forcedCategory||philippinesRelevant(obj.headline))){
       if(forcedCategory)obj.category=forcedCategory;
       out.push(obj);
     }
@@ -650,14 +664,32 @@ function dedupe(items){
 async function collect(){
   const diagnostics=[];
   let items=[];
+  const deskBuckets={};
+
+  function addParsed(parsed,job){
+    if(!Array.isArray(parsed)||!parsed.length)return;
+    items.push(...parsed);
+    const cat=job&&job.category;
+    if(cat){
+      if(!deskBuckets[cat])deskBuckets[cat]=[];
+      deskBuckets[cat].push(...parsed);
+    }else{
+      for(const x of parsed){
+        const k=x.category||"Nation";
+        if(!deskBuckets[k])deskBuckets[k]=[];
+        deskBuckets[k].push(x);
+      }
+    }
+  }
 
   const primary=PAGE_SOURCES.filter(s=>s.kind==="gmahtml"||s.kind==="philstarhtml");
   const firstWave=[
     ...primary.map(s=>({...s,timeout:3200})),
     ...RSS_SOURCES.map(s=>({kind:"rssdirect",name:s.name,url:s.url,timeout:2400})),
     ...CATEGORY_DIRECT_SOURCES.map(s=>({...s,timeout:2600})),
-    ...CATEGORY_GOOGLE_FEEDS.map(s=>({kind:"catrss",name:s.name,url:s.url,category:s.category,timeout:2100})),
-    ...GDELT_FEEDS.map(s=>({kind:"gdelt",name:s.name,url:s.url,timeout:2400}))
+    ...CATEGORY_GOOGLE_FEEDS.map(s=>({kind:"catrss",name:s.name,url:s.url,category:s.category,timeout:2300})),
+    ...CATEGORY_GOOGLE_EXTENDED.map(s=>({kind:"catrss",name:s.name,url:s.url,category:s.category,timeout:2300})),
+    ...GDELT_FEEDS.map(s=>({kind:"gdelt",name:s.name,url:s.url,timeout:2500}))
   ];
 
   const settled=await Promise.allSettled(firstWave.map(j=>fetchText(j.url,j.timeout)));
@@ -676,7 +708,7 @@ async function collect(){
       else if(job.kind==="catrss")parsed=parseGoogleRss(r.value,job.category);
       else if(job.kind==="gdelt")parsed=parseGdeltJson(r.value);
       diagnostics.push({name:job.name,ok:true,items:parsed.length});
-      items.push(...parsed);
+      addParsed(parsed,job);
     }catch(e){
       diagnostics.push({name:job.name,ok:false,error:"parse: "+String(e)});
     }
@@ -686,7 +718,6 @@ async function collect(){
   let fresh=combined.filter(isFresh3h);
   let sourceCount=new Set(fresh.map(x=>x.source)).size;
 
-  // Emergency fallback only if breadth or volume is still thin.
   if(fresh.length<14||sourceCount<4){
     const fallbacks=[
       ...GOOGLE_FEEDS.map((url,i)=>({kind:"rss",name:"GOOGLE PH "+(i+1),url,timeout:1900})),
@@ -702,12 +733,10 @@ async function collect(){
       let parsed=[];
       try{
         if(job.kind==="rss")parsed=parseGoogleRss(r.value);
-        else if(job.kind==="catrss")parsed=parseGoogleRss(r.value,job.category);
-        else if(job.kind==="gdelt")parsed=parseGdeltJson(r.value);
         else if(job.kind==="gma")parsed=parseGmaJina(r.value).filter(x=>philippinesRelevant(x.headline));
         else if(job.kind==="philstar")parsed=parsePhilstarJina(r.value);
         diagnostics.push({name:job.name,ok:true,items:parsed.length});
-        items.push(...parsed);
+        addParsed(parsed,job);
       }catch(e){
         diagnostics.push({name:job.name,ok:false,error:"parse: "+String(e)});
       }
@@ -717,8 +746,14 @@ async function collect(){
     sourceCount=new Set(fresh.map(x=>x.source)).size;
   }
 
+  const deskCombined={};
+  for(const [cat,list] of Object.entries(deskBuckets)){
+    deskCombined[cat]=dedupe(list).filter(x=>Date.now()-x.ts<=48*3600000);
+  }
+
   return {
     items:combined,
+    deskBuckets:deskCombined,
     diagnostics,
     feedCount:firstWave.length,
     fastPath:false,
@@ -730,8 +765,8 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v18");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v17");
+  const freshKey=new Request(origin+"/api/news-cache-v19");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v18");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
@@ -742,14 +777,23 @@ export async function onRequestGet(context){
     if(items.length<3)throw Object.assign(new Error("Not enough headlines inside the strict 3-hour window"),{diagnostics:result.diagnostics});
 
     const topToday=selectTopToday(result.items,10);
-    const topTodayByCategory=buildTopByCategory(result.items);
-    const categoryItems={};
     const allCats=["Nation","Weather","Earthquake","Crime","Business","Transport","Politics","Travel","Sports","Technology","Health"];
-    for(const cat of allCats)categoryItems[cat]=items.filter(x=>x.category===cat);
+    const categoryItems={},topTodayByCategory={},recentByCategory={};
+    for(const cat of allCats){
+      const desk=(result.deskBuckets&&result.deskBuckets[cat])||[];
+      const merged=dedupe(desk.concat(result.items.filter(x=>x.category===cat)));
+      categoryItems[cat]=merged.filter(isFresh3h);
+      topTodayByCategory[cat]=selectTopCategoryToday(merged.filter(isToday),12);
+      recentByCategory[cat]=selectTopCategoryToday(merged.filter(x=>Date.now()-x.ts<=48*3600000),12);
+    }
     categoryItems.Breaking=items.filter(x=>x.breaking);
     categoryItems["Metro Manila"]=items.filter(x=>/metro manila|manila|quezon city|makati|pasay|taguig|mandaluyong|pasig|caloocan/i.test(x.headline||""));
+    topTodayByCategory.Breaking=selectTopCategoryToday(result.items.filter(x=>x.breaking),12);
+    topTodayByCategory["Metro Manila"]=selectTopCategoryToday(result.items.filter(x=>/metro manila|manila|quezon city|makati|pasay|taguig|mandaluyong|pasig|caloocan/i.test(x.headline||"")),12);
+    recentByCategory.Breaking=topTodayByCategory.Breaking;
+    recentByCategory["Metro Manila"]=topTodayByCategory["Metro Manila"];
     const categoryCounts={};
-    for(const cat of Object.keys(categoryItems))categoryCounts[cat]=categoryItems[cat].length;
+    for(const cat of Object.keys(categoryItems))categoryCounts[cat]=Math.max(categoryItems[cat].length,(topTodayByCategory[cat]||[]).length,(recentByCategory[cat]||[]).length);
     const sources=[...new Set(items.map(x=>x.source))];
     const data={
       ok:true,
@@ -765,6 +809,7 @@ export async function onRequestGet(context){
       freshness_window_minutes:180,
       top_today:topToday,
       top_today_by_category:topTodayByCategory,
+      recent_by_category:recentByCategory,
       category_items:categoryItems,
       category_counts:categoryCounts,
       sources,
