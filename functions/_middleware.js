@@ -1,4 +1,4 @@
-const MX_BUILD = "2026-09-28-readability-v1";
+const MX_BUILD = "2026-10-06-news-mobile-v1";
 
 export async function onRequest(context) {
   const url = new URL(context.request.url);
@@ -8,7 +8,7 @@ export async function onRequest(context) {
   // Always expose the deployed build and prevent browsers/CDNs from pinning
   // an old HTML shell or an old fuel API response after a production update.
   headers.set('x-mx-build', MX_BUILD);
-  if (url.pathname === '/' || url.pathname === '/index.html' || url.pathname === '/api/fuel') {
+  if (url.pathname === '/' || url.pathname === '/index.html' || url.pathname === '/news.html' || url.pathname === '/api/news' || url.pathname === '/api/fuel') {
     headers.set('cache-control', 'no-store, no-cache, must-revalidate, max-age=0');
     headers.set('pragma', 'no-cache');
     headers.set('expires', '0');
