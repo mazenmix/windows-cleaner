@@ -4,8 +4,29 @@ const FRESH_WINDOW_MS = 3 * 60 * 60 * 1000;
 
 const GOOGLE_FEEDS = [
   "https://news.google.com/rss?hl=en-PH&gl=PH&ceid=PH:en",
-  "https://news.google.com/rss/search?q=Philippines%20breaking%20when%3A1d&hl=en-PH&gl=PH&ceid=PH%3Aen",
-  "https://news.google.com/rss/search?q=Philippines%20(PAGASA%20OR%20PHIVOLCS%20OR%20weather%20OR%20earthquake)%20when%3A1d&hl=en-PH&gl=PH&ceid=PH%3Aen"
+  "https://news.google.com/rss/search?q=Philippines%20breaking%20when%3A3h&hl=en-PH&gl=PH&ceid=PH%3Aen",
+  "https://news.google.com/rss/search?q=Philippines%20(PAGASA%20OR%20PHIVOLCS%20OR%20weather%20OR%20earthquake)%20when%3A3h&hl=en-PH&gl=PH&ceid=PH%3Aen"
+];
+
+const RSS_SOURCES = [
+  {name:"INQUIRER",url:"https://newsinfo.inquirer.net/feed/"},
+  {name:"RAPPLER",url:"https://www.rappler.com/feed/"},
+  {name:"BUSINESSWORLD",url:"https://www.bworldonline.com/feed/"},
+  {name:"MINDANEWS",url:"https://mindanews.com/feed/"},
+  {name:"BUSINESSMIRROR",url:"https://businessmirror.com.ph/feed/"},
+  {name:"PNA",url:"https://www.pna.gov.ph/rss"},
+  {name:"MANILA BULLETIN",url:"https://mb.com.ph/rss"},
+  {name:"MANILA TIMES",url:"https://www.manilatimes.net/rss"}
+];
+
+function gdeltUrl(query){
+  return "https://api.gdeltproject.org/api/v2/doc/doc?query="+encodeURIComponent(query)+"&mode=ArtList&maxrecords=150&format=json&sort=datedesc&timespan=3h";
+}
+const GDELT_FEEDS = [
+  {name:"GDELT PH",url:gdeltUrl("Philippines")},
+  {name:"GDELT NATIONAL",url:gdeltUrl("Philippines (domain:gmanetwork.com OR domain:philstar.com OR domain:inquirer.net OR domain:abs-cbn.com OR domain:pna.gov.ph OR domain:manilabulletin.com.ph OR domain:rappler.com)")},
+  {name:"GDELT BUSINESS REGIONAL",url:gdeltUrl("Philippines (domain:bworldonline.com OR domain:businessmirror.com.ph OR domain:sunstar.com.ph OR domain:mindanews.com OR domain:manilatimes.net OR domain:news.tv5.com.ph OR domain:onenews.ph)")},
+  {name:"GDELT WIRE",url:gdeltUrl("Philippines (domain:reuters.com OR domain:apnews.com)")}
 ];
 
 const PAGE_SOURCES = [
@@ -15,7 +36,11 @@ const PAGE_SOURCES = [
   {name:"PHILSTAR", url:"https://r.jina.ai/https://www.philstar.com/headlines", kind:"philstar"}
 ];
 
-const GDELT_URL = "https://api.gdeltproject.org/api/v2/doc/doc?query=Philippines&mode=ArtList&maxrecords=75&format=json&sort=datedesc&timespan=1d";
+const TRUSTED_DOMAINS = [
+  "gmanetwork.com","philstar.com","inquirer.net","abs-cbn.com","pna.gov.ph","manilabulletin.com.ph","mb.com.ph",
+  "rappler.com","bworldonline.com","news.tv5.com.ph","tv5.com.ph","onenews.ph","businessmirror.com.ph",
+  "sunstar.com.ph","mindanews.com","manilatimes.net","reuters.com","apnews.com"
+];
 
 const TRUSTED = [
   "GMA News Online","GMA News","INQUIRER.net","Philippine Daily Inquirer","Philstar.com","The Philippine Star",
@@ -110,6 +135,31 @@ function trusted(s){
   const x=plain(s).toLowerCase();
   return TRUSTED.some(v=>x.includes(v.toLowerCase()));
 }
+function sourceFromDomain(domain){
+  const d=String(domain||"").toLowerCase().replace(/^www\./,"");
+  if(/cebudailynews\.inquirer\.net$/.test(d))return"CEBU DAILY NEWS";
+  if(/gmanetwork\.com$/.test(d))return"GMA NEWS";
+  if(/philstar\.com$/.test(d))return"PHILSTAR";
+  if(/inquirer\.net$/.test(d))return"INQUIRER";
+  if(/abs-cbn\.com$/.test(d))return"ABS-CBN";
+  if(/pna\.gov\.ph$/.test(d))return"PNA";
+  if(/manilabulletin\.com\.ph$|mb\.com\.ph$/.test(d))return"MANILA BULLETIN";
+  if(/rappler\.com$/.test(d))return"RAPPLER";
+  if(/bworldonline\.com$/.test(d))return"BUSINESSWORLD";
+  if(/news\.tv5\.com\.ph$|tv5\.com\.ph$/.test(d))return"NEWS5";
+  if(/onenews\.ph$/.test(d))return"ONE NEWS";
+  if(/businessmirror\.com\.ph$/.test(d))return"BUSINESSMIRROR";
+  if(/sunstar\.com\.ph$/.test(d))return"SUNSTAR";
+  if(/mindanews\.com$/.test(d))return"MINDANEWS";
+  if(/manilatimes\.net$/.test(d))return"MANILA TIMES";
+  if(/reuters\.com$/.test(d))return"REUTERS";
+  if(/apnews\.com$/.test(d))return"AP";
+  return"";
+}
+function trustedDomain(domain){
+  const d=String(domain||"").toLowerCase().replace(/^www\./,"");
+  return TRUSTED_DOMAINS.some(x=>d===x||d.endsWith("."+x));
+}
 function stripSource(title,source){
   let t=cleanTitle(title);
   const s=plain(source);
@@ -202,6 +252,55 @@ function parseGoogleRss(xml){
     const h=stripSource(title,source);
     const obj=makeItem(h,sourceLabel(source),plain(link),Date.parse(plain(pub))||0,desc);
     if(obj)out.push(obj);
+  }
+  return out;
+}
+
+function rssImage(block,description){
+  const src=String(block||"")+"\n"+String(description||"");
+  const patterns=[
+    /<media:content[^>]+url=["']([^"']+)["']/i,
+    /<media:thumbnail[^>]+url=["']([^"']+)["']/i,
+    /<enclosure[^>]+url=["']([^"']+)["'][^>]*type=["']image\//i,
+    /<img[^>]+src=["']([^"']+)["']/i
+  ];
+  for(const re of patterns){
+    const m=src.match(re);
+    if(m&&/^https?:\/\//i.test(decode(m[1])))return decode(m[1]);
+  }
+  return"";
+}
+function parseGenericRss(xml,sourceHint){
+  const out=[];
+  const src=String(xml||"");
+  const blocks=[
+    ...(src.match(/<item>[\s\S]*?<\/item>/gi)||[]),
+    ...(src.match(/<entry>[\s\S]*?<\/entry>/gi)||[])
+  ];
+  for(const block of blocks){
+    const title=(block.match(/<title(?:\s[^>]*)?>([\s\S]*?)<\/title>/i)||[])[1]||"";
+    let link=(block.match(/<link>([\s\S]*?)<\/link>/i)||[])[1]||"";
+    if(!link){
+      const lm=block.match(/<link[^>]+href=["']([^"']+)["']/i);
+      if(lm)link=lm[1];
+    }
+    if(!link){
+      const gm=block.match(/<guid[^>]*>([\s\S]*?)<\/guid>/i);
+      if(gm)link=gm[1];
+    }
+    const pub=(block.match(/<pubDate>([\s\S]*?)<\/pubDate>/i)||[])[1]
+      ||(block.match(/<published>([\s\S]*?)<\/published>/i)||[])[1]
+      ||(block.match(/<updated>([\s\S]*?)<\/updated>/i)||[])[1]
+      ||(block.match(/<dc:date>([\s\S]*?)<\/dc:date>/i)||[])[1]||"";
+    const desc=(block.match(/<description>([\s\S]*?)<\/description>/i)||[])[1]
+      ||(block.match(/<content:encoded>([\s\S]*?)<\/content:encoded>/i)||[])[1]
+      ||(block.match(/<summary>([\s\S]*?)<\/summary>/i)||[])[1]||"";
+    const h=cleanTitle(title);
+    const url=normalizeUrl(plain(link));
+    const ts=Date.parse(plain(pub))||0;
+    if(!h||!url||!ts)continue;
+    const obj=makeItem(h,sourceHint,url,ts,desc,rssImage(block,desc));
+    if(obj&&philippinesRelevant(obj.headline))out.push(obj);
   }
   return out;
 }
@@ -312,10 +411,11 @@ function parseGdeltJson(text){
   for(const a of arr){
     const title=cleanTitle(a&&a.title);
     const url=normalizeUrl(a&&a.url);
-    const domain=String(a&&a.domain||"").toLowerCase();
+    let domain=String(a&&a.domain||"").toLowerCase();
+    if(!domain&&url){try{domain=new URL(url).hostname}catch(_){}}
     const country=String(a&&a.sourcecountry||"").toLowerCase();
-    if(!title||!url||excluded(title))continue;
-    if(!/philippines|manila|filipino|duterte|marcos|pagasa|phivolcs|senate|pnp|bsp|peso|cebu|davao/i.test(title) && country!=="philippines")continue;
+    if(!title||!url||excluded(title)||!trustedDomain(domain))continue;
+    if(!philippinesRelevant(title)&&country!=="philippines")continue;
     let raw=String(a&&a.seendate||"");
     let ts=Date.parse(raw);
     if(!Number.isFinite(ts)){
@@ -323,19 +423,14 @@ function parseGdeltJson(text){
       if(m)ts=Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]);
     }
     if(!Number.isFinite(ts)||!ts)continue;
-    let src=domain?domain.replace(/^www\./,"").toUpperCase():"GDELT";
-    if(/gmanetwork/.test(domain))src="GMA NEWS";
-    else if(/philstar/.test(domain))src="PHILSTAR";
-    else if(/inquirer/.test(domain))src="INQUIRER";
-    else if(/abs-cbn/.test(domain))src="ABS-CBN";
-    else if(/pna\.gov\.ph/.test(domain))src="PNA";
-    else if(/manilabulletin/.test(domain))src="MANILA BULLETIN";
-    else if(/rappler/.test(domain))src="RAPPLER";
-    const obj=makeItem(title,src,url,ts,"",normalizeUrl(a&&a.socialimage));
+    const source=sourceFromDomain(domain);
+    if(!source)continue;
+    const obj=makeItem(title,source,url,ts,"",normalizeUrl(a&&a.socialimage));
     if(obj)out.push(obj);
   }
   return out;
 }
+
 function resolveImage(raw,base){
   let u=decode(String(raw||"").trim());
   if(!u)return "";
@@ -408,10 +503,10 @@ function dedupe(items){
     const short=key.split(" ").slice(0,11).join(" ");
     if(!key||seen.has(key)||seen.has(short)||(x.url&&seenUrls.has(x.url)))continue;
     const n=perSource.get(x.source)||0;
-    if(n>=25)continue;
+    if(n>=8)continue;
     seen.add(key);seen.add(short);if(x.url)seenUrls.add(x.url);perSource.set(x.source,n+1);
     out.push(x);
-    if(out.length>=70)break;
+    if(out.length>=80)break;
   }
   return out;
 }
@@ -420,13 +515,16 @@ async function collect(){
   const diagnostics=[];
   let items=[];
 
-  // Fast path: these two direct publisher pages are the sources that are
-  // actually succeeding from Cloudflare. Do not make the user wait for
-  // rate-limited Google/GDELT/Jina requests before returning headlines.
   const primary=PAGE_SOURCES.filter(s=>s.kind==="gmahtml"||s.kind==="philstarhtml");
-  const primarySettled=await Promise.allSettled(primary.map(s=>fetchText(s.url,4500)));
-  primarySettled.forEach((r,i)=>{
-    const job=primary[i];
+  const firstWave=[
+    ...primary.map(s=>({...s,timeout:3200})),
+    ...RSS_SOURCES.map(s=>({kind:"rssdirect",name:s.name,url:s.url,timeout:2200})),
+    ...GDELT_FEEDS.map(s=>({kind:"gdelt",name:s.name,url:s.url,timeout:2800}))
+  ];
+
+  const settled=await Promise.allSettled(firstWave.map(j=>fetchText(j.url,j.timeout)));
+  settled.forEach((r,i)=>{
+    const job=firstWave[i];
     if(r.status!=="fulfilled"){
       diagnostics.push({name:job.name,ok:false,error:String(r.reason||"fetch failed")});
       return;
@@ -435,6 +533,8 @@ async function collect(){
     try{
       if(job.kind==="gmahtml")parsed=parseDirectHtml(r.value,"GMA NEWS","gmanetwork.com").filter(x=>philippinesRelevant(x.headline));
       else if(job.kind==="philstarhtml")parsed=parsePhilstarDirectHtml(r.value);
+      else if(job.kind==="rssdirect")parsed=parseGenericRss(r.value,job.name);
+      else if(job.kind==="gdelt")parsed=parseGdeltJson(r.value);
       diagnostics.push({name:job.name,ok:true,items:parsed.length});
       items.push(...parsed);
     }catch(e){
@@ -442,46 +542,54 @@ async function collect(){
     }
   });
 
-  items=dedupe(items);
-  const freshPrimary=items.filter(isFresh3h);
-  if(items.length>=3&&freshPrimary.length>=6){
-    return {items,diagnostics,feedCount:primary.length,fastPath:true,fresh3h:freshPrimary.length};
+  let combined=dedupe(items);
+  let fresh=combined.filter(isFresh3h);
+  let sourceCount=new Set(fresh.map(x=>x.source)).size;
+
+  // Emergency fallback only if breadth or volume is still thin.
+  if(fresh.length<14||sourceCount<4){
+    const fallbacks=[
+      ...GOOGLE_FEEDS.map((url,i)=>({kind:"rss",name:"GOOGLE PH "+(i+1),url,timeout:1800})),
+      ...PAGE_SOURCES.filter(s=>s.kind==="gma"||s.kind==="philstar").map(s=>({...s,timeout:1800}))
+    ];
+    const second=await Promise.allSettled(fallbacks.map(j=>fetchText(j.url,j.timeout)));
+    second.forEach((r,i)=>{
+      const job=fallbacks[i];
+      if(r.status!=="fulfilled"){
+        diagnostics.push({name:job.name,ok:false,error:String(r.reason||"fetch failed")});
+        return;
+      }
+      let parsed=[];
+      try{
+        if(job.kind==="rss")parsed=parseGoogleRss(r.value);
+        else if(job.kind==="gma")parsed=parseGmaJina(r.value).filter(x=>philippinesRelevant(x.headline));
+        else if(job.kind==="philstar")parsed=parsePhilstarJina(r.value);
+        diagnostics.push({name:job.name,ok:true,items:parsed.length});
+        items.push(...parsed);
+      }catch(e){
+        diagnostics.push({name:job.name,ok:false,error:"parse: "+String(e)});
+      }
+    });
+    combined=dedupe(items);
+    fresh=combined.filter(isFresh3h);
+    sourceCount=new Set(fresh.map(x=>x.source)).size;
   }
 
-  // Fallback path is only used when both direct publisher pages are weak/down.
-  const fallbacks=[
-    {kind:"gdelt",name:"GDELT",url:GDELT_URL},
-    ...GOOGLE_FEEDS.map(url=>({kind:"rss",name:"Google News",url})),
-    ...PAGE_SOURCES.filter(s=>s.kind==="gma"||s.kind==="philstar")
-  ];
-  const settled=await Promise.allSettled(fallbacks.map(j=>fetchText(j.url,4000)));
-  settled.forEach((r,i)=>{
-    const job=fallbacks[i];
-    if(r.status!=="fulfilled"){
-      diagnostics.push({name:job.name,ok:false,error:String(r.reason||"fetch failed")});
-      return;
-    }
-    let parsed=[];
-    try{
-      if(job.kind==="gdelt")parsed=parseGdeltJson(r.value);
-      else if(job.kind==="rss")parsed=parseGoogleRss(r.value);
-      else if(job.kind==="gma")parsed=parseGmaJina(r.value).filter(x=>philippinesRelevant(x.headline));
-      else if(job.kind==="philstar")parsed=parsePhilstarJina(r.value);
-      diagnostics.push({name:job.name,ok:true,items:parsed.length});
-      items.push(...parsed);
-    }catch(e){
-      diagnostics.push({name:job.name,ok:false,error:"parse: "+String(e)});
-    }
-  });
-  const combined=dedupe(items);
-  return {items:combined,diagnostics,feedCount:primary.length+fallbacks.length,fastPath:false,fresh3h:combined.filter(isFresh3h).length};
+  return {
+    items:combined,
+    diagnostics,
+    feedCount:firstWave.length,
+    fastPath:false,
+    fresh3h:fresh.length,
+    sourceCount
+  };
 }
 
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v12");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v11");
+  const freshKey=new Request(origin+"/api/news-cache-v13");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v12");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
@@ -497,7 +605,7 @@ export async function onRequestGet(context){
       live:true,
       stale:false,
       source:"MX Rapid Feed",
-      method:result.fastPath?"Direct Philippine sources":"Direct Philippine sources + emergency fallbacks",
+      method:"Curated multi-source Philippine newsroom",
       checked_at:new Date().toISOString(),
       feed_count:result.feedCount||2,
       feeds_ok:result.diagnostics.filter(x=>x.ok).length,
