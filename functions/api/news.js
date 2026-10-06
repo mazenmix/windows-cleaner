@@ -1,21 +1,62 @@
-const TTL=15;
-const LAST_GOOD_TTL=21600;
+const FRESH_TTL = 15;
+const LAST_GOOD_TTL = 21600;
 
-const FEEDS=[
-  {name:"PH Top",url:"https://news.google.com/rss?hl=en-PH&gl=PH&ceid=PH:en"},
-  {name:"PH Breaking",url:"https://news.google.com/rss/search?q=Philippines%20breaking%20when%3A1d&hl=en-PH&gl=PH&ceid=PH%3Aen"},
-  {name:"Metro Manila",url:"https://news.google.com/rss/search?q=%22Metro%20Manila%22%20when%3A1d&hl=en-PH&gl=PH&ceid=PH%3Aen"},
-  {name:"Weather & Disasters",url:"https://news.google.com/rss/search?q=Philippines%20(PAGASA%20OR%20PHIVOLCS%20OR%20typhoon%20OR%20earthquake%20OR%20flood)%20when%3A1d&hl=en-PH&gl=PH&ceid=PH%3Aen"},
-  {name:"Nation & Government",url:"https://news.google.com/rss/search?q=Philippines%20(government%20OR%20senate%20OR%20president%20OR%20DOTr%20OR%20MMDA)%20when%3A1d&hl=en-PH&gl=PH&ceid=PH%3Aen"},
-  {name:"Business & Transport",url:"https://news.google.com/rss/search?q=Philippines%20(business%20OR%20economy%20OR%20fuel%20OR%20transport%20OR%20traffic)%20when%3A1d&hl=en-PH&gl=PH&ceid=PH%3Aen"}
+const GOOGLE_FEEDS = [
+  "https://news.google.com/rss?hl=en-PH&gl=PH&ceid=PH:en",
+  "https://news.google.com/rss/search?q=Philippines%20breaking%20when%3A1d&hl=en-PH&gl=PH&ceid=PH%3Aen",
+  "https://news.google.com/rss/search?q=Philippines%20(PAGASA%20OR%20PHIVOLCS%20OR%20weather%20OR%20earthquake)%20when%3A1d&hl=en-PH&gl=PH&ceid=PH%3Aen"
 ];
 
-const TRUSTED=[
+const PAGE_SOURCES = [
+  {name:"GMA NEWS", url:"https://r.jina.ai/https://www.gmanetwork.com/news/", kind:"gma"},
+  {name:"PHILSTAR", url:"https://r.jina.ai/https://www.philstar.com/headlines", kind:"philstar"}
+];
+
+const TRUSTED = [
   "GMA News Online","GMA News","INQUIRER.net","Philippine Daily Inquirer","Philstar.com","The Philippine Star",
   "ABS-CBN","ABS-CBN News","Philippine News Agency","PNA","Manila Bulletin","Rappler","Reuters",
   "BusinessWorld Online","BusinessWorld","The Manila Times","News5","One News","BusinessMirror","SunStar",
-  "Cebu Daily News","MindaNews","DZRH","PTV","CNN","Associated Press","AP News","Agence France-Presse","AFP"
+  "Cebu Daily News","MindaNews","DZRH","PTV","Associated Press","AP News","Agence France-Presse","AFP"
 ];
+
+function response(data,status=200,ttl=FRESH_TTL){
+  return new Response(JSON.stringify(data),{
+    status,
+    headers:{
+      "content-type":"application/json; charset=utf-8",
+      "cache-control":"public, max-age=3, s-maxage="+ttl+", stale-while-revalidate=15",
+      "access-control-allow-origin":"*"
+    }
+  });
+}
+
+async function fetchText(url,timeout=10000){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),timeout);
+  try{
+    const isJina=/^https:\/\/r\.jina\.ai\//i.test(url);
+    const headers={
+      "user-agent":"Mozilla/5.0 (compatible; MXRapidFeed/3.0; +https://mxfuel.pages.dev/)",
+      "accept":isJina?"text/plain,text/markdown,*/*":"application/rss+xml,application/xml,text/xml,text/html,*/*",
+      "cache-control":"no-cache, no-store",
+      "pragma":"no-cache"
+    };
+    if(isJina){
+      headers["x-no-cache"]="true";
+      headers["x-cache-tolerance"]="0";
+      headers["x-timeout"]="10";
+    }
+    const r=await fetch(url,{
+      headers,
+      signal:controller.signal,
+      cf:{cacheTtl:0,cacheEverything:false}
+    });
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    return await r.text();
+  }finally{
+    clearTimeout(timer);
+  }
+}
 
 function decode(s){
   return String(s||"")
@@ -26,7 +67,15 @@ function decode(s){
     .replace(/&#(\d+);/g,(_,n)=>String.fromCharCode(Number(n)))
     .trim();
 }
-function plain(s){return decode(s).replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim()}
+function plain(s){
+  return decode(s).replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+}
+function cleanTitle(s){
+  return plain(s)
+    .replace(/^LIVE\s*[:\-]?\s*/i,"LIVE: ")
+    .replace(/\s+/g," ")
+    .trim();
+}
 function sourceLabel(s){
   const x=plain(s);
   if(/gma/i.test(x))return"GMA NEWS";
@@ -46,7 +95,6 @@ function sourceLabel(s){
   if(/cebu daily/i.test(x))return"CEBU DAILY NEWS";
   if(/mindanews/i.test(x))return"MINDANEWS";
   if(/dzrh/i.test(x))return"DZRH";
-  if(/^ptv|people.?s television/i.test(x))return"PTV";
   if(/associated press|ap news/i.test(x))return"AP";
   if(/agence france|\bafp\b/i.test(x))return"AFP";
   return x.toUpperCase();
@@ -56,7 +104,7 @@ function trusted(s){
   return TRUSTED.some(v=>x.includes(v.toLowerCase()));
 }
 function stripSource(title,source){
-  let t=plain(title);
+  let t=cleanTitle(title);
   const s=plain(source);
   if(s){
     const safe=s.replace(/[.*+?^$()|[\]\\]/g,"\\$&");
@@ -64,148 +112,242 @@ function stripSource(title,source){
   }
   return t.trim();
 }
-function tag(block,name){
-  const m=block.match(new RegExp("<"+name+"(?:\\s[^>]*)?>([\\s\\S]*?)<\\/"+name+">","i"));
-  return m?m[1]:"";
-}
-function imageFrom(block,description){
-  const tests=[
-    /<media:content[^>]+url=["']([^"']+)["']/i,
-    /<media:thumbnail[^>]+url=["']([^"']+)["']/i,
-    /<enclosure[^>]+url=["']([^"']+)["'][^>]+type=["']image\//i,
-    /<img[^>]+src=["']([^"']+)["']/i
-  ];
-  for(const r of tests){
-    const m=block.match(r)||String(description||"").match(r);
-    if(m&&/^https?:\/\//i.test(decode(m[1])))return decode(m[1]);
-  }
-  return "";
-}
 function categoryFor(title){
-  const t=title.toLowerCase();
+  const t=String(title||"").toLowerCase();
   if(/earthquake|quake|phivolcs|tremor|aftershock/.test(t))return"Earthquake";
-  if(/pagasa|typhoon|bagyo|storm|rain|flood|weather|heat index|monsoon|itcz|landslide/.test(t))return"Weather";
+  if(/pagasa|typhoon|bagyo|storm|rain|flood|weather|heat index|monsoon|itcz|landslide|el niño|la niña/.test(t))return"Weather";
   if(/pnp|police|arrest|robber|robbery|shooting|murder|killed|crime|drug bust|kidnap/.test(t))return"Crime";
   if(/lrt|mrt|mmda|traffic|transport|airport|flight|airline|road|bus|jeep|train|nlex|slex/.test(t))return"Transport";
   if(/peso|inflation|economy|business|stock|market|bank|fuel price|oil price|interest rate|bsp|trade/.test(t))return"Business";
-  if(/senate|senator|house|congress|president|marcos|duterte|malacañang|election|impeach|government|palace/.test(t))return"Politics";
+  if(/senate|senator|house|congress|president|marcos|duterte|malacañang|election|impeach|government|palace|amla|amlc/.test(t))return"Politics";
   if(/tourism|travel|tourist|resort|beach|destination/.test(t))return"Travel";
-  if(/basketball|pba|gilas|volleyball|football|boxing|sports|athlete|fiba|uaap|ncaa/.test(t))return"Sports";
-  if(/technology|cyber|digital|ai\b|internet|telecom|smartphone|software|data breach/.test(t))return"Technology";
+  if(/basketball|pba|gilas|volleyball|football|boxing|sports|athlete|fiba|uaap|ncaa|nba/.test(t))return"Sports";
+  if(/technology|cyber|digital|\bai\b|internet|telecom|smartphone|software|data breach/.test(t))return"Technology";
   if(/doh|health|hospital|disease|vaccine|virus|medical|medicine/.test(t))return"Health";
   return"Nation";
 }
-function isBreaking(title,ts){
-  const age=Date.now()-ts;
-  if(age>=0&&age<=10*60*1000)return true;
-  return age>=0&&age<=45*60*1000&&/earthquake|quake|typhoon|storm surge|flood|fire|explosion|shooting|emergency|evacuat|landslide|crash|suspend|alert|hostage/i.test(title);
+function excluded(title){
+  return /celebrity|actor|actress|movie|series|fashion|beauty|recipe|concert|k-pop|showbiz|horoscope|lotto/i.test(title);
 }
-function parse(xml){
+function isBreaking(title,ts){
+  const age=Date.now()-Number(ts||0);
+  if(age>=0&&age<=10*60*1000)return true;
+  return age>=0&&age<=45*60*1000&&/earthquake|quake|typhoon|storm surge|flood|fire|explosion|shooting|emergency|evacuat|landslide|crash|suspend|alert|hostage|inflation|amla|amlc/i.test(title);
+}
+function relativeToTs(raw){
+  const s=String(raw||"").toLowerCase().trim();
+  if(!s)return 0;
+  if(/just now|moments? ago/.test(s))return Date.now();
+  let m=s.match(/(\d+)\s*(?:s|sec|secs|second|seconds)\s*ago/);
+  if(m)return Date.now()-Number(m[1])*1000;
+  m=s.match(/(\d+)\s*(?:m|min|mins|minute|minutes)\s*ago/);
+  if(m)return Date.now()-Number(m[1])*60000;
+  m=s.match(/(\d+)\s*(?:h|hr|hrs|hour|hours)\s*ago/);
+  if(m)return Date.now()-Number(m[1])*3600000;
+  m=s.match(/(\d+)\s*(?:d|day|days)\s*ago/);
+  if(m)return Date.now()-Number(m[1])*86400000;
+  return 0;
+}
+function normalizeUrl(url){
+  const s=decode(url);
+  return /^https?:\/\//i.test(s)?s:"";
+}
+function makeItem(headline,source,url,ts,summary="",image=""){
+  const h=cleanTitle(headline);
+  const when=Number(ts||0);
+  if(!h||h.length<18||!when||Date.now()-when>48*3600000||excluded(h))return null;
+  return {
+    headline:h,
+    source,
+    source_full:source,
+    url:normalizeUrl(url),
+    published_at:new Date(when).toISOString(),
+    ts:when,
+    category:categoryFor(h),
+    breaking:isBreaking(h,when),
+    image:image||"",
+    summary:plain(summary).slice(0,260),
+    trusted_source:true
+  };
+}
+
+function parseGoogleRss(xml){
   const out=[];
   const blocks=String(xml||"").match(/<item>[\s\S]*?<\/item>/gi)||[];
   for(const item of blocks){
-    const titleRaw=tag(item,"title");
-    const linkRaw=tag(item,"link");
-    const pubRaw=tag(item,"pubDate")||tag(item,"dc:date");
-    const descRaw=tag(item,"description");
+    const title=(item.match(/<title>([\s\S]*?)<\/title>/i)||[])[1]||"";
+    const link=(item.match(/<link>([\s\S]*?)<\/link>/i)||[])[1]||"";
+    const pub=(item.match(/<pubDate>([\s\S]*?)<\/pubDate>/i)||[])[1]||"";
+    const desc=(item.match(/<description>([\s\S]*?)<\/description>/i)||[])[1]||"";
     const sm=item.match(/<source(?:\s+url=["'][^"']*["'])?>([\s\S]*?)<\/source>/i);
     const source=sm?plain(sm[1]):"";
-    if(!titleRaw||!linkRaw||!source)continue;
-    const headline=stripSource(titleRaw,source);
-    if(headline.length<18)continue;
-    if(/celebrity|actor|actress|movie|series|fashion|beauty|recipe|concert|k-pop|showbiz/i.test(headline))continue;
-    const ts=Date.parse(plain(pubRaw))||0;
-    if(!ts||Date.now()-ts>36*60*60*1000)continue;
-    const description=plain(descRaw).replace(/\s+-\s+[^-]{2,80}$/,"").slice(0,260);
-    out.push({
-      headline,
-      source:sourceLabel(source),
-      source_full:source,
-      url:plain(linkRaw),
-      published_at:new Date(ts).toISOString(),
-      ts,
-      category:categoryFor(headline),
-      breaking:isBreaking(headline,ts),
-      image:imageFrom(item,descRaw),
-      summary:description&&description.toLowerCase()!==headline.toLowerCase()?description:"",
-      trusted_source:trusted(source)
-    });
+    if(!title||!link||!source||!trusted(source))continue;
+    const h=stripSource(title,source);
+    const obj=makeItem(h,sourceLabel(source),plain(link),Date.parse(plain(pub))||0,desc);
+    if(obj)out.push(obj);
   }
   return out;
 }
-async function get(url){
-  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),7000);
-  try{
-    const r=await fetch(url,{headers:{
-      "user-agent":"Mozilla/5.0 (compatible; MXRapidFeed/2.0; +https://mxfuel.pages.dev/)",
-      "accept":"application/rss+xml,application/xml,text/xml,*/*"
-    },signal:ctrl.signal,cf:{cacheTtl:0,cacheEverything:false}});
-    if(!r.ok)throw new Error("HTTP "+r.status);
-    return await r.text();
-  }finally{clearTimeout(timer)}
+
+function markdownLinks(text){
+  const out=[];
+  const re=/\[([^\]\n]{8,300})\]\((https?:\/\/[^\s)]+)\)/g;
+  let m;
+  while((m=re.exec(String(text||"")))){
+    out.push({title:cleanTitle(m[1]),url:m[2],index:m.index,end:re.lastIndex});
+  }
+  return out;
 }
+function nearbyAge(text,start,end){
+  const src=String(text||"");
+  const before=src.slice(Math.max(0,start-160),start);
+  const after=src.slice(end,Math.min(src.length,end+120));
+  const patterns=[
+    /(?:just now|moments? ago|\d+\s*(?:s|sec|secs|seconds?|m|min|mins|minutes?|h|hr|hrs|hours?|d|days?)\s*ago)/ig
+  ];
+  let best="";
+  for(const p of patterns){
+    const a=[...before.matchAll(p)];if(a.length)best=a[a.length-1][0];
+    if(!best){const b=after.match(p);if(b)best=b[0]}
+  }
+  return best;
+}
+function validNewsLink(title,url,domain){
+  if(!title||title.length<18||title.length>260)return false;
+  if(!url.includes(domain))return false;
+  if(/home|headlines|news$|showbiz|lifestyle|privacy|contact|advertise|subscribe|see more|image|facebook|instagram|youtube|rss feed/i.test(title))return false;
+  if(/\/news\/(?:$|index|rss)/i.test(url))return false;
+  return !excluded(title);
+}
+function parseJinaPage(text,source,domain){
+  const out=[];
+  for(const l of markdownLinks(text)){
+    if(!validNewsLink(l.title,l.url,domain))continue;
+    const age=nearbyAge(text,l.index,l.end);
+    const ts=relativeToTs(age);
+    if(!ts)continue;
+    const obj=makeItem(l.title,source,l.url,ts,"");
+    if(obj)out.push(obj);
+  }
+  return out;
+}
+function parseGmaJina(text){
+  const src=String(text||"");
+  const just=src.match(/(?:##\s*Just In|Just In)([\s\S]{0,7000}?)(?:##\s*Top News|SEE MORE ARTICLES|Top News)/i);
+  const section=just?just[1]:src.slice(0,14000);
+  return parseJinaPage(section,"GMA NEWS","gmanetwork.com");
+}
+function parsePhilstarJina(text){
+  const src=String(text||"");
+  const marker=src.search(/#{1,4}\s*Headlines/i);
+  const section=marker>=0?src.slice(marker,marker+16000):src.slice(0,18000);
+  return parseJinaPage(section,"PHILSTAR","philstar.com");
+}
+
 function dedupe(items){
-  const seen=new Set(),perSource=new Map(),out=[];
+  const seen=new Set(),out=[],perSource=new Map();
   items.sort((a,b)=>b.ts-a.ts);
   for(const x of items){
     const key=x.headline.toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
-    const short=key.split(" ").slice(0,10).join(" ");
-    if(seen.has(key)||seen.has(short))continue;
+    const short=key.split(" ").slice(0,11).join(" ");
+    if(!key||seen.has(key)||seen.has(short))continue;
     const n=perSource.get(x.source)||0;
-    if(n>=10)continue;
-    seen.add(key);seen.add(short);perSource.set(x.source,n+1);out.push(x);
-    if(out.length>=60)break;
+    if(n>=25)continue;
+    seen.add(key);seen.add(short);perSource.set(x.source,n+1);
+    out.push(x);
+    if(out.length>=70)break;
   }
   return out;
 }
-function response(data,status=200,ttl=TTL){
-  return new Response(JSON.stringify(data),{status,headers:{
-    "content-type":"application/json; charset=utf-8",
-    "cache-control":"public, max-age=5, s-maxage="+ttl+", stale-while-revalidate=15",
-    "access-control-allow-origin":"*"
-  }});
+
+async function collect(){
+  const jobs=[];
+  for(const u of GOOGLE_FEEDS)jobs.push({kind:"rss",name:"Google News",url:u,p:fetchText(u)});
+  for(const s of PAGE_SOURCES)jobs.push({...s,p:fetchText(s.url)});
+  const settled=await Promise.allSettled(jobs.map(j=>j.p));
+  let items=[];
+  const diagnostics=[];
+  settled.forEach((r,i)=>{
+    const job=jobs[i];
+    if(r.status!=="fulfilled"){
+      diagnostics.push({name:job.name||job.kind,ok:false,error:String(r.reason||"fetch failed")});
+      return;
+    }
+    let parsed=[];
+    try{
+      if(job.kind==="rss")parsed=parseGoogleRss(r.value);
+      else if(job.kind==="gma")parsed=parseGmaJina(r.value);
+      else if(job.kind==="philstar")parsed=parsePhilstarJina(r.value);
+    }catch(e){
+      diagnostics.push({name:job.name||job.kind,ok:false,error:"parse: "+String(e)});
+      return;
+    }
+    diagnostics.push({name:job.name||job.kind,ok:true,items:parsed.length});
+    items.push(...parsed);
+  });
+  return {items:dedupe(items),diagnostics};
 }
+
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v3");
-  const lkgKey=new Request(origin+"/api/news-last-good-v2");
-  const hit=await cache.match(freshKey);
-  if(hit)return hit;
+  const freshKey=new Request(origin+"/api/news-cache-v4");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v3");
+
+  const cached=await cache.match(freshKey);
+  if(cached)return cached;
+
   try{
-    const results=await Promise.allSettled(FEEDS.map(f=>get(f.url)));
-    let items=[],feedOk=0;
-    results.forEach((r,i)=>{
-      if(r.status==="fulfilled"){feedOk++;items.push(...parse(r.value))}
-    });
-    items=dedupe(items);
-    if(items.length<3)throw new Error("Not enough fresh headlines");
+    const result=await collect();
+    const items=result.items;
+    if(items.length<3)throw Object.assign(new Error("Not enough fresh headlines"),{diagnostics:result.diagnostics});
+
     const sources=[...new Set(items.map(x=>x.source))];
     const data={
-      ok:true,live:true,stale:false,
+      ok:true,
+      live:true,
+      stale:false,
       source:"MX Rapid Feed",
-      method:"multi-feed aggregation",
+      method:"direct Philippine sources + RSS fallback",
       checked_at:new Date().toISOString(),
-      feed_count:FEEDS.length,
-      feeds_ok:feedOk,
+      feed_count:GOOGLE_FEEDS.length+PAGE_SOURCES.length,
+      feeds_ok:result.diagnostics.filter(x=>x.ok).length,
       source_count:sources.length,
       sources,
+      diagnostics:result.diagnostics,
       items
     };
-    const out=response(data);
+
+    const out=response(data,200,FRESH_TTL);
     const keep=response(data,200,LAST_GOOD_TTL);
-    context.waitUntil(Promise.all([cache.put(freshKey,out.clone()),cache.put(lkgKey,keep.clone())]));
+    context.waitUntil(Promise.all([
+      cache.put(freshKey,out.clone()),
+      cache.put(lastGoodKey,keep.clone())
+    ]));
     return out;
   }catch(e){
-    const last=await cache.match(lkgKey);
+    const last=await cache.match(lastGoodKey);
     if(last){
       try{
         const j=await last.clone().json();
         if(j&&Array.isArray(j.items)&&j.items.length){
-          return response({...j,ok:true,live:false,stale:true,last_verified:true,checked_at:new Date().toISOString(),note:"Sources temporarily unavailable — showing the last verified feed.",error:String(e)},200,15);
+          return response({
+            ...j,
+            ok:true,live:false,stale:true,last_verified:true,
+            checked_at:new Date().toISOString(),
+            note:"Live sources are retrying — showing the last verified headlines.",
+            error:String(e),
+            diagnostics:e&&e.diagnostics?e.diagnostics:j.diagnostics
+          },200,15);
         }
-      }catch{}
+      }catch(_){}
     }
-    return response({ok:false,live:false,stale:true,error:String(e),checked_at:new Date().toISOString(),items:[]},502,10);
+    return response({
+      ok:false,live:false,stale:true,
+      error:String(e),
+      diagnostics:e&&e.diagnostics?e.diagnostics:[],
+      checked_at:new Date().toISOString(),
+      items:[]
+    },502,5);
   }
 }
