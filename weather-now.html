@@ -270,7 +270,7 @@ function renderHero(d){
  const c=d.forecast.current||{},info=weatherInfo(c.weather_code,c.is_day!==0);
  const vis=d.forecast.hourly?.visibility?.[0];
  hero.innerHTML='<div class="hero-grid"><div class="weather-main-pane"><div class="location-line"><span class="location-name">📍 '+esc(state.name)+'</span><span class="updated">Updated '+fmtTime(d.checked_at)+'</span></div>'+
- '<div class="current-main"><div class="weather-glyph">'+info[1]+'</div><div><div class="temp">'+n(c.temperature_2m,0)+'<sup>°C</sup></div><div class="condition">'+esc(info[0])+'</div><div class="feels">Feels like '+n(c.apparent_temperature,0)+'°C • '+(c.precipitation>0?n(c.precipitation,1)+' mm precipitation':'No measurable precipitation now')+'</div></div></div>'+'<div class="mx-eq-mini" id="mxEqMini"><div class="mx-eq-mini-head"><span class="mx-eq-mini-dot"></span><span>LIVE EARTHQUAKES</span><small id="mxEqMiniStatus">PHILIPPINES • M3+</small></div><div class="mx-eq-mini-list" id="mxEqMiniList"><div class="mx-eq-mini-loading">Loading Philippines M3.0+ earthquakes…</div></div></div>'+
+ '<div class="current-main"><div class="weather-glyph">'+info[1]+'</div><div><div class="temp">'+n(c.temperature_2m,0)+'<sup>°C</sup></div><div class="condition">'+esc(info[0])+'</div><div class="feels">Feels like '+n(c.apparent_temperature,0)+'°C • '+(c.precipitation>0?n(c.precipitation,1)+' mm precipitation':'No measurable precipitation now')+'</div></div></div>'+'<div class="mx-eq-mini" id="mxEqMini"><div class="mx-eq-mini-head"><span class="mx-eq-mini-dot"></span><span>LIVE EARTHQUAKES</span><small id="mxEqMiniStatus">PHILIPPINES • M3+</small></div><div class="mx-eq-mini-list" id="mxEqMiniList"><div class="mx-eq-mini-loading">Loading Philippines-only M3.0+ earthquakes…</div></div></div>'+
  '<div class="metrics">'+
  '<div class="metric"><label>Humidity</label><b>'+n(c.relative_humidity_2m)+'%</b><small>Dew / moisture</small></div>'+
  '<div class="metric"><label>Wind</label><b>'+n(c.wind_speed_10m)+' km/h</b><small>'+compass(c.wind_direction_10m)+' • gust '+n(c.wind_gusts_10m)+' km/h</small></div>'+
@@ -401,7 +401,7 @@ setInterval(()=>loadWeather(false),60000);
 </script>
 
 <script id="mxEarthquakeMiniScript">(function(){
- const CACHE="mxEarthquakeMiniV2";
+ const CACHE="mxEarthquakeMiniV3";
  let events=[],lastChecked=null;
 
  function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
@@ -418,12 +418,21 @@ setInterval(()=>loadWeather(false),60000);
    if(m>=4)return"Light shaking may be felt";
    return"Weak shaking may be felt near epicenter";
  }
+ function isStrictPhilippinesQuake(f){
+   const p=f&&f.properties||{};
+   const mag=Number(p.mag);
+   const place=String(p.place||"").toLowerCase().trim();
+   if(!(mag>=3))return false;
+   const foreign=["malaysia","sabah","sarawak","indonesia","taiwan","japan","brunei","vietnam","china","papua new guinea","palau"];
+   if(foreign.some(x=>place.includes(x)))return false;
+   return place.includes("philippines")||place.includes("philippine islands");
+ }
  function repaint(){
    const list=document.getElementById("mxEqMiniList"),status=document.getElementById("mxEqMiniStatus");
    if(!list)return;
    if(!events.length){
      list.innerHTML='<div class="mx-eq-mini-loading">No M3.0+ earthquakes in the Philippines right now.</div>';
-     if(status)status.textContent="M3+ • USGS";
+     if(status)status.textContent="PH ONLY • M3+";
      return;
    }
    list.innerHTML=events.slice(0,5).map(f=>{
@@ -431,23 +440,12 @@ setInterval(()=>loadWeather(false),60000);
      const place=esc(p.place||"Unknown location");
      return '<a class="mx-eq-live-row '+age.cls+'" href="'+esc(p.url||"#")+'" target="_blank" rel="noopener"><span class="mx-eq-live-time">'+age.text+'</span><span class="mx-eq-live-copy"><span class="mx-eq-live-title"><b>M '+m.toFixed(1)+'</b> • '+place+'</span><span class="mx-eq-live-impact">'+esc(effect(m))+'</span></span></a>';
    }).join("");
-   if(status)status.textContent="PH • LIVE • M3+";
+   if(status)status.textContent="PHILIPPINES ONLY • M3+";
  }
  window.mxEqMiniRender=repaint;
 
  function setEvents(arr,checked){
-   events=(Array.isArray(arr)?arr:[]).filter(f=>{
-     const p=f&&f.properties||{},g=f&&f.geometry&&f.geometry.coordinates||[];
-     const mag=Number(p.mag),place=String(p.place||"").toLowerCase();
-     const lon=Number(g[0]),lat=Number(g[1]);
-     if(!(mag>=3))return false;
-     if(place.includes("philippines")||place.includes("philippine"))return true;
-     if(!Number.isFinite(lat)||!Number.isFinite(lon))return false;
-     if(lat<4.3||lat>21.3||lon<116.0||lon>127.8)return false;
-     if(lat>20.9&&lon>120.0)return false;
-     if(lat<7.5&&lon<118.0)return false;
-     return true;
-   }).sort((a,b)=>Number(b.properties&&b.properties.time||0)-Number(a.properties&&a.properties.time||0)).slice(0,40);
+   events=(Array.isArray(arr)?arr:[]).filter(isStrictPhilippinesQuake).sort((a,b)=>Number(b.properties&&b.properties.time||0)-Number(a.properties&&a.properties.time||0)).slice(0,40);
    lastChecked=checked||new Date();
    repaint();
  }
@@ -464,18 +462,7 @@ setInterval(()=>loadWeather(false),60000);
      const r=await fetch("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson?ts="+Date.now(),{cache:"no-store",signal:ctrl.signal});
      if(!r.ok)throw new Error("HTTP "+r.status);
      const j=await r.json();
-     const filtered=(j.features||[]).filter(f=>{
-       const p=f&&f.properties||{},g=f&&f.geometry&&f.geometry.coordinates||[];
-       const mag=Number(p.mag),place=String(p.place||"").toLowerCase();
-       const lon=Number(g[0]),lat=Number(g[1]);
-       if(!(mag>=3))return false;
-       if(place.includes("philippines")||place.includes("philippine"))return true;
-       if(!Number.isFinite(lat)||!Number.isFinite(lon))return false;
-       if(lat<4.3||lat>21.3||lon<116.0||lon>127.8)return false;
-       if(lat>20.9&&lon>120.0)return false;
-       if(lat<7.5&&lon<118.0)return false;
-       return true;
-     });
+     const filtered=(j.features||[]).filter(isStrictPhilippinesQuake);
      setEvents(filtered,new Date());
      try{localStorage.setItem(CACHE,JSON.stringify({saved:Date.now(),features:filtered}))}catch(e){}
    }catch(e){
