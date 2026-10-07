@@ -124,6 +124,54 @@ linear-gradient(135deg,rgba(10,44,73,.98),rgba(5,25,43,.97) 58%,rgba(8,33,54,.96
 @media(max-width:900px){.weather-main-pane{padding-right:0}.mx-eq-mini{position:static;width:100%;height:250px;margin-top:12px}.mx-eq-mini-list{overflow:auto}.metrics{margin-top:12px}}
 @media(max-width:650px){.mx-eq-mini{height:235px}.mx-eq-mini-head{height:32px;flex-basis:32px;font-size:8px}.mx-eq-live-row{grid-template-columns:58px minmax(0,1fr);min-height:50px;padding:7px 9px}.mx-eq-live-title{font-size:9px}.mx-eq-live-impact{font-size:7px}}
 </style>
+<style id="mxWeatherUnifiedTypography">
+/* Unified readable typography: Deep-Check / Risk Potential / Typhoon & Flood */
+.risk .k,
+.alert-title{
+  font-size:10px!important;
+  font-weight:500!important;
+  color:#bfd3e2!important;
+  letter-spacing:.18px!important;
+  line-height:1.25!important;
+}
+.risk .v,
+.alert-big{
+  font-size:18px!important;
+  font-weight:500!important;
+  line-height:1.12!important;
+  letter-spacing:0!important;
+}
+.risk .sub,
+.alert-copy{
+  font-size:11px!important;
+  font-weight:400!important;
+  color:#d7e4ed!important;
+  line-height:1.42!important;
+  letter-spacing:0!important;
+}
+.risk .v{margin-top:5px!important}
+.risk .sub{margin-top:4px!important}
+.alert-big{margin-top:8px!important}
+.alert-copy{margin-top:5px!important}
+.tag{
+  font-size:9px!important;
+  font-weight:500!important;
+  line-height:1.1!important;
+  padding:4px 7px!important;
+}
+.alert-link{
+  font-size:10px!important;
+  font-weight:400!important;
+  margin-top:7px!important;
+}
+.risk{min-height:82px!important}
+.alert-card{padding:12px 13px!important;min-height:132px!important}
+@media(max-width:650px){
+  .risk .k,.alert-title{font-size:10px!important}
+  .risk .v,.alert-big{font-size:17px!important}
+  .risk .sub,.alert-copy{font-size:10.5px!important;line-height:1.4!important}
+}
+</style>
 </head>
 <body>
 <header class="header"><div class="navbar">
