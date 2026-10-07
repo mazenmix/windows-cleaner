@@ -106,19 +106,23 @@ linear-gradient(135deg,rgba(10,44,73,.98),rgba(5,25,43,.97) 58%,rgba(8,33,54,.96
 @keyframes mxNewsPulse{50%{transform:scale(1.25);opacity:.7}}
 </style>
 <style id="mxEarthquakeMiniStyles">
-.weather-main-pane{position:relative}
-.mx-eq-mini{position:absolute;z-index:7;top:48px;right:0;width:335px;max-width:47%;height:94px;overflow:hidden;border:1px solid #275a7d;border-radius:13px;background:linear-gradient(145deg,rgba(7,29,48,.96),rgba(5,22,37,.97));box-shadow:0 12px 28px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.035)}
-.mx-eq-mini-head{height:30px;display:flex;align-items:center;gap:7px;padding:0 10px;border-bottom:1px solid rgba(42,88,121,.52);font-size:8px;font-weight:950;letter-spacing:.7px;color:#c8e8f8;white-space:nowrap}
-.mx-eq-mini-head small{margin-left:auto;font-size:7px;color:#6f97b3;font-weight:800;letter-spacing:.2px}
-.mx-eq-mini-dot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#20e59d;box-shadow:0 0 0 0 rgba(32,229,157,.35),0 0 12px rgba(32,229,157,.95);animation:mxEqMiniPulse 1.2s ease-in-out infinite}
-.mx-eq-mini-event{height:63px;display:grid;grid-template-columns:52px minmax(0,1fr);gap:9px;align-items:center;padding:7px 9px;transition:opacity .18s ease,transform .18s ease}
-.mx-eq-mini-event.swap{opacity:0;transform:translateY(-5px)}
-.mx-eq-mini-mag{height:43px;border-radius:10px;border:1px solid #246b51;background:#092e23;color:#70efb9;display:grid;place-items:center;font-size:13px;font-weight:950;letter-spacing:-.2px}
-.mx-eq-mini.yellow .mx-eq-mini-mag{border-color:#756526;background:#30280b;color:#ffe06b}.mx-eq-mini.orange .mx-eq-mini-mag{border-color:#76491d;background:#321f0b;color:#ffb258}
-.mx-eq-mini-copy{min-width:0}.mx-eq-mini-place{font-size:9.5px;font-weight:900;color:#f0f7fc;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mx-eq-mini-meta{margin-top:4px;display:flex;gap:7px;align-items:center;font-size:7.5px;color:#7fa2ba;white-space:nowrap;overflow:hidden}.mx-eq-mini-age{font-weight:950;color:#65e6ad}.mx-eq-mini.yellow .mx-eq-mini-age{color:#ffe06b}.mx-eq-mini.orange .mx-eq-mini-age{color:#ffb258}.mx-eq-mini-impact{margin-top:4px;font-size:7.5px;color:#9cb9cd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mx-eq-mini-loading{grid-column:1/-1;color:#789bb5;font-size:8.5px;text-align:center}
-@keyframes mxEqMiniPulse{0%,100%{transform:scale(.9);box-shadow:0 0 0 0 rgba(32,229,157,.35),0 0 8px rgba(32,229,157,.75)}50%{transform:scale(1.14);box-shadow:0 0 0 5px rgba(32,229,157,0),0 0 16px rgba(32,229,157,1)}}
-@media(max-width:1100px){.mx-eq-mini{position:static;width:100%;max-width:none;height:88px;margin-top:11px}.mx-eq-mini-event{height:57px}.metrics{margin-top:11px}}
-@media(max-width:650px){.mx-eq-mini{height:86px}.mx-eq-mini-head{height:28px;font-size:7.5px}.mx-eq-mini-event{height:57px;grid-template-columns:48px minmax(0,1fr);padding:6px 8px}.mx-eq-mini-mag{height:40px;font-size:12px}.mx-eq-mini-place{font-size:9px}.mx-eq-mini-meta,.mx-eq-mini-impact{font-size:7px}}
+.weather-main-pane{position:relative;padding-right:282px;min-height:100%}
+.mx-eq-mini{position:absolute;z-index:7;top:0;right:0;bottom:0;width:264px;overflow:hidden;border:1px solid #275a7d;border-radius:13px;background:linear-gradient(145deg,rgba(7,29,48,.97),rgba(5,22,37,.98));box-shadow:0 12px 28px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.035);display:flex;flex-direction:column}
+.mx-eq-mini-head{height:35px;flex:0 0 35px;display:flex;align-items:center;gap:7px;padding:0 11px;border-bottom:1px solid rgba(42,88,121,.60);font-size:8.5px;font-weight:950;letter-spacing:.7px;color:#d5effc;white-space:nowrap}
+.mx-eq-mini-head small{margin-left:auto;font-size:7px;color:#6ff0a6;font-weight:900;letter-spacing:.45px}
+.mx-eq-mini-dot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#34f58a;box-shadow:0 0 7px rgba(52,245,138,.92),0 0 14px rgba(52,245,138,.55);animation:mxEqMiniPulse 1.25s ease-in-out infinite}
+.mx-eq-mini-list{display:block;flex:1;min-height:0;overflow:hidden}
+.mx-eq-live-row{display:grid;grid-template-columns:62px minmax(0,1fr);gap:9px;padding:9px 10px;border-bottom:1px solid rgba(31,64,89,.72);min-height:55px;align-items:start;animation:mxEqRowIn .28s ease both}
+.mx-eq-live-row:last-child{border-bottom:0}
+.mx-eq-live-time{font-size:8px;line-height:1.3;font-weight:900;padding-top:1px;color:#73e9a7;text-shadow:0 0 8px rgba(76,240,145,.18)}
+.mx-eq-live-row.yellow .mx-eq-live-time{color:#f2d15c;text-shadow:0 0 8px rgba(242,209,92,.13)}
+.mx-eq-live-row.orange .mx-eq-live-time{color:#f29a4a;text-shadow:0 0 8px rgba(242,154,74,.13)}
+.mx-eq-live-copy{min-width:0}.mx-eq-live-title{font-size:9.5px;line-height:1.3;color:#e8f1f8;font-weight:850;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.mx-eq-live-title b{color:#fff;font-weight:950}.mx-eq-live-impact{margin-top:3px;font-size:7.5px;line-height:1.3;color:#8faec4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mx-eq-mini-loading{display:grid;place-items:center;height:100%;padding:18px;color:#789bb5;font-size:8.5px;text-align:center}
+@keyframes mxEqMiniPulse{0%,100%{transform:scale(.86);opacity:.72;box-shadow:0 0 5px rgba(52,245,138,.72),0 0 10px rgba(52,245,138,.34)}50%{transform:scale(1.18);opacity:1;box-shadow:0 0 9px rgba(52,245,138,1),0 0 18px rgba(52,245,138,.68)}}
+@keyframes mxEqRowIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:1180px){.weather-main-pane{padding-right:250px}.mx-eq-mini{width:235px}.mx-eq-live-row{grid-template-columns:56px minmax(0,1fr);padding:8px;gap:7px}.mx-eq-live-title{font-size:9px}}
+@media(max-width:900px){.weather-main-pane{padding-right:0}.mx-eq-mini{position:static;width:100%;height:250px;margin-top:12px}.mx-eq-mini-list{overflow:auto}.metrics{margin-top:12px}}
+@media(max-width:650px){.mx-eq-mini{height:235px}.mx-eq-mini-head{height:32px;flex-basis:32px;font-size:8px}.mx-eq-live-row{grid-template-columns:58px minmax(0,1fr);min-height:50px;padding:7px 9px}.mx-eq-live-title{font-size:9px}.mx-eq-live-impact{font-size:7px}}
 </style>
 </head>
 <body>
@@ -266,7 +270,7 @@ function renderHero(d){
  const c=d.forecast.current||{},info=weatherInfo(c.weather_code,c.is_day!==0);
  const vis=d.forecast.hourly?.visibility?.[0];
  hero.innerHTML='<div class="hero-grid"><div class="weather-main-pane"><div class="location-line"><span class="location-name">📍 '+esc(state.name)+'</span><span class="updated">Updated '+fmtTime(d.checked_at)+'</span></div>'+
- '<div class="current-main"><div class="weather-glyph">'+info[1]+'</div><div><div class="temp">'+n(c.temperature_2m,0)+'<sup>°C</sup></div><div class="condition">'+esc(info[0])+'</div><div class="feels">Feels like '+n(c.apparent_temperature,0)+'°C • '+(c.precipitation>0?n(c.precipitation,1)+' mm precipitation':'No measurable precipitation now')+'</div></div></div>'+'<div class="mx-eq-mini" id="mxEqMini"><div class="mx-eq-mini-head"><span class="mx-eq-mini-dot"></span><span>LIVE EARTHQUAKES</span><small id="mxEqMiniStatus">USGS</small></div><div class="mx-eq-mini-event" id="mxEqMiniEvent"><span class="mx-eq-mini-loading">Loading M3.0+ earthquakes…</span></div></div>'+
+ '<div class="current-main"><div class="weather-glyph">'+info[1]+'</div><div><div class="temp">'+n(c.temperature_2m,0)+'<sup>°C</sup></div><div class="condition">'+esc(info[0])+'</div><div class="feels">Feels like '+n(c.apparent_temperature,0)+'°C • '+(c.precipitation>0?n(c.precipitation,1)+' mm precipitation':'No measurable precipitation now')+'</div></div></div>'+'<div class="mx-eq-mini" id="mxEqMini"><div class="mx-eq-mini-head"><span class="mx-eq-mini-dot"></span><span>LIVE EARTHQUAKES</span><small id="mxEqMiniStatus">M3+ • USGS</small></div><div class="mx-eq-mini-list" id="mxEqMiniList"><div class="mx-eq-mini-loading">Loading M3.0+ earthquakes…</div></div></div>'+
  '<div class="metrics">'+
  '<div class="metric"><label>Humidity</label><b>'+n(c.relative_humidity_2m)+'%</b><small>Dew / moisture</small></div>'+
  '<div class="metric"><label>Wind</label><b>'+n(c.wind_speed_10m)+' km/h</b><small>'+compass(c.wind_direction_10m)+' • gust '+n(c.wind_gusts_10m)+' km/h</small></div>'+
@@ -397,15 +401,15 @@ setInterval(()=>loadWeather(false),60000);
 </script>
 
 <script id="mxEarthquakeMiniScript">(function(){
- const CACHE="mxEarthquakeMiniV1";
- let events=[],index=0,rotateTimer=null,lastChecked=null;
+ const CACHE="mxEarthquakeMiniV2";
+ let events=[],lastChecked=null;
 
  function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
  function ageInfo(ts){
    const ms=Math.max(0,Date.now()-Number(ts||0)),h=ms/3600000;
-   if(h<=12)return{cls:"green",text:h<1?Math.max(1,Math.floor(ms/60000))+"m ago":Math.floor(h)+"h "+Math.floor((ms%3600000)/60000)+"m ago"};
-   if(h<=24)return{cls:"yellow",text:Math.floor(h)+"h "+Math.floor((ms%3600000)/60000)+"m ago"};
-   return{cls:"orange",text:Math.floor(h/24)+"d "+Math.floor(h%24)+"h ago"};
+   if(h<=12)return{cls:"green",text:h<1?Math.max(1,Math.floor(ms/60000))+"m ago":Math.floor(h)+"h "+Math.floor((ms%3600000)/60000)+"m"};
+   if(h<=24)return{cls:"yellow",text:Math.floor(h)+"h "+Math.floor((ms%3600000)/60000)+"m"};
+   return{cls:"orange",text:Math.floor(h/24)+"d "+Math.floor(h%24)+"h"};
  }
  function effect(m){
    if(m>=7)return"Major regional shaking possible";
@@ -415,33 +419,26 @@ setInterval(()=>loadWeather(false),60000);
    return"Weak shaking may be felt near epicenter";
  }
  function repaint(){
-   const box=document.getElementById("mxEqMini"),eventEl=document.getElementById("mxEqMiniEvent"),status=document.getElementById("mxEqMiniStatus");
-   if(!box||!eventEl)return;
+   const list=document.getElementById("mxEqMiniList"),status=document.getElementById("mxEqMiniStatus");
+   if(!list)return;
    if(!events.length){
-     box.className="mx-eq-mini";
-     eventEl.innerHTML='<span class="mx-eq-mini-loading">No M3.0+ earthquakes in the current feed.</span>';
-     if(status)status.textContent="USGS";
+     list.innerHTML='<div class="mx-eq-mini-loading">No M3.0+ earthquakes in the current feed.</div>';
+     if(status)status.textContent="M3+ • USGS";
      return;
    }
-   if(index>=events.length)index=0;
-   const f=events[index],p=f.properties||{},g=f.geometry&&f.geometry.coordinates||[],m=Number(p.mag),age=ageInfo(p.time);
-   box.className="mx-eq-mini "+age.cls;
-   eventEl.innerHTML='<div class="mx-eq-mini-mag">M '+m.toFixed(1)+'</div><div class="mx-eq-mini-copy"><div class="mx-eq-mini-place">🌎 '+esc(p.place||"Unknown location")+'</div><div class="mx-eq-mini-meta"><span class="mx-eq-mini-age">'+age.text+'</span><span>'+(Number.isFinite(Number(g[2]))?Number(g[2]).toFixed(0)+" km depth":"USGS")+'</span></div><div class="mx-eq-mini-impact">'+esc(effect(m))+'</div></div>';
-   if(status)status.textContent=(lastChecked?lastChecked.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})+" • ":"")+"M3+";
+   list.innerHTML=events.slice(0,5).map(f=>{
+     const p=f.properties||{},m=Number(p.mag),age=ageInfo(p.time);
+     const place=esc(p.place||"Unknown location");
+     return '<a class="mx-eq-live-row '+age.cls+'" href="'+esc(p.url||"#")+'" target="_blank" rel="noopener"><span class="mx-eq-live-time">'+age.text+'</span><span class="mx-eq-live-copy"><span class="mx-eq-live-title"><b>M '+m.toFixed(1)+'</b> • '+place+'</span><span class="mx-eq-live-impact">'+esc(effect(m))+'</span></span></a>';
+   }).join("");
+   if(status)status.textContent="LIVE • M3+";
  }
  window.mxEqMiniRender=repaint;
 
  function setEvents(arr,checked){
    events=(Array.isArray(arr)?arr:[]).filter(f=>Number(f&&f.properties&&f.properties.mag)>=3).sort((a,b)=>Number(b.properties&&b.properties.time||0)-Number(a.properties&&a.properties.time||0)).slice(0,40);
    lastChecked=checked||new Date();
-   index=0;
    repaint();
-   if(rotateTimer)clearInterval(rotateTimer);
-   if(events.length>1)rotateTimer=setInterval(()=>{
-     const eventEl=document.getElementById("mxEqMiniEvent");
-     if(eventEl)eventEl.classList.add("swap");
-     setTimeout(()=>{index=(index+1)%events.length;repaint()},180);
-   },6000);
  }
  function restore(){
    try{
