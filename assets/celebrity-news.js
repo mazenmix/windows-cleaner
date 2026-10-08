@@ -100,9 +100,21 @@ function render(){
  const items=filtered();
  const available=new Set(items.map(i=>safeUrl(i.url)));
  let slides=(state.featured||[]).filter(i=>available.has(safeUrl(i.url))).slice(0,10);
- if(!slides.length){
-  const local=items.filter(i=>i.market==="PH"),world=items.filter(i=>i.market==="WORLD");
-  slides=local.slice(0,8).concat(world.slice(0,Math.min(2,Math.floor(local.length/4)))).slice(0,10);
+ // The visible hero must contain ten distinct stories when ten exist.
+ // A recently deployed API may temporarily reference older feature links,
+ // so fill vacancies with verified PH stories, never invented duplicates.
+ const usedSlides=new Set(slides.map(i=>safeUrl(i.url)));
+ const phUsed=()=>slides.filter(i=>i.market==="PH").length;
+ const target=Math.min(10,items.length),minPH=Math.ceil(target*0.8);
+ const local=items.filter(i=>i.market==="PH"&&!usedSlides.has(safeUrl(i.url)));
+ const world=items.filter(i=>i.market==="WORLD"&&!usedSlides.has(safeUrl(i.url)));
+ while(slides.length<target){
+  const choose=(phUsed()<minPH||!world.length)?local.shift():(world.shift()||local.shift());
+  const next=choose||local.shift()||world.shift();
+  if(!next)break;
+  const url=safeUrl(next.url);
+  if(usedSlides.has(url))continue;
+  slides.push(next);usedSlides.add(url);
  }
  const previous=state.slideItems[state.slideIndex]?safeUrl(state.slideItems[state.slideIndex].url):"";
  state.slideItems=slides;
