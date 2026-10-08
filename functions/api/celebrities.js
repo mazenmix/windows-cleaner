@@ -156,8 +156,8 @@ function json(data,status=200,ttl=CACHE_SECONDS){
 }
 export async function onRequestGet(context){
  const cache=caches.default,origin=new URL(context.request.url).origin;
- const fresh=new Request(origin+"/api/celebrities-cache-v6-celebrity");
- const last=new Request(origin+"/api/celebrities-last-good-v6-celebrity");
+ const fresh=new Request(origin+"/api/celebrities-cache-v7-direct-images");
+ const last=new Request(origin+"/api/celebrities-last-good-v7-direct-images");
  const hit=await cache.match(fresh);if(hit)return hit;
  try{
   const results=await Promise.allSettled(FEEDS.map(fetchFeed));
@@ -173,8 +173,15 @@ export async function onRequestGet(context){
   if(!items.length)throw new Error("No verified Philippine celebrity headlines are available");
   // 10 unique spotlight slides: 8 PH + at most 2 international stories.
   // The pool is editorially ranked, while the body remains newest-first.
-  const rankedPH=ph.slice().sort((a,b)=>importance(b)-importance(a)||b.ts-a.ts);
-  const rankedWorld=items.filter(x=>x.market==="WORLD").sort((a,b)=>importance(b)-importance(a)||b.ts-a.ts);
+  // Main ten-story carousel prioritizes direct publisher links.
+  // Google News redirect links do not reliably provide OG photos.
+  const directArticle=x=>{try{return new URL(x.url).hostname.toLowerCase()!=="news.google.com"}catch(_){return false}};
+  const phPool=items.filter(x=>x.market==="PH");
+  const worldPool=items.filter(x=>x.market==="WORLD");
+  const preferred=(pool)=>pool.filter(directArticle).sort((a,b)=>importance(b)-importance(a)||b.ts-a.ts)
+    .concat(pool.filter(x=>!directArticle(x)).sort((a,b)=>importance(b)-importance(a)||b.ts-a.ts));
+  const rankedPH=preferred(phPool);
+  const rankedWorld=preferred(worldPool);
   const featuredPH=rankedPH.slice(0,10);
   const featuredWorld=rankedWorld.slice(0,Math.min(2,Math.floor(featuredPH.length/4)));
   const featured=[];
