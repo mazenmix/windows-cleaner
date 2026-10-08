@@ -32,13 +32,23 @@ export async function onRequestGet(){
   const seconds=t.h*3600+t.m*60+t.s+t.ms/1000;
   const progress=Math.max(0,Math.min(1,seconds/86400));
 
-  // Visitors Today: always trends upward through the Manila day.
-  // Starts in the 20k range and typically finishes around 60k-72k.
-  const dayBase=22000+(seed%6500);
-  const dailyGain=36500+((seed>>>7)%8000);
+  // Visitors Today is a SIMULATED counter, not measured traffic.
+  // The seed changes at 00:00 Asia/Manila, with a +10,000 baseline
+  // each new calendar month starting October 2026.
+  const [year,month]=t.day.split("-").map(Number);
+  const monthsSinceStart=Math.max(0,(year-2026)*12+(month-10));
+  const monthlyLift=monthsSinceStart*10000;
+  const dayBase=70000+(seed%20001)+monthlyLift;
+  const dailyGain=12000+((seed>>>7)%7001);
   const curve=Math.pow(progress,0.92);
-  const today=Math.max(20000,Math.min(72000,
-    Math.floor(dayBase+(dailyGain*curve))
+  const today=Math.floor(dayBase+(dailyGain*curve));
+
+  // Preserve the previous Online Now algorithm independently of the
+  // higher simulated Visitors Today figures.
+  const onlineBase=22000+(seed%6500);
+  const onlineGain=36500+((seed>>>7)%8000);
+  const onlineTrafficToday=Math.max(20000,Math.min(72000,
+    Math.floor(onlineBase+onlineGain*curve)
   ));
 
   // Online Now: tied to traffic volume, but breathes up/down naturally.
@@ -50,7 +60,7 @@ export async function onRequestGet(){
   const wave2=Math.sin((seconds/11)+((seed>>>8)%29))*58;
   const wave3=Math.sin((seconds/4.7)+((seed>>>4)%41))*24;
   const now=Math.max(650,Math.min(2100,
-    Math.round(today*ratio+peakBoost+wave1+wave2+wave3)
+    Math.round(onlineTrafficToday*ratio+peakBoost+wave1+wave2+wave3)
   ));
 
   return j({
