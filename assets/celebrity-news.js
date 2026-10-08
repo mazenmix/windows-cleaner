@@ -177,16 +177,40 @@ function filtered(){const q=String(searchEl&&searchEl.value||"").trim().toLowerC
 const buzzBar=document.getElementById("mxCelebrityBuzz");
 const buzzStrip=document.getElementById("mxCelebrityBuzzStrip");
 let buzzSignature="";
+const BUZZ_CACHE_KEY="mxCelebrityBuzzLatestPHV2";
+let lastBuzzStories=[];
+function readBuzzCache(){
+ try{
+  const saved=JSON.parse(localStorage.getItem(BUZZ_CACHE_KEY)||"null");
+  if(saved&&Array.isArray(saved.items)&&Date.now()-Number(saved.saved)<72*3600000){
+   return saved.items.filter(i=>i&&i.market==="PH"&&stamp(i)>0&&safeUrl(i.url)!=="#").slice(0,12);
+  }
+ }catch(_){}
+ return[];
+}
+lastBuzzStories=readBuzzCache();
 function renderCelebrityBuzz(){
  if(!buzzBar||!buzzStrip||!active())return;
+ // Never hide the bar during fetches, API failures or transient empty feeds.
+ buzzBar.hidden=false;
  const ph=state.items.filter(i=>i.market==="PH"&&safeUrl(i.url)!=="#"&&stamp(i)>0)
    .sort((a,b)=>stamp(b)-stamp(a));
  const actualNews=ph.filter(i=>!/youLOL rewind|full episode|throwback|replay|episode \d+|music video|trailer/i.test(i.headline||""));
- const picked=(actualNews.length>=5?actualNews:ph).slice(0,12);
- if(!picked.length){buzzBar.hidden=true;buzzSignature="";return;}
+ let picked=(actualNews.length>=5?actualNews:ph).slice(0,12);
+ if(picked.length){
+  lastBuzzStories=picked;
+  try{localStorage.setItem(BUZZ_CACHE_KEY,JSON.stringify({saved:Date.now(),items:picked}))}catch(_){}
+ }else{
+  picked=lastBuzzStories.length?lastBuzzStories:readBuzzCache();
+ }
+ if(!picked.length){
+  if(!buzzStrip.children.length){
+   buzzStrip.innerHTML='<span class="celeb-buzz-wait">✦ &nbsp; Checking the latest Philippine celebrity headlines… &nbsp; ✧</span>';
+  }
+  return;
+ }
  const sig=picked.map(i=>i.url+"|"+stamp(i)).join("||");
- buzzBar.hidden=false;
- if(sig===buzzSignature&&buzzStrip.children.length)return;
+ if(sig===buzzSignature&&buzzStrip.querySelector(".celeb-buzz-run"))return;
  buzzSignature=sig;
  const run=(duplicate)=>'<div class="celeb-buzz-run"'+(duplicate?' aria-hidden="true"':"")+'>'+
   picked.map(i=>'<a class="celeb-buzz-item" href="'+esc(safeUrl(i.url))+
