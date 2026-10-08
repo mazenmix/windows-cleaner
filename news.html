@@ -7,7 +7,7 @@
 <title>NEWS | Philippines Live News</title>
 <meta name="description" content="NEWS — live Philippine headlines with automatic updates.">
 <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./assets/celebrity-news.css?v=20261008buzz1">
+<link rel="stylesheet" href="./assets/celebrity-news.css?v=20261008buzz2">
 <style>
 :root{
   --bg:#050b12;--bg2:#07111d;--panel:#091522;--panel2:#0b1a2a;--line:#1b2d40;
@@ -302,11 +302,11 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
 </main>
 
 <section id="mxCelebrityStage" hidden aria-label="Celebrity entertainment news">
- <div class="celeb-buzz" id="mxCelebrityBuzz" hidden aria-label="Latest Philippine celebrity headlines">
+ <div class="celeb-buzz" id="mxCelebrityBuzz" aria-label="Latest Philippine celebrity headlines">
   <div class="celeb-buzz-shine" aria-hidden="true"></div>
   <div class="celeb-buzz-title"><span class="celeb-buzz-star" aria-hidden="true">✦</span><span>Celebrity Buzz</span><span class="celeb-buzz-star other" aria-hidden="true">✧</span></div>
   <div class="celeb-buzz-viewport" id="mxCelebrityBuzzViewport" aria-label="Scrolling headlines">
-   <div class="celeb-buzz-strip" id="mxCelebrityBuzzStrip"></div>
+   <div class="celeb-buzz-strip" id="mxCelebrityBuzzStrip"><span class="celeb-buzz-wait">✦ &nbsp; Checking the latest Philippine celebrity headlines… &nbsp; ✧</span></div>
   </div>
   <span class="celeb-buzz-endstar" aria-hidden="true">✧</span>
  </div>
@@ -870,7 +870,7 @@ if(rememberedCategory!=="All"&&rememberedCategory!=="Celebrity"){
 load();setInterval(load,15000);
 })();
 </script>
-<script src="./assets/celebrity-news.js?v=20261008buzz1"></script>
+<script src="./assets/celebrity-news.js?v=20261008buzz2"></script>
 <script>
 (function(){
  const box=document.getElementById("visitorStats"),todayEl=document.getElementById("visitorsToday"),nowEl=document.getElementById("visitorsNow");
@@ -934,6 +934,6 @@ load();setInterval(load,15000);
  },1000);
 })();
 </script>
-<!-- NEWS build: pink-celebrity-buzz-v32 -->
+<!-- NEWS build: pink-celebrity-buzz-persistent-v33 -->
 </body>
 </html>
