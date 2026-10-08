@@ -1,0 +1,55 @@
+/* MX NEWS • CELEBRITY SPOTLIGHT */
+.cat[data-cat="Celebrities"]{color:#ffd2ea;border-color:#ff4b9e;background:linear-gradient(125deg,#42112e,#8a235f);font-weight:850;box-shadow:0 0 12px rgba(255,70,151,.29);animation:celebGlow 2.6s ease-in-out infinite}
+.cat[data-cat="Celebrities"]:before{content:"✦";margin-right:6px;color:#ffdfac}
+.cat[data-cat="Celebrities"].active,.cat[data-cat="Celebrities"]:hover{color:#fff;background:linear-gradient(120deg,#ff50a1,#e82d88 70%,#9b2067);border-color:#ffc0df;box-shadow:0 0 15px rgba(255,77,162,.6),0 0 34px rgba(255,58,145,.32)}
+@keyframes celebGlow{50%{box-shadow:0 0 15px rgba(255,72,163,.64),0 0 27px rgba(255,72,163,.3)}}
+body.mx-celeb-active .main,body.mx-celeb-active .ticker{display:none}
+#mxCelebrityStage[hidden]{display:none!important}
+#mxCelebrityStage{--rose:#ff82ba;--pale:#ffe3ef;max-width:1560px;margin:auto;padding:28px 22px 65px;position:relative;isolation:isolate}
+#mxCelebrityStage:before{content:"";position:absolute;inset:0 0 auto;height:460px;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 23% 10%,rgba(223,53,146,.18),transparent 50%),radial-gradient(ellipse at 89% 40%,rgba(150,85,169,.14),transparent 40%)}
+.celeb-head{display:flex;align-items:flex-end;justify-content:space-between;gap:25px;padding:6px 2px 26px}
+.celeb-overline{font-size:10px;font-weight:800;letter-spacing:2.3px;color:#f9caa1}
+.celeb-overline:before{content:"";display:inline-block;vertical-align:middle;margin-right:13px;width:33px;border-top:1px solid #f9caa1}
+.celeb-head h1{font:400 clamp(38px,4.7vw,68px)/1.04 Georgia,"Times New Roman",serif;letter-spacing:-1.8px;margin:13px 0 9px;color:#fff}
+.celeb-head h1 em,.celeb-section-title em{color:#ff9fcc;font-weight:400}
+.celeb-head p{font-size:12px;color:#bda3b4;max-width:660px;line-height:1.55;margin:0}
+.celeb-status{border:1px solid rgba(255,154,202,.32);border-radius:20px;padding:10px 14px;white-space:nowrap;color:#f4bfd5;background:rgba(61,20,49,.59);font-size:10px;letter-spacing:.2px}
+.celeb-status:before{content:"";display:inline-block;margin-right:9px;width:7px;height:7px;border-radius:50%;background:#ff78b3;box-shadow:0 0 10px #ff78b3}
+.celeb-feature-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,.83fr);gap:14px}
+.celeb-feature,.celeb-mini,.celeb-card{display:block;position:relative;overflow:hidden;isolation:isolate;border-radius:19px;border:1px solid rgba(255,150,193,.29);background:linear-gradient(135deg,#4a1b38,#140f1b);box-shadow:0 12px 38px rgba(0,0,0,.24);transition:transform .25s,border-color .25s,box-shadow .25s}
+.celeb-feature:hover,.celeb-mini:hover,.celeb-card:hover{transform:translateY(-3px);border-color:rgba(255,158,210,.77);box-shadow:0 19px 45px rgba(0,0,0,.35),0 0 24px rgba(235,77,144,.14)}
+.celeb-feature{min-height:435px}
+.celeb-side{display:grid;grid-template-rows:1fr 1fr;gap:14px}
+.celeb-mini{min-height:210px}
+.celeb-photo{position:absolute;inset:0;background:radial-gradient(circle at 65% 27%,rgba(248,132,195,.31),transparent 39%),radial-gradient(circle at 20% 80%,rgba(142,95,212,.23),transparent 52%),linear-gradient(135deg,#652b51,#191322)}
+.celeb-photo img{position:relative;z-index:2;width:100%;height:100%;object-fit:cover;transition:transform .35s;display:block}
+.celeb-feature:hover img,.celeb-mini:hover img,.celeb-card:hover img{transform:scale(1.035)}
+.celeb-photo-mark{position:absolute;inset:0;display:grid;place-items:center;font:400 125px Georgia,serif;color:rgba(255,180,219,.23)}
+.celeb-feature:after,.celeb-mini:after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,transparent 13%,rgba(10,6,12,.18) 40%,rgba(10,6,15,.97) 100%)}
+.celeb-copy{position:absolute;bottom:0;left:0;right:0;z-index:3;padding:28px}
+.celeb-tag{display:inline-flex;border:1px solid rgba(255,203,229,.38);background:rgba(162,41,108,.55);color:#ffe2f0;padding:6px 10px;border-radius:5px;font-size:9px;font-weight:850;letter-spacing:1.3px}
+.celeb-copy h2{font:400 clamp(25px,2.55vw,38px)/1.14 Georgia,serif;text-wrap:balance;color:#fff;letter-spacing:-.4px;margin:14px 0 10px;text-shadow:0 3px 14px #000}
+.celeb-copy p{font-size:12px;line-height:1.48;color:#f1d4e2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:0 0 12px}
+.celeb-caption{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#f7d1e3;font-size:10px;margin-top:12px}
+.celeb-caption .date{color:#f7b5d4}
+.celeb-read{font-size:10px;font-weight:750;color:#ffdda8;letter-spacing:.4px}
+.celeb-mini .celeb-copy{padding:20px}.celeb-mini .celeb-copy h2{font-size:21px;margin:12px 0 8px}
+.celeb-section-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:30px 1px 16px;border-bottom:1px solid rgba(255,145,196,.2);padding-bottom:16px}
+.celeb-section-title{font:400 32px Georgia,serif;margin:0;color:#fff}
+.celeb-count{font-size:10px;color:#af91a4;letter-spacing:.4px}
+.celeb-feed-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.celeb-card{display:flex;flex-direction:column;min-height:325px}
+.celeb-card .celeb-photo{position:relative;inset:auto;height:200px;flex:0 0 auto}
+.celeb-card .celeb-photo-mark{font-size:95px}
+.celeb-card-body{padding:16px 18px;display:flex;flex-direction:column;gap:12px;flex:1}
+.celeb-card-top{display:flex;align-items:center;justify-content:space-between;color:#ffb8d8;font-size:9px;letter-spacing:.4px}
+.celeb-card h3{color:#fff;margin:0;line-height:1.28;font-size:17px;font-weight:650;letter-spacing:-.2px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.celeb-card-bottom{margin-top:auto;display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#e8b6ce}
+.celeb-card-arrow{display:grid;place-items:center;border:1px solid rgba(255,176,217,.39);border-radius:50%;width:28px;height:28px;color:#ffd6e9;font-size:19px}
+.celeb-placeholder{padding:72px 25px;text-align:center;border:1px dashed rgba(254,145,201,.39);background:rgba(54,20,45,.3);border-radius:18px;grid-column:1/-1;color:#cda9bb;font-size:13px}
+.celeb-placeholder strong{display:block;font:400 28px Georgia,serif;color:#fff;margin-bottom:9px}
+.celeb-attribution{font-size:10px;color:#8e7989;text-align:center;margin:26px 0 0}
+@media(max-width:1000px){.celeb-feature-grid{grid-template-columns:1fr}.celeb-feature{min-height:385px}.celeb-side{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none}.celeb-mini{min-height:230px}}
+@media(max-width:750px){.celeb-head{flex-direction:column;align-items:flex-start;gap:13px}.celeb-feed-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:580px){#mxCelebrityStage{padding:18px 12px 48px}.celeb-head h1{font-size:41px;letter-spacing:-1px}.celeb-overline{font-size:9px}.celeb-feature{min-height:350px}.celeb-copy{padding:21px}.celeb-copy h2{font-size:25px}.celeb-side{grid-template-columns:1fr}.celeb-mini{min-height:195px}.celeb-section-title{font-size:27px}.celeb-feed-grid{grid-template-columns:1fr}.celeb-card{min-height:0}.celeb-card .celeb-photo{height:210px}.celeb-section-header{align-items:flex-start}.celeb-count{max-width:140px;text-align:right}}
+@media(prefers-reduced-motion:reduce){.cat[data-cat="Celebrities"]{animation:none}.celeb-feature,.celeb-mini,.celeb-card,.celeb-photo img{transition:none}}
