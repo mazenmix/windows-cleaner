@@ -6,6 +6,14 @@ const FEEDS=[
   {name:"PHILSTAR ENTERTAINMENT",kind:"rss",url:"https://www.philstar.com/rss/entertainment",source:"Philstar",local:true},
   {name:"RAPPLER ENTERTAINMENT",kind:"rss",url:"https://www.rappler.com/entertainment/feed/",source:"Rappler",local:true},
   {name:"ABS-CBN ENTERTAINMENT",kind:"rss",url:"https://www.abs-cbn.com/feed2",source:"ABS-CBN",local:false},
+  {name:"GMA NEWS SHOWBIZ",kind:"rss",url:"https://data.gmanews.tv/gno/rss/news/feed.xml",source:"GMA News",local:false},
+  {name:"INQUIRER HEADLINES",kind:"rss",url:"https://www.inquirer.net/fullfeed",source:"Inquirer",local:false},
+  {name:"MANILA BULLETIN ENTERTAINMENT",kind:"rss",url:"https://mb.com.ph/rss/articles/entertainment",source:"Manila Bulletin",local:true},
+  {name:"MANILA TIMES ENTERTAINMENT",kind:"rss",url:"https://www.manilatimes.net/entertainment/feed/",source:"Manila Times",local:true},
+  {name:"PEP PH LATEST",kind:"rss",url:"https://www.pep.ph/rss",source:"PEP.ph",local:true},
+  {name:"VARIETY HOLLYWOOD",kind:"rss",url:"https://variety.com/feed/",source:"Variety",local:true},
+  {name:"DEADLINE HOLLYWOOD",kind:"rss",url:"https://deadline.com/feed/",source:"Deadline",local:true},
+  {name:"BILLBOARD MUSIC",kind:"rss",url:"https://www.billboard.com/feed/",source:"Billboard",local:true},
   {name:"SHOWBIZ PH",kind:"google",query:"Philippines showbiz celebrities actor actress singer entertainment when:2d"},
   {name:"LOCAL STARS",kind:"google",query:"Filipino celebrity TV star actress actor romance music when:2d"},
   {name:"PEP PH",kind:"google",query:"site:pep.ph celebrity showbiz when:2d"},
@@ -133,8 +141,8 @@ function json(data,status=200,ttl=CACHE_SECONDS){
 }
 export async function onRequestGet(context){
  const cache=caches.default,origin=new URL(context.request.url).origin;
- const fresh=new Request(origin+"/api/celebrities-cache-v1");
- const last=new Request(origin+"/api/celebrities-last-good-v1");
+ const fresh=new Request(origin+"/api/celebrities-cache-v2");
+ const last=new Request(origin+"/api/celebrities-last-good-v2");
  const hit=await cache.match(fresh);if(hit)return hit;
  try{
   const results=await Promise.allSettled(FEEDS.map(fetchFeed));
