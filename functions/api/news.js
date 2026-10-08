@@ -101,6 +101,8 @@ const CATEGORY_DIRECT_SOURCES = [
   {name:"PHILSTAR HEALTH",source:"PHILSTAR",category:"Health",kind:"philstarhtml",validate:true,url:"https://www.philstar.com/lifestyle/health-and-family"},
   {name:"PHILSTAR SPORTS RSS",source:"PHILSTAR",category:"Sports",kind:"rsscat",url:"https://www.philstar.com/rss/sports"},
   {name:"PHILSTAR BUSINESS RSS",source:"PHILSTAR",category:"Business",kind:"rsscat",url:"https://www.philstar.com/rss/business"},
+  {name:"PHILSTAR CELEBRITY RSS",source:"PHILSTAR",category:"Celebrity",kind:"rsscat",url:"https://www.philstar.com/rss/entertainment"},
+  {name:"RAPPLER CELEBRITY RSS",source:"RAPPLER",category:"Celebrity",kind:"rsscat",url:"https://www.rappler.com/entertainment/feed/"},
   {name:"RAPPLER SPORTS",source:"RAPPLER",category:"Sports",kind:"rsscat",url:"https://www.rappler.com/sports/feed/"},
   {name:"RAPPLER BUSINESS",source:"RAPPLER",category:"Business",kind:"rsscat",url:"https://www.rappler.com/business/feed/"},
   {name:"RAPPLER TECHNOLOGY",source:"RAPPLER",category:"Technology",kind:"rsscat",validate:true,url:"https://www.rappler.com/technology/feed/"},
@@ -352,10 +354,10 @@ function normalizeUrl(url){
     return u.href.replace(/\/$/,"");
   }catch(e){return s}
 }
-function makeItem(headline,source,url,ts,summary="",image=""){
+function makeItem(headline,source,url,ts,summary="",image="",forcedCategory=""){
   const h=cleanTitle(headline);
   const when=Number(ts||0);
-  if(!h||h.length<18||!when||Date.now()-when>48*3600000||excluded(h))return null;
+  if(!h||h.length<18||!when||Date.now()-when>48*3600000||(excluded(h)&&forcedCategory!=="Celebrity"))return null;
   return {
     headline:h,
     source,
@@ -363,7 +365,7 @@ function makeItem(headline,source,url,ts,summary="",image=""){
     url:normalizeUrl(url),
     published_at:new Date(when).toISOString(),
     ts:when,
-    category:categoryFor(h),
+    category:forcedCategory||categoryFor(h),
     breaking:isBreaking(h,when),
     image:image||"",
     summary:plain(summary).slice(0,260),
@@ -440,7 +442,7 @@ function parseGenericRss(xml,sourceHint,forcedCategory){
     const url=normalizeUrl(plain(link));
     const ts=Date.parse(plain(pub))||0;
     if(!h||!url||!ts)continue;
-    const obj=makeItem(h,sourceHint,url,ts,desc,rssImage(block,desc));
+    const obj=makeItem(h,sourceHint,url,ts,desc,rssImage(block,desc),forcedCategory);
     if(obj&&(forcedCategory||philippinesRelevant(obj.headline))){
       if(forcedCategory&&/^(Health|Technology|Travel|Transport)$/.test(forcedCategory)&&!categoryMatchesTitle(obj.headline,forcedCategory,sourceHint,itemDomain(obj)))continue;
       if(forcedCategory)obj.category=forcedCategory;
@@ -709,7 +711,7 @@ function selectTopCategoryToday(items,limit=18){
   return out;
 }
 function buildTopByCategory(items){
-  const cats=["Nation","Weather","Earthquake","Crime","Business","Transport","Politics","Travel","Sports","Technology","Health"];
+  const cats=["Nation","Weather","Earthquake","Crime","Business","Transport","Politics","Travel","Sports","Technology","Health","Celebrity"];
   const out={};
   for(const cat of cats)out[cat]=selectTopCategoryToday((items||[]).filter(x=>x.category===cat),18);
   out.Breaking=selectTopCategoryToday((items||[]).filter(x=>x.breaking),12);
@@ -855,8 +857,8 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v22");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v21");
+  const freshKey=new Request(origin+"/api/news-cache-v23-celebrity");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v22-celebrity");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
@@ -868,7 +870,7 @@ export async function onRequestGet(context){
 
     const topToday=selectTopToday(result.items,10);
     const breakingGlobal=selectGlobalBreaking(result.items,topToday,12);
-    const allCats=["Nation","Weather","Earthquake","Crime","Business","Transport","Politics","Travel","Sports","Technology","Health"];
+    const allCats=["Nation","Weather","Earthquake","Crime","Business","Transport","Politics","Travel","Sports","Technology","Health","Celebrity"];
     const categoryItems={},topTodayByCategory={},recentByCategory={};
     for(const cat of allCats){
       const desk=(result.deskBuckets&&result.deskBuckets[cat])||[];
