@@ -1,7 +1,7 @@
 /* MX NEWS • CELEBRITY SPOTLIGHT */
-.cat[data-cat="Celebrities"]{color:#ffd2ea;border-color:#ff4b9e;background:linear-gradient(125deg,#42112e,#8a235f);font-weight:850;box-shadow:0 0 12px rgba(255,70,151,.29);animation:celebGlow 2.6s ease-in-out infinite}
-.cat[data-cat="Celebrities"]:before{content:"✦";margin-right:6px;color:#ffdfac}
-.cat[data-cat="Celebrities"].active,.cat[data-cat="Celebrities"]:hover{color:#fff;background:linear-gradient(120deg,#ff50a1,#e82d88 70%,#9b2067);border-color:#ffc0df;box-shadow:0 0 15px rgba(255,77,162,.6),0 0 34px rgba(255,58,145,.32)}
+.cat[data-cat="Celebrity"]{color:#ffd2ea;border-color:#ff4b9e;background:linear-gradient(125deg,#42112e,#8a235f);font-weight:850;box-shadow:0 0 12px rgba(255,70,151,.29);animation:celebGlow 2.6s ease-in-out infinite}
+.cat[data-cat="Celebrity"]:before{content:"✦";margin-right:6px;color:#ffdfac}
+.cat[data-cat="Celebrity"].active,.cat[data-cat="Celebrity"]:hover{color:#fff;background:linear-gradient(120deg,#ff50a1,#e82d88 70%,#9b2067);border-color:#ffc0df;box-shadow:0 0 15px rgba(255,77,162,.6),0 0 34px rgba(255,58,145,.32)}
 @keyframes celebGlow{50%{box-shadow:0 0 15px rgba(255,72,163,.64),0 0 27px rgba(255,72,163,.3)}}
 body.mx-celeb-active .main,body.mx-celeb-active .ticker{display:none}
 #mxCelebrityStage[hidden]{display:none!important}
@@ -52,7 +52,7 @@ body.mx-celeb-active .main,body.mx-celeb-active .ticker{display:none}
 @media(max-width:1000px){.celeb-feature-grid{grid-template-columns:1fr}.celeb-feature{min-height:385px}.celeb-side{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none}.celeb-mini{min-height:230px}}
 @media(max-width:750px){.celeb-head{flex-direction:column;align-items:flex-start;gap:13px}.celeb-feed-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:580px){#mxCelebrityStage{padding:18px 12px 48px}.celeb-head h1{font-size:41px;letter-spacing:-1px}.celeb-overline{font-size:9px}.celeb-feature{min-height:350px}.celeb-copy{padding:21px}.celeb-copy h2{font-size:25px}.celeb-side{grid-template-columns:1fr}.celeb-mini{min-height:195px}.celeb-section-title{font-size:27px}.celeb-feed-grid{grid-template-columns:1fr}.celeb-card{min-height:0}.celeb-card .celeb-photo{height:210px}.celeb-section-header{align-items:flex-start}.celeb-count{max-width:140px;text-align:right}}
-@media(prefers-reduced-motion:reduce){.cat[data-cat="Celebrities"]{animation:none}.celeb-feature,.celeb-mini,.celeb-card,.celeb-photo img{transition:none}}
+@media(prefers-reduced-motion:reduce){.cat[data-cat="Celebrity"]{animation:none}.celeb-feature,.celeb-mini,.celeb-card,.celeb-photo img{transition:none}}
 
 
 /* Ten-story luxury celebrity hero, matching the existing news hero controls. */
