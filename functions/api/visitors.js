@@ -43,24 +43,18 @@ export async function onRequestGet(){
   const curve=Math.pow(progress,0.92);
   const today=Math.floor(dayBase+(dailyGain*curve));
 
-  // Preserve the previous Online Now algorithm independently of the
-  // higher simulated Visitors Today figures.
-  const onlineBase=22000+(seed%6500);
-  const onlineGain=36500+((seed>>>7)%8000);
-  const onlineTrafficToday=Math.max(20000,Math.min(72000,
-    Math.floor(onlineBase+onlineGain*curve)
-  ));
-
-  // Online Now: tied to traffic volume, but breathes up/down naturally.
-  // Evening gets a small activity lift; late night/early morning cools down.
-  const hour=t.h+t.m/60;
-  const peakBoost=(hour>=17&&hour<23)?150:(hour<6? -120:35);
-  const ratio=0.019+(((seed>>>16)%12)/1000);
-  const wave1=Math.sin((seconds/34)+(seed%17))*125;
-  const wave2=Math.sin((seconds/11)+((seed>>>8)%29))*58;
-  const wave3=Math.sin((seconds/4.7)+((seed>>>4)%41))*24;
-  const now=Math.max(650,Math.min(2100,
-    Math.round(onlineTrafficToday*ratio+peakBoost+wave1+wave2+wave3)
+  // SIMULATED concurrent visitors: a 3,000–8,000 range alongside
+  // Visitors Today, not a measurement of real connected users.
+  // Activity is usually higher in the Manila afternoon/evening and
+  // changes smoothly instead of jumping several times a second.
+  const hour=t.h+t.m/60+t.s/3600;
+  const ManilaPeak=0.5+0.5*Math.cos((hour-17)*Math.PI/12);
+  const dayVariation=((seed>>>11)%701)-350;
+  const visitorLift=Math.min(650,Math.max(0,(today-70000)*0.01));
+  const wave1=Math.sin((seconds/410)+(seed%17))*110;
+  const wave2=Math.sin((seconds/137)+((seed>>>8)%29))*55;
+  const now=Math.max(3000,Math.min(8000,
+    Math.round(3650+3100*ManilaPeak+dayVariation+visitorLift+wave1+wave2)
   ));
 
   return j({
