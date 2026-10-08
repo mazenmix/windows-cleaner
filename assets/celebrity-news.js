@@ -20,46 +20,91 @@ function ago(i){
  return Math.floor(s/86400)+"d ago";
 }
 function phDate(i){return new Date(stamp(i)).toLocaleString("en-PH",{timeZone:"Asia/Manila",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})+" PHT"}
-// Shared photo loader for both the Celebrity tab and Celebrity stories in All News.
-// First try existing proxy, then discover the actual publisher OG photo.
+// Real publisher photos take priority. If a source (especially Google News)
+// cannot provide one, every story uses our own polished editorial cover.
+const CELEB_FALLBACK="/assets/celebrity-cover.svg";
 const photoCache=new Map();
-window.mxCelebrityImageFallback=async function(img){
- if(!img||!img.dataset)return;
- const article=safeUrl(img.dataset.celebUrl||"");
- if(article==="#"||img.dataset.celebRetry==="1"){img.style.display="none";return;}
- img.dataset.celebRetry="1";
+let celebObserver=null;
+function directPublisher(article){
  try{
-  let pending=photoCache.get(article);
-  if(!pending){
-   pending=fetch("/api/celebrity-image?ref="+btoa(article).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""),{cache:"force-cache"})
-    .then(r=>r.json()).then(j=>j.ok&&/^https?:\/\//i.test(j.image)?j.image:"")
-    .catch(()=>"");
-   photoCache.set(article,pending);
-  }
-  const url=await pending;
-  if(!url){img.style.display="none";return;}
-  if(img.isConnected){img.src=url;img.style.display="block";}
- }catch(_){img.style.display="none"}
+  const url=new URL(article);
+  return /^https?:$/.test(url.protocol)&&!/(^|\.)news\.google\.com$/i.test(url.hostname);
+ }catch(_){return false}
+}
+function refForArticle(article){
+ // Original article links are ASCII URLs; use URL-safe base64 as supported by the API.
+ return btoa(article).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function showCelebrityCover(img){
+ if(!img)return;
+ img.onerror=null;
+ img.dataset.celebNeedsOg="0";
+ img.dataset.celebCover="1";
+ img.style.display="block";
+ if(!img.src.endsWith(CELEB_FALLBACK))img.src=CELEB_FALLBACK;
+}
+async function findPublisherPhoto(article){
+ if(!directPublisher(article))return"";
+ if(photoCache.has(article))return photoCache.get(article);
+ const pending=fetch("/api/celebrity-image?ref="+refForArticle(article),{cache:"force-cache"})
+  .then(async r=>{
+   if(!r.ok)return"";
+   const data=await r.json();
+   return data&&data.ok&&/^https?:\/\//i.test(data.image)?data.image:"";
+  }).catch(()=>"");
+ photoCache.set(article,pending);
+ return pending;
+}
+window.mxCelebrityImageFallback=async function(img){
+ if(!img||!img.dataset||img.dataset.celebMetaRunning==="1")return;
+ const article=safeUrl(img.dataset.celebUrl||"");
+ if(!directPublisher(article)||img.dataset.celebMetaTried==="1"){showCelebrityCover(img);return;}
+ img.dataset.celebMetaTried="1";
+ img.dataset.celebMetaRunning="1";
+ try{
+  const photo=await findPublisherPhoto(article);
+  if(!img.isConnected)return;
+  if(photo&&photo!==img.src){
+   img.onerror=function(){showCelebrityCover(this)};
+   img.src=photo;
+   img.style.display="block";
+   img.dataset.celebCover="0";
+  }else showCelebrityCover(img);
+ }catch(_){showCelebrityCover(img)}
+ finally{img.dataset.celebMetaRunning="0"}
 };
-function hydrateCelebrityImages(){
- // Load publisher images for the first visible cards right away;
- // subsequent slideshow cards resolve automatically on demand.
- const imgs=[...stage.querySelectorAll(".celeb-photo img")].slice(0,11);
- imgs.forEach(img=>{
-  if(img.dataset.celebHydrate==="1")return;
-  img.dataset.celebHydrate="1";
-  if(img.dataset.celebRetry!=="1")window.mxCelebrityImageFallback(img);
- });
+function scheduleCelebrityImage(img){
+ if(!img||img.dataset.celebQueued==="1")return;
+ img.dataset.celebQueued="1";
+ if(celebObserver){celebObserver.observe(img)}
+ else window.mxCelebrityImageFallback(img);
 }
+function hydrateCelebrityImages(root){
+ const scope=root||stage;
+ const imgs=[...(scope.matches&&scope.matches('img[data-celeb-needs-og="1"]')?[scope]:[]),
+  ...scope.querySelectorAll('img[data-celeb-needs-og="1"]')];
+ imgs.forEach(scheduleCelebrityImage);
+}
+if("IntersectionObserver" in window){
+ celebObserver=new IntersectionObserver(entries=>{
+  for(const entry of entries){
+   if(!entry.isIntersecting)continue;
+   celebObserver.unobserve(entry.target);
+   if(entry.target.dataset.celebNeedsOg==="1")window.mxCelebrityImageFallback(entry.target);
+  }
+ },{rootMargin:"450px 0px"});
+}
+window.mxCelebrityQueueImages=hydrateCelebrityImages;
 function image(i){
- let src="";
  const article=safeUrl(i.url);
- if(i.image&&/^https?:\/\//i.test(i.image))src=i.image;
- else if(article!=="#"&&!/news\.google\.com/i.test(article))src="/api/news-image?url="+encodeURIComponent(article);
+ const trustedPhoto=i.image&&/^https?:\/\//i.test(i.image)?i.image:"";
+ const needsOg=!trustedPhoto&&directPublisher(article);
+ const src=trustedPhoto||CELEB_FALLBACK;
  return '<div class="celeb-photo"><span class="celeb-photo-mark">✦</span>'+
-  (src?'<img src="'+esc(src)+'" data-celeb-url="'+esc(article)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="window.mxCelebrityImageFallback&&window.mxCelebrityImageFallback(this)">':"")+
-  '</div>';
+   '<img src="'+esc(src)+'" data-celeb-url="'+esc(article)+'" data-celeb-needs-og="'+(needsOg?"1":"0")+'" alt="" loading="lazy" referrerpolicy="no-referrer" onload="this.parentElement.classList.add(\'has-real-image\')" onerror="window.mxCelebrityImageFallback?window.mxCelebrityImageFallback(this):this.style.display=\'none\'">'+
+   '</div>';
 }
+
 function featureCard(i,small){
  return '<a class="'+(small?"celeb-mini":"celeb-feature")+'" href="'+esc(safeUrl(i.url))+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(i.headline)+'">'+
    image(i)+'<div class="celeb-copy">'+
