@@ -173,6 +173,60 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
   .live-list{grid-template-columns:1fr}.lower{margin-top:10px}.latest-panel{padding:10px}.latest-showcase{grid-template-columns:1fr;gap:10px}.latest-featured{min-height:310px}.latest-featured-body{padding:18px 18px 16px}.latest-featured h3{font-size:22px;max-width:94%}.latest-featured p{font-size:12px;max-width:92%}.latest-featured-arrow{width:34px;height:34px;font-size:22px;right:12px;bottom:12px}.latest-side-stack{grid-template-columns:1fr;gap:10px}.latest-side-card{min-height:190px}.latest-rest-grid{grid-template-columns:1fr;gap:10px}.news-card{min-height:210px;display:flex}.news-media{height:auto}.news-body{padding:14px 14px 13px;min-height:140px}.news-card h3{font-size:15px;-webkit-line-clamp:3}
   
 }
+
+/* NEWS: visitor counters mirror the MX Fuel header; estimates share /api/visitors. */
+.visitor-stats{display:flex;align-items:center;gap:8px;margin-left:10px}
+.visitor-chip{height:36px;display:inline-flex;align-items:center;gap:7px;padding:0 11px;border-radius:18px;border:1px solid #244b67;background:rgba(6,28,47,.78);white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+.visitor-chip .visitor-label{font-size:8px;font-weight:800;color:#8fb0c9;letter-spacing:.2px}
+.visitor-chip b{font-size:11px;font-weight:950;color:#f4f8fb;min-width:25px;text-align:right}.visitor-demo{font-style:normal;font-size:5.8px;font-weight:950;letter-spacing:.55px;color:#6f8da5;opacity:.78;margin-left:1px}.visitor-estimated{font-size:3px;font-weight:600;letter-spacing:.2px;color:#607e97;opacity:.28;margin-left:1px;white-space:nowrap;line-height:1}
+.visitor-dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px}
+.visitor-dot.purple{background:#ff9500;box-shadow:0 0 0 0 rgba(255,149,0,.42),0 0 14px rgba(255,149,0,1);animation:visitorPurplePulse 1.15s ease-in-out infinite}
+.visitor-dot.green{background:#20e59d;box-shadow:0 0 0 0 rgba(32,229,157,.35),0 0 12px rgba(32,229,157,.9);animation:visitorPulse 1.15s ease-in-out infinite}
+@keyframes visitorPulse{0%,100%{transform:scale(.9);box-shadow:0 0 0 0 rgba(32,229,157,.35),0 0 8px rgba(32,229,157,.75)}50%{transform:scale(1.15);box-shadow:0 0 0 5px rgba(32,229,157,0),0 0 17px rgba(32,229,157,1)}}@keyframes visitorPurplePulse{0%,100%{transform:scale(.9);box-shadow:0 0 0 0 rgba(255,149,0,.42),0 0 10px rgba(255,149,0,.88)}50%{transform:scale(1.17);box-shadow:0 0 0 6px rgba(255,149,0,0),0 0 20px rgba(255,149,0,1)}}
+@media(max-width:900px){.visitor-stats{order:3;width:100%;margin-left:0;justify-content:flex-start}.visitor-chip{height:34px}.visitor-chip .visitor-label{font-size:7.5px}.visitor-chip b{font-size:10.5px}}
+@media(max-width:520px){.visitor-stats{display:grid;grid-template-columns:1fr 1fr}.visitor-chip{justify-content:center;padding:0 9px}}
+
+
+
+.nav .visitor-stats{margin-left:0;flex:0 0 auto;gap:6px}
+.nav .visitor-chip{height:34px;padding:0 9px;gap:6px}
+.nav .visitor-estimated{font-size:8px;opacity:.68;color:#879eaf}
+@media(max-width:1500px) and (min-width:1181px){
+ .nav{gap:10px}.nav .brand{min-width:160px}
+ .nav .links a{padding:0 8px;font-size:11px}
+ .nav .search{width:clamp(130px,14vw,200px);flex-shrink:1}
+ .nav .visitor-chip{padding:0 7px;gap:5px}
+ .nav .visitor-chip .visitor-label{font-size:7.5px}
+ .nav .visitor-chip b{font-size:10.5px}
+}
+@media(max-width:1180px){
+ .nav .visitor-stats{width:auto;order:0;justify-content:flex-start;min-width:0}
+ .nav .brand{min-width:170px}
+ .nav .search{width:clamp(135px,18vw,210px)}
+}
+@media(max-width:970px){
+ .topbar{height:auto}
+ .nav{height:auto;min-height:66px;flex-wrap:wrap;padding-top:9px;padding-bottom:9px;row-gap:9px}
+ .nav .visitor-stats{order:3;width:100%;margin:0;justify-content:flex-end}
+ .nav .search{width:clamp(175px,30vw,240px)}
+ .nav .live{order:2}
+}
+@media(max-width:580px){
+ .nav .brand{order:0}
+ .nav .live{order:1}
+ .nav .visitor-stats{order:2;display:flex;width:100%;justify-content:space-between;gap:7px}
+ .nav .visitor-chip{flex:1 1 0;justify-content:center;min-width:0;padding:0 8px}
+ .nav .visitor-estimated{font-size:8px}
+ .nav .search{order:3;width:100%}
+}
+@media(max-width:360px){
+ .nav .visitor-stats{flex-wrap:wrap}
+ .nav .visitor-estimated{width:100%;text-align:center}
+}
+@media(prefers-reduced-motion:reduce){
+ .nav .visitor-dot.purple,.nav .visitor-dot.green{animation:none}
+}
+
 </style>
 </head>
 <body>
@@ -190,6 +244,7 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
       <a class="active" href="./news.html">NEWS</a>
     </nav>
     <div class="search"><span>⌕</span><input id="searchInput" placeholder="Search news..." autocomplete="off"></div>
+    <div class="visitor-stats" id="visitorStats"><div class="visitor-chip today"><span class="visitor-dot purple"></span><span class="visitor-label">Visitors Today</span><b id="visitorsToday">1,000+</b></div><div class="visitor-chip now"><span class="visitor-dot green"></span><span class="visitor-label">Online Now</span><b id="visitorsNow">3,000+</b></div><span class="visitor-estimated">Estimated</span></div>
     <div class="live"><span class="dot" id="liveDot"></span><span><strong id="liveText">LIVE NOW</strong><small id="clock">Loading PHT…</small></span></div>
   </div>
 </header>
@@ -808,6 +863,69 @@ load();setInterval(load,15000);
 })();
 </script>
 <script src="./assets/celebrity-news.js?v=20261008j"></script>
+<script>
+(function(){
+ const box=document.getElementById("visitorStats"),todayEl=document.getElementById("visitorsToday"),nowEl=document.getElementById("visitorsNow");
+ if(!box||!todayEl||!nowEl)return;
+ const note=box.querySelector(".visitor-estimated");
+ const KEY="mxVisitorRealV1";
+ const NOW_KEY="mxVisitorsNowBumpV2";
+ const phDay=()=>new Date(Date.now()+8*3600000).toISOString().slice(0,10);
+ let nowDay=phDay(),boostedNow=0;
+ try{
+  const prev=JSON.parse(localStorage.getItem(NOW_KEY)||"null");
+  if(prev&&prev.day===nowDay&&Number.isFinite(Number(prev.count))){
+   boostedNow=Math.max(0,Math.min(8000,Math.round(Number(prev.count))));
+  }
+ }catch(e){}
+ // Continue the previous small increase on each page refresh.
+ boostedNow=Math.min(8000,boostedNow+3+Math.floor(Math.random()*10));
+ function fmt(v){return Math.max(0,Math.round(Number(v)||0)).toLocaleString("en-US")}
+ function render(j,cached){
+  if(!j||!Number.isFinite(Number(j.today))||!Number.isFinite(Number(j.now)))return false;
+  todayEl.textContent=fmt(j.today);
+  const day=phDay();
+  if(day!==nowDay){nowDay=day;boostedNow=0;}
+  boostedNow=Math.min(8000,Math.max(3000,boostedNow,Math.round(Number(j.now)||0)));
+  nowEl.textContent=fmt(boostedNow);
+  try{localStorage.setItem(NOW_KEY,JSON.stringify({day:nowDay,count:boostedNow}))}catch(e){}
+  if(note)note.textContent="Estimated";
+  box.hidden=false;
+  return true;
+ }
+ function restore(){
+  try{return render(JSON.parse(localStorage.getItem(KEY)||"null"),true)}catch(e){return false}
+ }
+ async function refresh(){
+  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),8000);
+  try{
+   const r=await fetch("/api/visitors?ts="+Date.now(),{cache:"no-store",signal:ctrl.signal});
+   if(!r.ok)throw new Error("HTTP "+r.status);
+   const j=await r.json();
+   if(!j.ok||!j.configured||!render(j,false))throw new Error("Visitor counter unavailable");
+   try{localStorage.setItem(KEY,JSON.stringify(j))}catch(e){}
+  }catch(e){
+   if(!restore()){
+    todayEl.textContent="—";nowEl.textContent="—";
+    if(note)note.textContent="Unavailable";
+   }
+  }finally{clearTimeout(timer)}
+ }
+ restore();
+ refresh();
+ setInterval(refresh,60000);
+ // Trigger the daily reset immediately at midnight in Manila,
+ // without waiting for the next regular 60-second poll.
+ let manilaDate=new Date(Date.now()+8*3600000).toISOString().slice(0,10);
+ setInterval(()=>{
+  const day=new Date(Date.now()+8*3600000).toISOString().slice(0,10);
+  if(day!==manilaDate){
+   manilaDate=day;
+   refresh();
+  }
+ },1000);
+})();
+</script>
 <!-- NEWS build: celebrity-all-photos-v31 -->
 </body>
 </html>
