@@ -838,6 +838,15 @@ async function collect(){
     sourceCount=new Set(fresh.map(x=>x.source)).size;
   }
 
+  // Keep local celebrity reporting in the All News source collection,
+  // even when the busiest main news pool has reached its size cap.
+  const celebrityMain=dedupe((deskBuckets.Celebrity||[]).slice()).filter(isToday).slice(0,9);
+  const included=new Set(combined.map(x=>x.url));
+  for(const x of celebrityMain){
+    if(!included.has(x.url)){combined.push(x);included.add(x.url)}
+  }
+  combined.sort((a,b)=>b.ts-a.ts);
+
   const deskCombined={};
   for(const [cat,list] of Object.entries(deskBuckets)){
     deskCombined[cat]=dedupe(list).filter(x=>Date.now()-x.ts<=48*3600000);
@@ -857,8 +866,8 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v23-celebrity");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v22-celebrity");
+  const freshKey=new Request(origin+"/api/news-cache-v24-celebrity-merged");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v23-celebrity-merged");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
