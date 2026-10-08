@@ -7,8 +7,6 @@ const tab=bar&&bar.querySelector('[data-cat="Celebrities"]');
 if(!stage||!bar||!tab)return;
 const featureRoot=document.getElementById("mxCelebrityFeature");
 const newsRoot=document.getElementById("mxCelebrityGrid");
-const statusEl=document.getElementById("mxCelebrityStatus");
-const countEl=document.getElementById("mxCelebrityCount");
 const searchEl=document.getElementById("searchInput");
 const state={items:[],featured:[],sourceCount:0,checkedAt:"",signature:"",loaded:false,loading:false,stale:false,error:"",slideItems:[],slideIndex:0,slideTimer:null};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -125,10 +123,6 @@ function render(){
  const side=items.filter(i=>!slideUrls.has(safeUrl(i.url))).slice(0,2);
  const used=new Set(slides.concat(side).map(i=>safeUrl(i.url)));
  const rest=items.filter(i=>!used.has(safeUrl(i.url)));
- countEl.textContent=items.length+" STORIES · "+state.slideItems.length+" SPOTLIGHT FEATURES · ≥80% PH";
- statusEl.textContent=state.loading&&!state.loaded?"CONNECTING ENTERTAINMENT SOURCES":
-  state.stale?"LAST VERIFIED · SOURCES RECONNECTING":
-  state.loaded?state.sourceCount+" PUBLISHERS · AUTO-UPDATING":"PREPARING STORIES";
  if(!lead){
   stopSlider();
   featureRoot.innerHTML='<div class="celeb-placeholder"><strong>'+(state.loading?"The spotlight is loading ✦":"No new headlines yet")+'</strong>'+
@@ -165,7 +159,6 @@ async function refresh(){
   state.signature=signature;
   try{localStorage.setItem("mxCelebrityV1",JSON.stringify({saved:Date.now(),items:state.items,featured:state.featured,sourceCount:state.sourceCount}))}catch(_){}
   if(changed||!newsRoot.children.length)render();
-  else if(active())statusEl.textContent=state.sourceCount+" PUBLISHERS · AUTO-UPDATING";
  }catch(e){
   state.loading=false;state.error="Published entertainment sources are reconnecting. New stories will appear automatically.";
   if(active())render();
@@ -175,6 +168,7 @@ bar.addEventListener("click",function(e){
  const b=e.target.closest("[data-cat]");if(!b)return;
  if(b.dataset.cat==="Celebrities"){
   e.preventDefault();e.stopImmediatePropagation();
+  if(typeof window.mxNewsPersistCategory==="function")window.mxNewsPersistCategory("Celebrities");
   bar.querySelectorAll(".cat").forEach(x=>x.classList.remove("active"));
   tab.classList.add("active");document.body.classList.add("mx-celeb-active");
   stage.hidden=false;render();refresh();
@@ -188,5 +182,5 @@ setInterval(()=>{if(active())refresh()},45000);
 setInterval(()=>{if(!active())return;stage.querySelectorAll(".mx-celeb-age").forEach(el=>{
  const time=Number(el.getAttribute("data-ts"));if(time)el.textContent=ago({ts:time});
 })},30000);
-if(new URLSearchParams(location.search).get("category")==="Celebrities")tab.click();
+if(typeof window.mxNewsPreferredCategory==="function"&&window.mxNewsPreferredCategory()==="Celebrities")tab.click();
 })();
