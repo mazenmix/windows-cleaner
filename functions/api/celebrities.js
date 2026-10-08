@@ -125,6 +125,21 @@ function uniq(items){
  }
  return output;
 }
+// "PH" identifies entertainment coverage from Philippine publishers,
+ // unless the headline explicitly concerns a foreign-only celebrity story.
+const PH_PUBLISHER=/^(Philstar|Rappler|ABS-CBN|GMA News|Inquirer|Manila Bulletin|Manila Times|PEP\.ph)$/i;
+const WORLD_ONLY=/\b(?:hollywood|kardashian|jennifer lawrence|taylor swift|justin bieber|selena gomez|travis scott|ariana grande|billie eilish|leonardo dicaprio|brad pitt|tom cruise|lollapalooza argentina|paramount|skydance|wall street|new york stock exchange)\b/i;
+const PH_SIGNAL=/philippin|filipin|pinoy|pinay|manila|kapamilya|kapuso|gma|abs-cbn|vivamax|star magic|teleserye|quezon city|cebu|baguio|tv5|pinoy big brother/i;
+function isPhilippineStory(item){
+ const t=String(item.headline||"")+" "+String(item.summary||"");
+ if(PH_SIGNAL.test(t))return true;
+ return PH_PUBLISHER.test(String(item.source||""))&&!WORLD_ONLY.test(t);
+}
+function localRatio(items){
+ const arr=Array.isArray(items)?items:[];
+ const count=arr.filter(x=>x.market==="PH").length;
+ return arr.length?Math.round(count/arr.length*100):0;
+}
 function importance(item){
  const ageH=Math.max(0,(Date.now()-item.ts)/3600000),t=item.headline.toLowerCase();
  let score=Math.max(0,90-ageH*2.2);
@@ -141,18 +156,35 @@ function json(data,status=200,ttl=CACHE_SECONDS){
 }
 export async function onRequestGet(context){
  const cache=caches.default,origin=new URL(context.request.url).origin;
- const fresh=new Request(origin+"/api/celebrities-cache-v2");
- const last=new Request(origin+"/api/celebrities-last-good-v2");
+ const fresh=new Request(origin+"/api/celebrities-cache-v3");
+ const last=new Request(origin+"/api/celebrities-last-good-v3");
  const hit=await cache.match(fresh);if(hit)return hit;
  try{
   const results=await Promise.allSettled(FEEDS.map(fetchFeed));
   const diagnostics=FEEDS.map((x,i)=>({name:x.name,ok:results[i].status==="fulfilled",items:results[i].status==="fulfilled"?results[i].value.length:0}));
   const valid=results.flatMap(r=>r.status==="fulfilled"?r.value:[]);
-  const items=uniq(valid);
-  if(!items.length)throw new Error("No verified celebrity headlines are available");
-  const featured=items.filter(x=>Date.now()-x.ts<=24*3600000).sort((a,b)=>importance(b)-importance(a)||b.ts-a.ts).slice(0,5);
+  const all=uniq(valid).map(x=>({...x,market:isPhilippineStory(x)?"PH":"WORLD"}));
+  const ph=all.filter(x=>x.market==="PH");
+  const world=all.filter(x=>x.market==="WORLD");
+  // Enforce ≥80% PH across all displayed stories. When enough PH stories
+  // are unavailable, show fewer items rather than mislabel foreign news.
+  const worldQuota=Math.floor(ph.length/4);
+  const items=uniq(ph.concat(world.slice(0,worldQuota))).sort((a,b)=>b.ts-a.ts);
+  if(!items.length)throw new Error("No verified Philippine celebrity headlines are available");
+  // 10 unique spotlight slides: 8 PH + at most 2 international stories.
+  // The pool is editorially ranked, while the body remains newest-first.
+  const rankedPH=ph.slice().sort((a,b)=>importance(b)-importance(a)||b.ts-a.ts);
+  const rankedWorld=world.slice().sort((a,b)=>importance(b)-importance(a)||b.ts-a.ts);
+  const featuredPH=rankedPH.slice(0,10);
+  const featuredWorld=rankedWorld.slice(0,Math.min(2,Math.floor(featuredPH.length/4)));
+  const featured=[];
+  for(let i=0;i<featuredPH.length&&featured.length<10;i++){
+   featured.push(featuredPH[i]);
+   if((i===3||i===7)&&featuredWorld.length)featured.push(featuredWorld.shift());
+  }
   const data={ok:true,live:true,stale:false,source:"Multi-source published entertainment RSS",
-   checked_at:new Date().toISOString(),items,featured:featured.length?featured:items.slice(0,5),
+   checked_at:new Date().toISOString(),items,featured:featured.slice(0,10),
+   philippines_percent:localRatio(items),spotlight_philippines_percent:localRatio(featured.slice(0,10)),
    source_count:new Set(items.map(x=>x.source)).size,feeds_ok:diagnostics.filter(x=>x.ok).length,feed_count:FEEDS.length,diagnostics};
   const answer=json(data),backup=json(data,200,LAST_GOOD_SECONDS);
   context.waitUntil(Promise.all([cache.put(fresh,answer.clone()),cache.put(last,backup.clone())]));
