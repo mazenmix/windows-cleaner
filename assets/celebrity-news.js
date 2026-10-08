@@ -10,7 +10,7 @@ const newsRoot=document.getElementById("mxCelebrityGrid");
 const statusEl=document.getElementById("mxCelebrityStatus");
 const countEl=document.getElementById("mxCelebrityCount");
 const searchEl=document.getElementById("searchInput");
-const state={items:[],featured:[],sourceCount:0,checkedAt:"",signature:"",loaded:false,loading:false,stale:false,error:""};
+const state={items:[],featured:[],sourceCount:0,checkedAt:"",signature:"",loaded:false,loading:false,stale:false,error:"",slideItems:[],slideIndex:0,slideTimer:null};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function safeUrl(url){try{const u=new URL(String(url));return /^https?:$/.test(u.protocol)?u.href:"#"}catch(_){return"#"}}
 function stamp(i){return Number(i.ts)||Date.parse(i.published_at)||0}
@@ -38,6 +38,54 @@ function featureCard(i,small){
    (small?"":'<p>'+esc(i.summary||"The latest from "+(i.source||"entertainment news")+".")+'</p>')+
    '<div class="celeb-caption"><span>'+esc(i.source||"Entertainment")+' <span class="date">· '+esc(ago(i))+'</span></span><span class="celeb-read">READ STORY ↗</span></div></div></a>';
 }
+
+function sliderAnchor(i){
+ return '<a class="celeb-slide-link" id="mxCelebritySlideLink" href="'+esc(safeUrl(i.url))+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(i.headline)+'">'+
+   image(i)+'<div class="celeb-copy"><span class="celeb-tag">✦ &nbsp; CELEBRITY SPOTLIGHT</span>'+
+   '<h2>'+esc(i.headline)+'</h2><p>'+esc(i.summary||"Read the original entertainment report.")+'</p>'+
+   '<div class="celeb-caption"><span>'+esc(i.source||"Entertainment")+' <span class="date">· '+esc(ago(i))+'</span></span>'+
+   '<span class="celeb-read">READ STORY ↗</span></div></div></a>';
+}
+function sliderMarkup(i,total,current){
+ return '<div class="celeb-feature celeb-slider" id="mxCelebritySlider">'+sliderAnchor(i)+
+   '<button class="celeb-slide-arrow prev" type="button" data-direction="-1" aria-label="Previous celebrity story">‹</button>'+
+   '<button class="celeb-slide-arrow next" type="button" data-direction="1" aria-label="Next celebrity story">›</button>'+
+   '<span class="celeb-slide-counter" id="mxCelebritySlideCounter">'+(current+1)+' / '+total+'</span></div>';
+}
+function stopSlider(){if(state.slideTimer){clearInterval(state.slideTimer);state.slideTimer=null}}
+function startSlider(){
+ stopSlider();
+ if(!active()||state.slideItems.length<2||document.hidden)return;
+ state.slideTimer=setInterval(()=>slideTo(state.slideIndex+1,1),5000);
+}
+function slideTo(n,dir=1){
+ const pool=state.slideItems;
+ if(!active()||!pool.length)return;
+ state.slideIndex=(n%pool.length+pool.length)%pool.length;
+ const link=document.getElementById("mxCelebritySlideLink");
+ const counter=document.getElementById("mxCelebritySlideCounter");
+ if(!link||!counter)return;
+ link.outerHTML=sliderAnchor(pool[state.slideIndex]);
+ counter.textContent=(state.slideIndex+1)+" / "+pool.length;
+ const next=document.getElementById("mxCelebritySlideLink");
+ if(next&&next.animate&&!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)){
+   next.animate([{opacity:.45,transform:"translateX("+(dir<0?"-18px":"18px")+")"},{opacity:1,transform:"translateX(0)"}],
+    {duration:320,easing:"ease-out"});
+ }
+}
+function attachSlider(){
+ const slider=document.getElementById("mxCelebritySlider");if(!slider)return;
+ slider.querySelectorAll("[data-direction]").forEach(b=>{
+  b.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();const d=Number(b.dataset.direction);slideTo(state.slideIndex+d,d);startSlider()});
+ });
+ slider.addEventListener("mouseenter",stopSlider);
+ slider.addEventListener("mouseleave",startSlider);
+ let startX=0,startY=0;
+ slider.addEventListener("touchstart",e=>{const t=e.touches[0];if(t){startX=t.clientX;startY=t.clientY;stopSlider()}},{passive:true});
+ slider.addEventListener("touchend",e=>{const t=e.changedTouches[0];if(t){const dx=t.clientX-startX,dy=t.clientY-startY;if(Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy)*1.3){slideTo(state.slideIndex+(dx<0?1:-1),dx<0?1:-1)}}startSlider()},{passive:true});
+}
+document.addEventListener("visibilitychange",()=>{if(document.hidden)stopSlider();else if(active())startSlider()});
+
 function articleCard(i){
  return '<a class="celeb-card" href="'+esc(safeUrl(i.url))+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(i.headline)+'">'+image(i)+
  '<div class="celeb-card-body"><div class="celeb-card-top"><span>✦ SHOWBIZ & CULTURE</span><span class="mx-celeb-age" data-ts="'+stamp(i)+'">'+esc(ago(i))+'</span></div>'+
@@ -51,21 +99,33 @@ function render(){
  if(!active())return;
  const items=filtered();
  const available=new Set(items.map(i=>safeUrl(i.url)));
- const lead=state.featured.find(i=>available.has(safeUrl(i.url)))||items[0];
- const side=(state.featured.length?state.featured:items).filter(i=>available.has(safeUrl(i.url))&&(!lead||i.url!==lead.url)).slice(0,2);
- const used=new Set((lead?[lead]:[]).concat(side).map(i=>safeUrl(i.url)));
+ let slides=(state.featured||[]).filter(i=>available.has(safeUrl(i.url))).slice(0,10);
+ if(!slides.length){
+  const local=items.filter(i=>i.market==="PH"),world=items.filter(i=>i.market==="WORLD");
+  slides=local.slice(0,8).concat(world.slice(0,Math.min(2,Math.floor(local.length/4)))).slice(0,10);
+ }
+ const previous=state.slideItems[state.slideIndex]?safeUrl(state.slideItems[state.slideIndex].url):"";
+ state.slideItems=slides;
+ const keepIndex=slides.findIndex(i=>safeUrl(i.url)===previous);
+ state.slideIndex=keepIndex>=0?keepIndex:0;
+ const lead=slides[state.slideIndex];
+ const slideUrls=new Set(slides.map(i=>safeUrl(i.url)));
+ const side=items.filter(i=>!slideUrls.has(safeUrl(i.url))).slice(0,2);
+ const used=new Set(slides.concat(side).map(i=>safeUrl(i.url)));
  const rest=items.filter(i=>!used.has(safeUrl(i.url)));
- countEl.textContent=items.length+" STORIES · LATEST FIRST · PHT";
+ countEl.textContent=items.length+" STORIES · "+state.slideItems.length+" SPOTLIGHT FEATURES · ≥80% PH";
  statusEl.textContent=state.loading&&!state.loaded?"CONNECTING ENTERTAINMENT SOURCES":
   state.stale?"LAST VERIFIED · SOURCES RECONNECTING":
   state.loaded?state.sourceCount+" PUBLISHERS · AUTO-UPDATING":"PREPARING STORIES";
  if(!lead){
+  stopSlider();
   featureRoot.innerHTML='<div class="celeb-placeholder"><strong>'+(state.loading?"The spotlight is loading ✦":"No new headlines yet")+'</strong>'+
    esc(state.error||"Finding fresh, published celebrity stories from entertainment sources…")+'</div>';
   newsRoot.innerHTML="";return;
  }
- featureRoot.innerHTML=featureCard(lead,false)+'<div class="celeb-side">'+side.map(i=>featureCard(i,true)).join("")+'</div>';
+ featureRoot.innerHTML=sliderMarkup(lead,slides.length,state.slideIndex)+'<div class="celeb-side">'+side.map(i=>featureCard(i,true)).join("")+'</div>';
  newsRoot.innerHTML=rest.slice(0,45).map(articleCard).join("");
+ attachSlider();startSlider();
 }
 function cacheRestore(){
  try{
@@ -108,7 +168,7 @@ bar.addEventListener("click",function(e){
   stage.hidden=false;render();refresh();
   return;
  }
- stage.hidden=true;document.body.classList.remove("mx-celeb-active");
+ stopSlider();stage.hidden=true;document.body.classList.remove("mx-celeb-active");
 },true);
 if(searchEl)searchEl.addEventListener("input",()=>{if(active())render()});
 cacheRestore();
