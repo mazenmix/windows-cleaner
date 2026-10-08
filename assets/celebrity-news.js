@@ -189,6 +189,31 @@ function readBuzzCache(){
  return[];
 }
 lastBuzzStories=readBuzzCache();
+function readMainNewsBuzz(){
+ // Reuse verified Philippine celebrity articles from the main NEWS cache
+ // if the specialised entertainment feed temporarily fails on mobile.
+ try{
+  const stored=JSON.parse(localStorage.getItem("mxNewsCacheV1")||"null");
+  if(!stored||!stored.data)return[];
+  const db=stored.data;
+  const pools=[...(db.recent_by_category&&db.recent_by_category.Celebrity||[]),
+   ...(db.category_items&&db.category_items.Celebrity||[])];
+  const seen=new Set();
+  return pools.filter(i=>{
+   const url=safeUrl(i.url),ts=stamp(i);
+   if(url==="#"||!ts||Date.now()-ts>48*3600000||seen.has(url))return false;
+   seen.add(url);return true;
+  }).map(i=>({...i,market:"PH"})).sort((a,b)=>stamp(b)-stamp(a)).slice(0,12);
+ }catch(_){return[]}
+}
+function resumeCelebrityBuzzMotion(){
+ if(!active()||!buzzStrip)return;
+ // Safari may preserve a paused animation after returning from hidden tabs.
+ // Restart after the container becomes visible, without rewriting headlines.
+ buzzStrip.style.animation="none";
+ void buzzStrip.offsetWidth;
+ buzzStrip.style.animation="";
+}
 function renderCelebrityBuzz(){
  if(!buzzBar||!buzzStrip||!active())return;
  // Never hide the bar during fetches, API failures or transient empty feeds.
@@ -202,13 +227,17 @@ function renderCelebrityBuzz(){
   try{localStorage.setItem(BUZZ_CACHE_KEY,JSON.stringify({saved:Date.now(),items:picked}))}catch(_){}
  }else{
   picked=lastBuzzStories.length?lastBuzzStories:readBuzzCache();
+  if(!picked.length)picked=readMainNewsBuzz();
  }
  if(!picked.length){
+  // Even the loading state moves. A stationary placeholder can look broken
+  // on a phone while a delayed mobile connection retrieves the first feed.
   if(!buzzStrip.querySelector(".celeb-buzz-run")){
-   buzzStrip.style.animation="none";
-   if(!buzzStrip.children.length){
-    buzzStrip.innerHTML='<span class="celeb-buzz-wait">✦ &nbsp; Checking the latest Philippine celebrity headlines… &nbsp; ✧</span>';
-   }
+   const waiting='<span class="celeb-buzz-wait">✦ &nbsp; Checking the latest Philippine celebrity headlines… &nbsp; ✧</span>';
+   const run='<div class="celeb-buzz-run">'+waiting+waiting+waiting+'</div>';
+   buzzStrip.innerHTML=run+run;
+   buzzStrip.style.setProperty("--celeb-buzz-time","38s");
+   buzzSignature="";
   }
   return;
  }
@@ -304,6 +333,7 @@ async function refresh(){
   state.signature=signature;
   try{localStorage.setItem("mxCelebrityV1",JSON.stringify({saved:Date.now(),items:state.items,featured:state.featured,sourceCount:state.sourceCount}))}catch(_){}
   if(changed||!newsRoot.children.length)render();
+  else if(active())renderCelebrityBuzz();
  }catch(e){
   state.loading=false;state.error="Published entertainment sources are reconnecting. New stories will appear automatically.";
   if(active())render();
@@ -316,12 +346,18 @@ bar.addEventListener("click",function(e){
   if(typeof window.mxNewsPersistCategory==="function")window.mxNewsPersistCategory("Celebrity");
   bar.querySelectorAll(".cat").forEach(x=>x.classList.remove("active"));
   tab.classList.add("active");document.body.classList.add("mx-celeb-active");
-  stage.hidden=false;render();refresh();
+  stage.hidden=false;render();requestAnimationFrame(resumeCelebrityBuzzMotion);refresh();
   return;
  }
  stopSlider();stage.hidden=true;document.body.classList.remove("mx-celeb-active");
 },true);
 if(searchEl)searchEl.addEventListener("input",()=>{if(active())render()});
+document.addEventListener("visibilitychange",()=>{
+ if(!document.hidden&&active())requestAnimationFrame(resumeCelebrityBuzzMotion);
+});
+window.addEventListener("pageshow",()=>{
+ if(active())requestAnimationFrame(resumeCelebrityBuzzMotion);
+});
 cacheRestore();
 setInterval(()=>{if(active())refresh()},45000);
 setInterval(updateBuzzAges,30000);
