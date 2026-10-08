@@ -22,7 +22,10 @@ function imageFromHtml(raw,article){
  return fallback?decode(fallback[0]):"";
 }
 export async function onRequestGet(ctx){
- const url=new URL(ctx.request.url),article=url.searchParams.get("url")||"";
+ const url=new URL(ctx.request.url);
+ let article=url.searchParams.get("url")||"";
+ const ref=url.searchParams.get("ref");
+ if(ref){try{article=atob(ref.replace(/-/g,"+").replace(/_/g,"/"))}catch(_){return j({ok:false,error:"invalid reference"},400)}}
  let target;
  try{target=new URL(article)}catch(_){return j({ok:false,error:"invalid article URL"},400)}
  if(target.protocol!=="https:"||!allowed(target.hostname))return j({ok:false,error:"unsupported publisher"},400);
