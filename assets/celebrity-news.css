@@ -134,7 +134,11 @@ body.mx-celeb-active .main,body.mx-celeb-active .ticker{display:none}
   white-space:nowrap;will-change:transform;
   animation:celebBuzzMove var(--celeb-buzz-time,64s) linear infinite;
 }
-.celeb-buzz-strip:hover,.celeb-buzz:focus-within .celeb-buzz-strip,.celeb-buzz:hover .celeb-buzz-strip{animation-play-state:paused}
+/* Hover must not pause tickers on touch browsers (sticky :hover on iOS/Android). */
+.celeb-buzz-strip{animation-play-state:running}
+@media (hover:hover) and (pointer:fine){
+ .celeb-buzz:hover .celeb-buzz-strip{animation-play-state:paused}
+}
 .celeb-buzz-run{display:flex;align-items:center;flex:0 0 auto;min-width:max-content}
 .celeb-buzz-item{
   display:inline-flex;align-items:center;flex:0 0 auto;gap:11px;
@@ -169,11 +173,11 @@ body.mx-celeb-active .main,body.mx-celeb-active .ticker{display:none}
  .celeb-buzz-star.other{display:none}
  .celeb-buzz-endstar{display:none}
 }
+/* User explicitly wants the news to scroll on ALL devices, including phones
+   set to Reduce Motion: keep a calm linear motion rather than turning ticker off. */
 @media(prefers-reduced-motion:reduce){
- .celeb-buzz-strip{animation:none;will-change:auto}
+ .celeb-buzz-strip{animation-duration:max(140s,var(--celeb-buzz-time,140s));animation-timing-function:linear;animation-iteration-count:infinite}
  .celeb-buzz-star{animation:none}
- .celeb-buzz-viewport{overflow-x:auto;-webkit-mask-image:none;mask-image:none}
- .celeb-buzz-run[aria-hidden="true"]{display:none}
 }
 
 
