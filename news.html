@@ -7,7 +7,7 @@
 <title>NEWS | Philippines Live News</title>
 <meta name="description" content="NEWS — live Philippine headlines with automatic updates.">
 <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./assets/celebrity-news.css?v=20261008f">
+<link rel="stylesheet" href="./assets/celebrity-news.css?v=20261008g">
 <style>
 :root{
   --bg:#050b12;--bg2:#07111d;--panel:#091522;--panel2:#0b1a2a;--line:#1b2d40;
@@ -76,7 +76,7 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
 @keyframes heroSlideIn{from{opacity:.55;transform:translateX(22px)}to{opacity:1;transform:translateX(0)}}
 .badges{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
 .badge{padding:5px 9px;border-radius:5px;background:#263545;color:#e7eef5;font-size:9px;font-weight:950;letter-spacing:.15px;text-transform:uppercase}
-.badge.breaking{background:var(--red);color:#fff}.badge.weather{background:#ee7517}.badge.earthquake{background:#d94444}.badge.crime{background:#814cd4}.badge.business{background:#e27d12}.badge.transport{background:#2678e6}.badge.politics{background:#d83c56}.badge.travel{background:#2a9a87}.badge.sports{background:#22a04b}.badge.technology{background:#1898b6}.badge.health{background:#2d9e77}
+.badge.breaking{background:var(--red);color:#fff}.badge.celebrity{background:linear-gradient(125deg,#d82f89,#922d75);color:#fff4f9;border:1px solid rgba(255,172,215,.38)}.badge.weather{background:#ee7517}.badge.earthquake{background:#d94444}.badge.crime{background:#814cd4}.badge.business{background:#e27d12}.badge.transport{background:#2678e6}.badge.politics{background:#d83c56}.badge.travel{background:#2a9a87}.badge.sports{background:#22a04b}.badge.technology{background:#1898b6}.badge.health{background:#2d9e77}
 .age-pill{margin-left:auto;background:rgba(3,9,15,.82);border:1px solid #354759;border-radius:18px;padding:5px 9px;color:#dbe5ee;font-size:9px;display:flex;gap:6px;align-items:center}
 .age-pill i{width:6px;height:6px;border-radius:50%;background:var(--green);display:block}
 .hero h1{margin:14px 0 9px;font-size:31px;line-height:1.08;letter-spacing:-.9px;max-width:92%}
@@ -204,7 +204,7 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
 
 <div class="categories" id="categories">
   <button class="cat active" data-cat="All">All News</button>
-  <button class="cat" data-cat="Celebrities">Celebrities</button>
+  <button class="cat" data-cat="Celebrity">Celebrity</button>
   <button class="cat" data-cat="Breaking">Breaking</button>
   <button class="cat" data-cat="Metro Manila">Metro Manila</button>
   <button class="cat" data-cat="Weather">Weather</button>
@@ -248,7 +248,7 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
 
 <section id="mxCelebrityStage" hidden aria-label="Celebrities entertainment news">
  <div class="celeb-head">
-  <h1>Celebrity <em>Spotlight.</em></h1>
+  <h1>Celebrity</h1>
  </div>
  <div class="celeb-feature-grid" id="mxCelebrityFeature">
    <div class="celeb-placeholder"><strong>Preparing the spotlight ✦</strong>Checking the latest published entertainment stories…</div>
@@ -269,6 +269,7 @@ function preferredCategory(){
  var stored="";
  try{stored=localStorage.getItem(SELECTED_CATEGORY_KEY)||""}catch(e){}
  var selected=fromUrl||stored||"All";
+ if(selected==="Celebrities")selected="Celebrity";
  var exists=Array.from(document.querySelectorAll("#categories .cat")).some(function(btn){return btn.dataset.cat===selected});
  return exists?selected:"All";
 }
@@ -291,7 +292,7 @@ var els={
  tickerLabel:document.getElementById("tickerLabel"),tickerAge:document.getElementById("tickerAge"),latestTitle:document.getElementById("latestTitle"),resultCount:document.getElementById("resultCount"),
  liveText:document.getElementById("liveText"),liveDot:document.getElementById("liveDot"),searchInput:document.getElementById("searchInput")
 };
-var icons={Nation:"🇵🇭","Metro Manila":"🏙️",Weather:"🌧️",Earthquake:"◉",Crime:"🚨",Business:"₱",Transport:"🚆",Politics:"🏛️",Travel:"✈️",Sports:"🏀",Technology:"⌘",Health:"✚"};
+var icons={Nation:"🇵🇭","Metro Manila":"🏙️",Weather:"🌧️",Earthquake:"◉",Crime:"🚨",Business:"₱",Transport:"🚆",Politics:"🏛️",Travel:"✈️",Sports:"🏀",Technology:"⌘",Health:"✚",Celebrity:"✦"};
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]})}
 function safeUrl(u){try{var x=new URL(String(u));return /^https?:$/.test(x.protocol)?x.href:"#"}catch(e){return"#"}}
 function itemTs(i){return Date.parse(i&&i.published_at||i&&i.ts||0)||0}
@@ -338,7 +339,7 @@ function syncCategories(){
  var counts=categoryCounts(),valid=true;
  document.querySelectorAll("#categories .cat").forEach(function(btn){
    var key=btn.dataset.cat;
-   var pinned=/^(All|Weather|Crime|Business|Transport|Politics|Sports|Health|Celebrities)$/.test(key);
+   var pinned=/^(All|Weather|Crime|Business|Transport|Politics|Sports|Health|Celebrity)$/.test(key);
    var show=pinned||Number(counts[key]||0)>0||key===state.cat;
    btn.hidden=!show;
    if(key===state.cat&&!show)valid=false;
@@ -782,14 +783,14 @@ function clock(){
 }
 clock();setInterval(clock,1000);restoreLocal();
 var rememberedCategory=preferredCategory();
-if(rememberedCategory!=="All"&&rememberedCategory!=="Celebrities"){
+if(rememberedCategory!=="All"&&rememberedCategory!=="Celebrity"){
  var rememberedButton=Array.from(document.querySelectorAll("#categories .cat")).find(function(btn){return btn.dataset.cat===rememberedCategory});
  if(rememberedButton)rememberedButton.click();
 }
 load();setInterval(load,15000);
 })();
 </script>
-<script src="./assets/celebrity-news.js?v=20261008e"></script>
+<script src="./assets/celebrity-news.js?v=20261008g"></script>
 <!-- NEWS build: celebrity-clean-footer-and-restore-v29 -->
 </body>
 </html>
