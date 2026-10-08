@@ -31,7 +31,7 @@ window.mxCelebrityImageFallback=async function(img){
  try{
   let pending=photoCache.get(article);
   if(!pending){
-   pending=fetch("/api/celebrity-image?url="+encodeURIComponent(article),{cache:"force-cache"})
+   pending=fetch("/api/celebrity-image?ref="+btoa(article).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""),{cache:"force-cache"})
     .then(r=>r.json()).then(j=>j.ok&&/^https?:\/\//i.test(j.image)?j.image:"")
     .catch(()=>"");
    photoCache.set(article,pending);
