@@ -3,7 +3,7 @@
 "use strict";
 const stage=document.getElementById("mxCelebrityStage");
 const bar=document.getElementById("categories");
-const tab=bar&&bar.querySelector('[data-cat="Celebrities"]');
+const tab=bar&&bar.querySelector('[data-cat="Celebrity"]');
 if(!stage||!bar||!tab)return;
 const featureRoot=document.getElementById("mxCelebrityFeature");
 const newsRoot=document.getElementById("mxCelebrityGrid");
@@ -20,18 +20,50 @@ function ago(i){
  return Math.floor(s/86400)+"d ago";
 }
 function phDate(i){return new Date(stamp(i)).toLocaleString("en-PH",{timeZone:"Asia/Manila",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})+" PHT"}
+// Shared photo loader for both the Celebrity tab and Celebrity stories in All News.
+// First try existing proxy, then discover the actual publisher OG photo.
+const photoCache=new Map();
+window.mxCelebrityImageFallback=async function(img){
+ if(!img||!img.dataset)return;
+ const article=safeUrl(img.dataset.celebUrl||"");
+ if(article==="#"||img.dataset.celebRetry==="1"){img.style.display="none";return;}
+ img.dataset.celebRetry="1";
+ try{
+  let pending=photoCache.get(article);
+  if(!pending){
+   pending=fetch("/api/celebrity-image?url="+encodeURIComponent(article),{cache:"force-cache"})
+    .then(r=>r.json()).then(j=>j.ok&&/^https?:\/\//i.test(j.image)?j.image:"")
+    .catch(()=>"");
+   photoCache.set(article,pending);
+  }
+  const url=await pending;
+  if(!url){img.style.display="none";return;}
+  if(img.isConnected){img.src=url;img.style.display="block";}
+ }catch(_){img.style.display="none"}
+};
+function hydrateCelebrityImages(){
+ // Load publisher images for the first visible cards right away;
+ // subsequent slideshow cards resolve automatically on demand.
+ const imgs=[...stage.querySelectorAll(".celeb-photo img")].slice(0,11);
+ imgs.forEach(img=>{
+  if(img.dataset.celebHydrate==="1")return;
+  img.dataset.celebHydrate="1";
+  if(img.dataset.celebRetry!=="1")window.mxCelebrityImageFallback(img);
+ });
+}
 function image(i){
  let src="";
+ const article=safeUrl(i.url);
  if(i.image&&/^https?:\/\//i.test(i.image))src=i.image;
- else if(safeUrl(i.url)!=="#"&&!/news\.google\.com/i.test(i.url||""))src="/api/news-image?url="+encodeURIComponent(safeUrl(i.url));
+ else if(article!=="#"&&!/news\.google\.com/i.test(article))src="/api/news-image?url="+encodeURIComponent(article);
  return '<div class="celeb-photo"><span class="celeb-photo-mark">✦</span>'+
-  (src?'<img src="'+esc(src)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">':"")+
+  (src?'<img src="'+esc(src)+'" data-celeb-url="'+esc(article)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="window.mxCelebrityImageFallback&&window.mxCelebrityImageFallback(this)">':"")+
   '</div>';
 }
 function featureCard(i,small){
  return '<a class="'+(small?"celeb-mini":"celeb-feature")+'" href="'+esc(safeUrl(i.url))+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(i.headline)+'">'+
    image(i)+'<div class="celeb-copy">'+
-   '<span class="celeb-tag">✦ &nbsp; CELEBRITY SPOTLIGHT</span>'+
+   '<span class="celeb-tag">✦ &nbsp; Celebrity</span>'+
    '<h2>'+esc(i.headline)+'</h2>'+
    (small?"":'<p>'+esc(i.summary||"The latest from "+(i.source||"entertainment news")+".")+'</p>')+
    '<div class="celeb-caption"><span>'+esc(i.source||"Entertainment")+' <span class="date">· '+esc(ago(i))+'</span></span><span class="celeb-read">READ STORY ↗</span></div></div></a>';
@@ -39,7 +71,7 @@ function featureCard(i,small){
 
 function sliderAnchor(i){
  return '<a class="celeb-slide-link" id="mxCelebritySlideLink" href="'+esc(safeUrl(i.url))+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(i.headline)+'">'+
-   image(i)+'<div class="celeb-copy"><span class="celeb-tag">✦ &nbsp; CELEBRITY SPOTLIGHT</span>'+
+   image(i)+'<div class="celeb-copy"><span class="celeb-tag">✦ &nbsp; Celebrity</span>'+
    '<h2>'+esc(i.headline)+'</h2><p>'+esc(i.summary||"Read the original entertainment report.")+'</p>'+
    '<div class="celeb-caption"><span>'+esc(i.source||"Entertainment")+' <span class="date">· '+esc(ago(i))+'</span></span>'+
    '<span class="celeb-read">READ STORY ↗</span></div></div></a>';
@@ -66,6 +98,7 @@ function slideTo(n,dir=1){
  link.outerHTML=sliderAnchor(pool[state.slideIndex]);
  counter.textContent=(state.slideIndex+1)+" / "+pool.length;
  const next=document.getElementById("mxCelebritySlideLink");
+ hydrateCelebrityImages();
  if(next&&next.animate&&!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)){
    next.animate([{opacity:.45,transform:"translateX("+(dir<0?"-18px":"18px")+")"},{opacity:1,transform:"translateX(0)"}],
     {duration:320,easing:"ease-out"});
@@ -86,7 +119,7 @@ document.addEventListener("visibilitychange",()=>{if(document.hidden)stopSlider(
 
 function articleCard(i){
  return '<a class="celeb-card" href="'+esc(safeUrl(i.url))+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(i.headline)+'">'+image(i)+
- '<div class="celeb-card-body"><div class="celeb-card-top"><span>✦ SHOWBIZ & CULTURE</span><span class="mx-celeb-age" data-ts="'+stamp(i)+'">'+esc(ago(i))+'</span></div>'+
+ '<div class="celeb-card-body"><div class="celeb-card-top"><span>✦ Celebrity</span><span class="mx-celeb-age" data-ts="'+stamp(i)+'">'+esc(ago(i))+'</span></div>'+
  '<h3>'+esc(i.headline)+'</h3><div class="celeb-card-bottom"><span>'+esc(i.source||"Entertainment")+' · '+esc(phDate(i))+'</span><span class="celeb-card-arrow">›</span></div></div></a>';
 }
 function active(){return !stage.hidden}
@@ -131,7 +164,7 @@ function render(){
  }
  featureRoot.innerHTML=sliderMarkup(lead,slides.length,state.slideIndex)+'<div class="celeb-side">'+side.map(i=>featureCard(i,true)).join("")+'</div>';
  newsRoot.innerHTML=rest.slice(0,45).map(articleCard).join("");
- attachSlider();startSlider();
+ hydrateCelebrityImages();attachSlider();startSlider();
 }
 function cacheRestore(){
  try{
@@ -166,9 +199,9 @@ async function refresh(){
 }
 bar.addEventListener("click",function(e){
  const b=e.target.closest("[data-cat]");if(!b)return;
- if(b.dataset.cat==="Celebrities"){
+ if(b.dataset.cat==="Celebrity"){
   e.preventDefault();e.stopImmediatePropagation();
-  if(typeof window.mxNewsPersistCategory==="function")window.mxNewsPersistCategory("Celebrities");
+  if(typeof window.mxNewsPersistCategory==="function")window.mxNewsPersistCategory("Celebrity");
   bar.querySelectorAll(".cat").forEach(x=>x.classList.remove("active"));
   tab.classList.add("active");document.body.classList.add("mx-celeb-active");
   stage.hidden=false;render();refresh();
@@ -182,5 +215,5 @@ setInterval(()=>{if(active())refresh()},45000);
 setInterval(()=>{if(!active())return;stage.querySelectorAll(".mx-celeb-age").forEach(el=>{
  const time=Number(el.getAttribute("data-ts"));if(time)el.textContent=ago({ts:time});
 })},30000);
-if(typeof window.mxNewsPreferredCategory==="function"&&window.mxNewsPreferredCategory()==="Celebrities")tab.click();
+if(typeof window.mxNewsPreferredCategory==="function"&&window.mxNewsPreferredCategory()==="Celebrity")tab.click();
 })();
