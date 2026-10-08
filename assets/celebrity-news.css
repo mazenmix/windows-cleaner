@@ -53,3 +53,16 @@ body.mx-celeb-active .main,body.mx-celeb-active .ticker{display:none}
 @media(max-width:750px){.celeb-head{flex-direction:column;align-items:flex-start;gap:13px}.celeb-feed-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:580px){#mxCelebrityStage{padding:18px 12px 48px}.celeb-head h1{font-size:41px;letter-spacing:-1px}.celeb-overline{font-size:9px}.celeb-feature{min-height:350px}.celeb-copy{padding:21px}.celeb-copy h2{font-size:25px}.celeb-side{grid-template-columns:1fr}.celeb-mini{min-height:195px}.celeb-section-title{font-size:27px}.celeb-feed-grid{grid-template-columns:1fr}.celeb-card{min-height:0}.celeb-card .celeb-photo{height:210px}.celeb-section-header{align-items:flex-start}.celeb-count{max-width:140px;text-align:right}}
 @media(prefers-reduced-motion:reduce){.cat[data-cat="Celebrities"]{animation:none}.celeb-feature,.celeb-mini,.celeb-card,.celeb-photo img{transition:none}}
+
+
+/* Ten-story luxury celebrity hero, matching the existing news hero controls. */
+.celeb-slider{isolation:isolate;touch-action:pan-y}
+.celeb-slide-link{position:absolute;inset:0;display:block;color:#fff;outline-offset:-4px}
+.celeb-slide-arrow{position:absolute;z-index:8;top:43%;width:35px;height:35px;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(255,217,237,.52);background:rgba(41,14,35,.53);color:#fff3f8;box-shadow:0 7px 20px rgba(0,0,0,.25);font-size:24px;line-height:1;cursor:pointer;transform:translateY(-50%);backdrop-filter:blur(8px);transition:background .2s,border-color .2s,box-shadow .2s}
+.celeb-slide-arrow.prev{left:12px}
+.celeb-slide-arrow.next{right:12px}
+.celeb-slide-arrow:hover{background:rgba(206,48,126,.56);border-color:#ffb9de;box-shadow:0 0 14px rgba(255,75,161,.35)}
+.celeb-slide-arrow:focus-visible{outline:2px solid #ffc6e5;outline-offset:2px}
+.celeb-slide-counter{position:absolute;right:15px;bottom:18px;z-index:8;min-width:50px;padding:5px 11px;border-radius:20px;border:1px solid rgba(255,210,230,.4);background:rgba(35,13,28,.65);color:#ffe7f2;font-size:10px;font-weight:850;letter-spacing:.7px;text-align:center;backdrop-filter:blur(10px)}
+.celeb-slider .celeb-copy{padding-right:65px}
+@media(max-width:580px){.celeb-slide-arrow{width:31px;height:31px;font-size:21px;top:35%}.celeb-slide-arrow.prev{left:8px}.celeb-slide-arrow.next{right:8px}.celeb-slider .celeb-copy{padding-right:53px}.celeb-slide-counter{right:13px;bottom:12px;font-size:9px;padding:4px 9px}}
