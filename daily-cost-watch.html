@@ -439,6 +439,16 @@ setInterval(()=>refreshAll(false),60000);
  restore();
  refresh();
  setInterval(refresh,60000);
+ // Trigger the daily reset immediately at midnight in Manila,
+ // without waiting for the next regular 60-second poll.
+ let manilaDate=new Date(Date.now()+8*3600000).toISOString().slice(0,10);
+ setInterval(()=>{
+  const day=new Date(Date.now()+8*3600000).toISOString().slice(0,10);
+  if(day!==manilaDate){
+   manilaDate=day;
+   refresh();
+  }
+ },1000);
 })();
 </script>
 
