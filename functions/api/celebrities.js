@@ -71,7 +71,7 @@ function createItem({title,url,date,description,image,source,local=false,curated
  if(/(?:crypto|trading bot|betting odds|lottery|stock quote|live weather)\b/i.test(headline))return null;
  return {
   headline,source:sourceName(source)||"Entertainment",url,
-  published_at:new Date(ts).toISOString(),ts,category:"Celebrities",
+  published_at:new Date(ts).toISOString(),ts,category:"Celebrity",
   breaking:false,image:image&&/^https?:\/\//i.test(image)?image:"",
   summary:plain(description).slice(0,230),trusted_source:true
  };
@@ -156,8 +156,8 @@ function json(data,status=200,ttl=CACHE_SECONDS){
 }
 export async function onRequestGet(context){
  const cache=caches.default,origin=new URL(context.request.url).origin;
- const fresh=new Request(origin+"/api/celebrities-cache-v5");
- const last=new Request(origin+"/api/celebrities-last-good-v5");
+ const fresh=new Request(origin+"/api/celebrities-cache-v6-celebrity");
+ const last=new Request(origin+"/api/celebrities-last-good-v6-celebrity");
  const hit=await cache.match(fresh);if(hit)return hit;
  try{
   const results=await Promise.allSettled(FEEDS.map(fetchFeed));
