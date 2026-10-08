@@ -173,8 +173,45 @@ function active(){return !stage.hidden}
 function filtered(){const q=String(searchEl&&searchEl.value||"").trim().toLowerCase();
  return state.items.filter(i=>!q||(i.headline+" "+i.source).toLowerCase().includes(q));
 }
+// Elegant, sourced Philippine celebrity headlines; uses the existing 45s desk feed.
+const buzzBar=document.getElementById("mxCelebrityBuzz");
+const buzzStrip=document.getElementById("mxCelebrityBuzzStrip");
+let buzzSignature="";
+function renderCelebrityBuzz(){
+ if(!buzzBar||!buzzStrip||!active())return;
+ const ph=state.items.filter(i=>i.market==="PH"&&safeUrl(i.url)!=="#"&&stamp(i)>0)
+   .sort((a,b)=>stamp(b)-stamp(a));
+ const actualNews=ph.filter(i=>!/youLOL rewind|full episode|throwback|replay|episode \d+|music video|trailer/i.test(i.headline||""));
+ const picked=(actualNews.length>=5?actualNews:ph).slice(0,12);
+ if(!picked.length){buzzBar.hidden=true;buzzSignature="";return;}
+ const sig=picked.map(i=>i.url+"|"+stamp(i)).join("||");
+ buzzBar.hidden=false;
+ if(sig===buzzSignature&&buzzStrip.children.length)return;
+ buzzSignature=sig;
+ const run=(duplicate)=>'<div class="celeb-buzz-run"'+(duplicate?' aria-hidden="true"':"")+'>'+
+  picked.map(i=>'<a class="celeb-buzz-item" href="'+esc(safeUrl(i.url))+
+   '" target="_blank" rel="noopener noreferrer"'+(duplicate?' tabindex="-1"':"")+'>'+
+   '<span class="buzz-sparkle" aria-hidden="true">✦</span>'+
+   '<span class="buzz-title">'+esc(i.headline||"Celebrity update")+'</span>'+
+   '<span class="buzz-source">'+esc(i.source||"PH Showbiz")+'</span>'+
+   '<span class="buzz-time" data-buzz-ts="'+stamp(i)+'">'+esc(ago(i))+'</span>'+
+   '<span class="buzz-sep" aria-hidden="true">✧</span></a>').join("")+'</div>';
+ buzzStrip.innerHTML=run(false)+run(true);
+ // The duplicate is exactly the same length, so -50% gives a seamless loop.
+ const headlineLength=picked.reduce((n,i)=>n+String(i.headline||"").length,0);
+ buzzStrip.style.setProperty("--celeb-buzz-time",Math.min(140,Math.max(45,headlineLength*0.09))+"s");
+}
+function updateBuzzAges(){
+ if(!buzzBar||buzzBar.hidden)return;
+ buzzStrip.querySelectorAll("[data-buzz-ts]").forEach(el=>{
+  const ts=Number(el.getAttribute("data-buzz-ts")||0);
+  if(ts)el.textContent=ago({ts});
+ });
+}
+
 function render(){
  if(!active())return;
+ renderCelebrityBuzz();
  const items=filtered();
  const available=new Set(items.map(i=>safeUrl(i.url)));
  let slides=(state.featured||[]).filter(i=>available.has(safeUrl(i.url))).slice(0,10);
@@ -259,6 +296,7 @@ bar.addEventListener("click",function(e){
 if(searchEl)searchEl.addEventListener("input",()=>{if(active())render()});
 cacheRestore();
 setInterval(()=>{if(active())refresh()},45000);
+setInterval(updateBuzzAges,30000);
 setInterval(()=>{if(!active())return;stage.querySelectorAll(".mx-celeb-age").forEach(el=>{
  const time=Number(el.getAttribute("data-ts"));if(time)el.textContent=ago({ts:time});
 })},30000);
