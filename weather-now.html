@@ -453,6 +453,15 @@ setInterval(()=>loadWeather(false),60000);
  restore();
  refresh();
  setInterval(refresh,60000);
+ // Update Visitors Today when the Manila calendar day rolls over.
+ let manilaDate=new Date(Date.now()+8*3600000).toISOString().slice(0,10);
+ setInterval(()=>{
+  const day=new Date(Date.now()+8*3600000).toISOString().slice(0,10);
+  if(day!==manilaDate){
+   manilaDate=day;
+   refresh();
+  }
+ },1000);
 })();
 </script>
 
