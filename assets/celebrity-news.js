@@ -95,6 +95,8 @@ if("IntersectionObserver" in window){
  },{rootMargin:"450px 0px"});
 }
 window.mxCelebrityQueueImages=hydrateCelebrityImages;
+// Also hydrate Celebrity tiles restored from All News cache before this script loaded.
+hydrateCelebrityImages(document);
 function image(i){
  const article=safeUrl(i.url);
  const trustedPhoto=i.image&&/^https?:\/\//i.test(i.image)?i.image:"";
