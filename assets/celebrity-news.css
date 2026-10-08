@@ -175,3 +175,12 @@ body.mx-celeb-active .main,body.mx-celeb-active .ticker{display:none}
  .celeb-buzz-viewport{overflow-x:auto;-webkit-mask-image:none;mask-image:none}
  .celeb-buzz-run[aria-hidden="true"]{display:none}
 }
+
+
+/* While verified Philippine-star headlines connect, keep the pink ticker visible. */
+#mxCelebrityStage .celeb-buzz-wait{
+ display:inline-flex;align-items:center;flex:0 0 auto;
+ color:#ffe3f1;font-weight:650;font-size:11px;letter-spacing:.25px;
+ padding:0 20px;text-shadow:0 0 12px rgba(255,159,207,.32);
+ white-space:nowrap;
+}
