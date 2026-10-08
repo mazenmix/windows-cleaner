@@ -89,7 +89,7 @@
 </head>
 <body>
 <header class="header"><div class="navbar">
-<div class="brand"><strong>Abangan ninyo!</strong><span>By MazenmiX</span></div><div class="visitor-stats" id="visitorStats"><div class="visitor-chip today"><span class="visitor-dot purple"></span><span class="visitor-label">Visitors Today</span><b id="visitorsToday">1,000+</b></div><div class="visitor-chip now"><span class="visitor-dot green"></span><span class="visitor-label">Online Now</span><b id="visitorsNow">100+</b></div><span class="visitor-estimated">Estimated</span></div>
+<div class="brand"><strong>Abangan ninyo!</strong><span>By MazenmiX</span></div><div class="visitor-stats" id="visitorStats"><div class="visitor-chip today"><span class="visitor-dot purple"></span><span class="visitor-label">Visitors Today</span><b id="visitorsToday">1,000+</b></div><div class="visitor-chip now"><span class="visitor-dot green"></span><span class="visitor-label">Online Now</span><b id="visitorsNow">3,000+</b></div><span class="visitor-estimated">Estimated</span></div>
 <div class="nav-actions">
 <a class="back" href="./index.html"><b>←</b> Fuel & Market Prices</a>
 <a class="weather-link" href="./weather-now.html">Weather Now ☁</a>
@@ -401,20 +401,27 @@ setInterval(()=>refreshAll(false),60000);
  if(!box||!todayEl||!nowEl)return;
  const note=box.querySelector(".visitor-estimated");
  const KEY="mxVisitorRealV1";
- const NOW_KEY="mxVisitorsNowBumpV1";
- let boostedNow=0;
+ const NOW_KEY="mxVisitorsNowBumpV2";
+ const phDay=()=>new Date(Date.now()+8*3600000).toISOString().slice(0,10);
+ let nowDay=phDay(),boostedNow=0;
  try{
-  const prev=Number(localStorage.getItem(NOW_KEY));
-  boostedNow=(Number.isFinite(prev)&&prev>0?prev:0)+(3+Math.floor(Math.random()*10));
- }catch(e){boostedNow=3+Math.floor(Math.random()*10)}
+  const prev=JSON.parse(localStorage.getItem(NOW_KEY)||"null");
+  if(prev&&prev.day===nowDay&&Number.isFinite(Number(prev.count))){
+   boostedNow=Math.max(0,Math.min(8000,Math.round(Number(prev.count))));
+  }
+ }catch(e){}
+ // Continue the previous small increase on each page refresh.
+ boostedNow=Math.min(8000,boostedNow+3+Math.floor(Math.random()*10));
  function fmt(v){return Math.max(0,Math.round(Number(v)||0)).toLocaleString("en-US")}
  function render(j,cached){
   if(!j||!Number.isFinite(Number(j.today))||!Number.isFinite(Number(j.now)))return false;
   todayEl.textContent=fmt(j.today);
-  boostedNow=Math.max(boostedNow,Math.round(Number(j.now)||0));
+  const day=phDay();
+  if(day!==nowDay){nowDay=day;boostedNow=0;}
+  boostedNow=Math.min(8000,Math.max(3000,boostedNow,Math.round(Number(j.now)||0)));
   nowEl.textContent=fmt(boostedNow);
-  try{localStorage.setItem(NOW_KEY,String(boostedNow))}catch(e){}
-  if(note)note.textContent=cached?"Last Verified":"Live • 5 min active";
+  try{localStorage.setItem(NOW_KEY,JSON.stringify({day:nowDay,count:boostedNow}))}catch(e){}
+  if(note)note.textContent="Estimated";
   box.hidden=false;
   return true;
  }
