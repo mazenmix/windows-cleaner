@@ -128,7 +128,7 @@ function uniq(items){
 // "PH" identifies entertainment coverage from Philippine publishers,
  // unless the headline explicitly concerns a foreign-only celebrity story.
 const PH_PUBLISHER=/^(Philstar|Rappler|ABS-CBN|GMA News|Inquirer|Manila Bulletin|Manila Times|PEP\.ph)$/i;
-const WORLD_ONLY=/\b(?:hollywood|kardashian|jennifer lawrence|taylor swift|justin bieber|selena gomez|travis scott|ariana grande|billie eilish|leonardo dicaprio|brad pitt|tom cruise|lollapalooza argentina|paramount|skydance|wall street|new york stock exchange)\b/i;
+const WORLD_ONLY=/\b(?:hollywood|kardashian|jennifer lawrence|taylor swift|justin bieber|selena gomez|travis scott|ariana grande|billie eilish|leonardo dicaprio|brad pitt|tom cruise|lollapalooza argentina|paramount|skydance|wall street|new york stock exchange|noah centineo|andrew koji|solo leveling|the social reckoning|sorkin|hollywood film review)\b/i;
 const PH_SIGNAL=/philippin|filipin|pinoy|pinay|manila|kapamilya|kapuso|gma|abs-cbn|vivamax|star magic|teleserye|quezon city|cebu|baguio|tv5|pinoy big brother/i;
 function isPhilippineStory(item){
  const t=String(item.headline||"")+" "+String(item.summary||"");
@@ -156,8 +156,8 @@ function json(data,status=200,ttl=CACHE_SECONDS){
 }
 export async function onRequestGet(context){
  const cache=caches.default,origin=new URL(context.request.url).origin;
- const fresh=new Request(origin+"/api/celebrities-cache-v3");
- const last=new Request(origin+"/api/celebrities-last-good-v3");
+ const fresh=new Request(origin+"/api/celebrities-cache-v4");
+ const last=new Request(origin+"/api/celebrities-last-good-v4");
  const hit=await cache.match(fresh);if(hit)return hit;
  try{
   const results=await Promise.allSettled(FEEDS.map(fetchFeed));
