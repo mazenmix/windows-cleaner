@@ -204,14 +204,18 @@ function renderCelebrityBuzz(){
   picked=lastBuzzStories.length?lastBuzzStories:readBuzzCache();
  }
  if(!picked.length){
-  if(!buzzStrip.children.length){
-   buzzStrip.innerHTML='<span class="celeb-buzz-wait">✦ &nbsp; Checking the latest Philippine celebrity headlines… &nbsp; ✧</span>';
+  if(!buzzStrip.querySelector(".celeb-buzz-run")){
+   buzzStrip.style.animation="none";
+   if(!buzzStrip.children.length){
+    buzzStrip.innerHTML='<span class="celeb-buzz-wait">✦ &nbsp; Checking the latest Philippine celebrity headlines… &nbsp; ✧</span>';
+   }
   }
   return;
  }
  const sig=picked.map(i=>i.url+"|"+stamp(i)).join("||");
  if(sig===buzzSignature&&buzzStrip.querySelector(".celeb-buzz-run"))return;
  buzzSignature=sig;
+ buzzStrip.style.animation="";
  const run=(duplicate)=>'<div class="celeb-buzz-run"'+(duplicate?' aria-hidden="true"':"")+'>'+
   picked.map(i=>'<a class="celeb-buzz-item" href="'+esc(safeUrl(i.url))+
    '" target="_blank" rel="noopener noreferrer"'+(duplicate?' tabindex="-1"':"")+'>'+
