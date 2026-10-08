@@ -66,3 +66,28 @@ body.mx-celeb-active .main,body.mx-celeb-active .ticker{display:none}
 .celeb-slide-counter{position:absolute;right:15px;bottom:18px;z-index:8;min-width:50px;padding:5px 11px;border-radius:20px;border:1px solid rgba(255,210,230,.4);background:rgba(35,13,28,.65);color:#ffe7f2;font-size:10px;font-weight:850;letter-spacing:.7px;text-align:center;backdrop-filter:blur(10px)}
 .celeb-slider .celeb-copy{padding-right:65px}
 @media(max-width:580px){.celeb-slide-arrow{width:31px;height:31px;font-size:21px;top:35%}.celeb-slide-arrow.prev{left:8px}.celeb-slide-arrow.next{right:8px}.celeb-slider .celeb-copy{padding-right:53px}.celeb-slide-counter{right:13px;bottom:12px;font-size:9px;padding:4px 9px}}
+
+/* Celebrity footer: intentionally understated layout, vivid soft-pink branding. */
+#mxCelebrityStage .celeb-feed-grid{margin-top:30px}
+#mxCelebrityStage .celeb-brand-footer{
+  text-align:center;
+  margin:48px auto 0;
+  padding:20px 16px 13px;
+  width:fit-content;
+  max-width:100%;
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  font-size:16px;
+  font-weight:550;
+  letter-spacing:1.55px;
+  line-height:1.3;
+  color:#ff9dd1;
+  background:linear-gradient(105deg,#ff8fc8 5%,#ffe0f0 45%,#ff79c7 91%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 9px rgba(255,101,175,.35));
+}
+@media(max-width:580px){
+  #mxCelebrityStage .celeb-feed-grid{margin-top:22px}
+  #mxCelebrityStage .celeb-brand-footer{font-size:15px;margin-top:36px}
+}
