@@ -355,6 +355,7 @@ function imgHtml(i){
  if(i.image&&/^https?:\/\//i.test(i.image))src=i.image;
  else if(article&&article!=="#")src="/api/news-image?url="+encodeURIComponent(article);
  if(!src)return '<span class="fallback">'+esc(icon)+'</span>';
+ if(c==="Celebrity")return '<img src="'+esc(src)+'" alt="" loading="lazy" data-celeb-url="'+esc(article)+'" referrerpolicy="no-referrer" onload="this.parentElement.classList.add(\'has-real-image\')" onerror="window.mxCelebrityImageFallback?window.mxCelebrityImageFallback(this):this.style.display=\'none\'"><span class="fallback">'+esc(icon)+'</span>';
  return '<img src="'+esc(src)+'" alt="" loading="lazy" onload="this.parentElement.classList.add(\'has-real-image\')" onerror="this.style.display=\'none\'"><span class="fallback">'+esc(icon)+'</span>';
 }
 function hydrateImages(){}
@@ -607,29 +608,41 @@ function renderLatestOnly(items){
    var u=safeUrl(i.url);
    return u!==heroUrl&&!isLatestFresh(i)&&!today.some(function(t){return safeUrl(t.url)===u});
  }).slice(0,15);
+ // In All News include the day's Celebrity coverage even if not inside
+ // the main breaking-news feed's strict three-hour window.
+ var celebExtras=[];
+ if(state.cat==="All"){
+   var seenCelebrity=new Set(fresh.concat(today).concat(recent).map(function(i){return safeUrl(i.url)}));
+   celebExtras=((state.recentByCategory||{}).Celebrity||[]).filter(function(i){
+     var u=safeUrl(i.url);
+     if(seenCelebrity.has(u)||!queryMatches(i))return false;
+     seenCelebrity.add(u);return true;
+   }).slice(0,6);
+ }
+ var celebSection=celebExtras.length?'<div class="latest-subhead">✦ Celebrity</div><div class="latest-rest-grid">'+celebExtras.map(newsCard).join("")+'</div>':"";
 
- var sig=latestSignature(fresh)+"##"+latestSignature(today)+"##"+latestSignature(recent)+"##"+state.cat;
+ var sig=latestSignature(fresh)+"##"+latestSignature(today)+"##"+latestSignature(recent)+"##"+latestSignature(celebExtras)+"##"+state.cat;
  if(sig===state.latestSignature)return;
  state.latestSignature=sig;
 
  if(fresh.length){
    els.latestTitle.innerHTML='<span>●</span> LATEST NEWS';
    els.resultCount.textContent=fresh.length+" fresh • last 3 hours";
-   els.latestGrid.innerHTML=renderLatestLayout(fresh);
+   els.latestGrid.innerHTML=renderLatestLayout(fresh)+celebSection;
    return;
  }
 
  if(today.length){
    els.latestTitle.innerHTML='<span>●</span> TOP STORIES TODAY';
    els.resultCount.textContent=today.length+" important today";
-   els.latestGrid.innerHTML=renderLatestLayout(today);
+   els.latestGrid.innerHTML=renderLatestLayout(today)+celebSection;
    return;
  }
 
  if(recent.length){
    els.latestTitle.innerHTML='<span>●</span> RECENT TOP STORIES';
    els.resultCount.textContent=recent.length+" recent • last 48 hours";
-   els.latestGrid.innerHTML=renderLatestLayout(recent);
+   els.latestGrid.innerHTML=renderLatestLayout(recent)+celebSection;
    return;
  }
 
@@ -790,7 +803,7 @@ if(rememberedCategory!=="All"&&rememberedCategory!=="Celebrity"){
 load();setInterval(load,15000);
 })();
 </script>
-<script src="./assets/celebrity-news.js?v=20261008g"></script>
-<!-- NEWS build: celebrity-clean-footer-and-restore-v29 -->
+<script src="./assets/celebrity-news.js?v=20261008h"></script>
+<!-- NEWS build: celebrity-publisher-photos-and-all-news-v30 -->
 </body>
 </html>
