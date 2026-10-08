@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="MX Celebrity editorial cover">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6b285a"/><stop offset=".48" stop-color="#29172f"/><stop offset="1" stop-color="#100d20"/></linearGradient>
+ <radialGradient id="rose"><stop stop-color="#ff91c9" stop-opacity=".57"/><stop offset="1" stop-color="#fa4a9e" stop-opacity="0"/></radialGradient>
+ <linearGradient id="roseLine" x1="0" x2="1"><stop stop-color="#ffb7d9" stop-opacity=".08"/><stop offset=".52" stop-color="#ffe4d1" stop-opacity=".88"/><stop offset="1" stop-color="#ff89c8" stop-opacity=".08"/></linearGradient>
+ <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff1fa" stop-opacity=".30"/><stop offset="1" stop-color="#f75ba7" stop-opacity=".04"/></linearGradient>
+ <filter id="soft"><feGaussianBlur stdDeviation="54"/></filter>
+ <filter id="lit"><feGaussianBlur stdDeviation="10"/></filter>
+</defs>
+<rect width="1200" height="800" fill="url(#bg)"/>
+<circle cx="1010" cy="90" r="350" fill="url(#rose)"/>
+<circle cx="180" cy="700" r="400" fill="url(#rose)" opacity=".31"/>
+<path d="M0 720C200 610 320 590 478 633s307 60 722-149v316H0Z" fill="#f368ac" opacity=".065"/>
+<path d="M0 0h1200v800H0z" fill="none" stroke="#ffb8d8" stroke-opacity=".18" stroke-width="3"/>
+<path d="M140 160H1060" stroke="url(#roseLine)" stroke-width="2"/>
+<path d="M140 641H1060" stroke="url(#roseLine)" stroke-width="2"/>
+<circle cx="600" cy="398" r="196" fill="#0f1026" opacity=".42" stroke="#f8c0db" stroke-opacity=".30" stroke-width="3"/>
+<circle cx="600" cy="398" r="164" fill="url(#glass)" stroke="#ffcfe5" stroke-opacity=".32" stroke-width="1"/>
+<path d="M600 235 627 337 728 365 627 393 600 495 573 393 472 365 573 337Z" fill="#ffd8e6" opacity=".20"/>
+<path d="M812 227l10 37 37 10-37 10-10 37-10-37-37-10 37-10z" fill="#ffc5de" opacity=".63"/>
+<path d="M370 465l12 44 44 12-44 12-12 44-12-44-44-12 44-12z" fill="#ffb9d6" opacity=".38"/>
+<circle cx="600" cy="398" r="125" fill="#ff9eca" opacity=".12" filter="url(#lit)"/>
+<text x="600" y="370" font-family="Arial,Helvetica,sans-serif" font-size="24" font-weight="600" letter-spacing="14" text-anchor="middle" fill="#ffe2ef">MX NEWS</text>
+<text x="600" y="427" font-family="Georgia,'Times New Roman',serif" font-size="68" text-anchor="middle" fill="#fff4fb">Celebrity</text>
+<text x="600" y="482" font-family="Arial,Helvetica,sans-serif" font-size="14" letter-spacing="7" text-anchor="middle" fill="#ffd6e5" opacity=".92">THE ENTERTAINMENT EDITION</text>
+<circle cx="150" cy="150" r="3" fill="#ffddeb"/><circle cx="1038" cy="634" r="3" fill="#ffddeb"/>
+</svg>
