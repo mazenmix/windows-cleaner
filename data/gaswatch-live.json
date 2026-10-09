@@ -2,7 +2,7 @@
   "provider": "GasWatch PH",
   "source_url": "https://gaswatchph.com/",
   "updated": "October 6, 2026",
-  "rendered_at": "2026-10-07T19:34:59.511Z",
+  "rendered_at": "2026-10-09T08:59:11.157Z",
   "fuel": [
     {
       "name": "Shell",
@@ -37,16 +37,16 @@
       "name": "Petron",
       "stations": 240,
       "diesel": [
-        94.71,
-        -1.3
+        94.7,
+        -1.31
       ],
       "premDiesel": [
         98.03,
         -1.3
       ],
       "unleaded91": [
-        91.16,
-        1.9
+        91.13,
+        1.87
       ],
       "eGas": null,
       "prem95": [
@@ -121,8 +121,8 @@
       "name": "Seaoil",
       "stations": 71,
       "diesel": [
-        93.91,
-        -1.3
+        93.94,
+        -1.27
       ],
       "premDiesel": [
         99.45,
@@ -158,8 +158,8 @@
       ],
       "premDiesel": null,
       "unleaded91": [
-        91.1,
-        1.83
+        91.09,
+        1.82
       ],
       "eGas": [
         115.58,
