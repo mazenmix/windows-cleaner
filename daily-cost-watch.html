@@ -85,6 +85,19 @@
 .news-main-btn span{width:7px;height:7px;border-radius:50%;background:#ffeded;box-shadow:0 0 10px rgba(255,255,255,.8);animation:mxNewsPulse 1.15s ease-in-out infinite}
 .news-main-btn:hover{border-color:#ff8b4c;background:linear-gradient(180deg,#ff7c2d,#e65310);transform:translateY(-1px)}
 @keyframes mxNewsPulse{50%{transform:scale(1.25);opacity:.7}}
+
+/* Mercury Drug / DOH-reported prices: static dated source snapshot */
+.mercury-card{width:100%;margin-bottom:14px}
+.mercury-details{padding:10px 15px;color:#91b3ce;font-size:10px;line-height:1.65;border-bottom:1px solid rgba(30,72,106,.48)}
+.mercury-details a{color:#78bffc;text-decoration:underline;text-underline-offset:3px}
+.mercury-card .row-label{font-size:11px}
+.mercury-card .row-detail{font-size:9px}
+.mercury-card .row-value{font-size:11px}
+.mercury-card .row{min-height:54px}
+.mercury-rows .row a:hover .row-label{color:#8dc9ff}
+.mercury-more{font-size:11px;letter-spacing:.4px;min-width:150px}
+@media(max-width:700px){.mercury-card .row{min-height:51px}.mercury-details{padding:10px 12px;font-size:9px}}
+
 </style>
 </head>
 <body>
@@ -110,6 +123,18 @@
 </div></section>
 
 <main class="content">
+
+<article class="cost-card medicine-card mercury-card" id="mercuryDrugCard" aria-label="Mercury Drug medicine prices">
+ <div class="card-head"><div class="icon">💊</div><div class="titlebox">
+  <h3>Mercury Drug • Medicine Prices</h3>
+  <a class="source-name" href="https://hanapmed.ph/about/" target="_blank" rel="noopener noreferrer">Mercury Drug • reported to DOH, compiled by hanapmed ↗</a>
+ </div><span class="status stale">PRICE SNAPSHOT</span></div>
+ <div class="mercury-details">Prices reported by Mercury Drug branches to the Philippine Department of Health, reproduced from public <a href="https://hanapmed.ph/price-index/" target="_blank" rel="noopener noreferrer">hanapmed comparisons</a>. These are <strong>reference prices, not a complete real-time inventory</strong>. Confirm current price, availability, and prescription requirements with <a href="https://www.mercurydrug.com/price-inquiry.html" target="_blank" rel="noopener noreferrer">Mercury Drug ↗</a>.</div>
+ <div class="medicine-tools"><input class="medicine-search" id="mercuryDrugSearch" type="search" autocomplete="off" placeholder="Search medicine, generic, brand or strength…" aria-label="Search Mercury Drug medicines"><span class="medicine-result-count" id="mercuryDrugCount">Loading verified prices…</span></div>
+ <div class="medicine-rows mercury-rows" id="mercuryDrugRows" aria-live="polite"><div class="row" style="grid-column:1/-1"><span class="row-label">Loading published Mercury Drug prices…</span></div></div>
+ <div class="medicine-actions"><button class="medicine-more mercury-more" id="mercuryDrugMore" type="button" style="display:none">VIEW MORE</button></div>
+ <div class="card-foot"><span class="asof">PRICE CHECK • October 12, 2026</span><span class="checked" id="mercuryDrugShown">Not live • reference prices only</span></div>
+</article>
 <div class="grid" id="costGrid"></div>
 </main>
 
@@ -456,6 +481,40 @@ setInterval(()=>refreshAll(false),60000);
    refresh();
   }
  },1000);
+})();
+</script>
+
+
+<script>
+(function(){
+"use strict";
+const search=document.getElementById("mercuryDrugSearch"),rows=document.getElementById("mercuryDrugRows"),more=document.getElementById("mercuryDrugMore"),count=document.getElementById("mercuryDrugCount"),shown=document.getElementById("mercuryDrugShown");
+let catalog=[],query="",visible=60;
+const safe=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function render(){
+ const term=query.trim().toLocaleLowerCase("en"),matched=term?catalog.filter(x=>(x.generic+" "+x.strength+" "+x.brand).toLocaleLowerCase("en").includes(term)):catalog;
+ const display=matched.slice(0,visible);
+ rows.innerHTML=display.length?display.map(x=>{
+   const href=/^https:\/\/hanapmed\.ph\/generics\/[a-z0-9-]+\/$/.test(x.source_url)?x.source_url:"https://hanapmed.ph/price-index/";
+   const amount="₱"+Number(x.price).toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});
+   return '<div class="row"><div><a href="'+safe(href)+'" target="_blank" rel="noopener noreferrer"><span class="row-label">'+safe(x.brand)+'</span><span class="row-detail">'+safe(x.generic)+' • '+safe(x.strength)+' • per '+safe(x.unit)+' ↗</span></a></div><span class="row-value">'+safe(amount)+'</span></div>';
+ }).join(""):'<div class="row" style="grid-column:1/-1"><span class="row-label">No matching medicine found.</span></div>';
+ count.textContent=term?matched.length+" matches":catalog.length+" published prices";
+ shown.textContent=display.length+" of "+matched.length+" shown";
+ more.style.display=matched.length>visible?"":"none";
+ more.textContent="VIEW MORE (+"+Math.min(60,matched.length-visible)+")";
+}
+search.addEventListener("input",()=>{query=search.value;visible=60;render()});
+more.addEventListener("click",()=>{visible+=60;render()});
+fetch("./mercury-drug-prices-20261012.json",{cache:"default"}).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(data=>{
+ if(!data||!Array.isArray(data.items)||!data.items.length)throw new Error("Empty source");
+ const uniq=new Set();catalog=data.items.filter(x=>{if(!x||!x.generic||!x.brand||!x.strength||!Number.isFinite(Number(x.price))||Number(x.price)<=0)return false;const k=[x.generic,x.brand,x.strength,x.price,x.unit].join("|");if(uniq.has(k))return false;uniq.add(k);return true});
+ if(!catalog.length)throw new Error("No valid prices");
+ render();
+}).catch(()=>{
+ rows.innerHTML='<div class="row" style="grid-column:1/-1"><div><span class="row-label">Mercury Drug prices are temporarily unavailable.</span><span class="row-detail">Visit the source or Mercury Drug price inquiry to confirm the latest prices.</span></div></div>';
+ count.textContent="Source unavailable";shown.textContent="Cannot verify prices";more.style.display="none";
+});
 })();
 </script>
 
