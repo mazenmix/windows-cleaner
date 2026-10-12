@@ -708,45 +708,109 @@
    const p=['#6fe7d8','#72b8ff','#ff9fcf','#b48cff','#ffb65c','#7ee08b','#f3df69','#8fd3ff','#ff8f7a','#b7e46f'];
    let h=0;for(let i=0;i<n.length;i++)h=((h<<5)-h+n.charCodeAt(i))|0;return p[Math.abs(h)%p.length];
  }
- function unitLabel(x){return x.unit==='pc'?'pc':x.unit==='L'?'L':x.unit||'kg'}
- function renderFood(items,label){
-   const groups={};categories.forEach(([name])=>groups[name]=[]);
-   items.forEach(x=>groups[categoryOf(x)].push(x));
-   stack.innerHTML=categories.map(([name,color])=>{
-     const list=groups[name].slice().sort((a,b)=>String(a.name).localeCompare(String(b.name)));
-     if(!list.length)return'';
-     const rows=list.map(x=>{
-       const ch=Number(x.change_pct),moved=Number.isFinite(ch)&&Math.abs(ch)>=.005;
+ // Keep a permanent catalogue. Neither a partial API response nor an old cache may replace it.
+ const FOOD_CACHE_KEY='mxFoodGridCacheV3',FOOD_OLD_CACHE_KEY='mxFoodGridCacheV2';
+ const foodItems=new Map();
+ let lastMarkup='',lastStatus='Reference prices';
+ function keyOf(name){return String(name||'').normalize('NFKC').replace(/\s+/g,' ').trim().toLowerCase()}
+ function escapeHTML(value){return String(value==null?'':value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]})}
+ function usablePrice(value){const n=Number(value);return Number.isFinite(n)&&n>0&&n<100000?n:null}
+ function unitLabel(item){return item.unit==='pc'?'pc':item.unit==='L'?'L':item.unit||'kg'}
+ function mergeFood(incoming,kind,date){
+   if(!Array.isArray(incoming))return 0;
+   let applied=0;
+   incoming.forEach(function(raw){
+     if(!raw||typeof raw.name!=='string')return;
+     const name=raw.name.trim().replace(/\s+/g,' '),key=keyOf(name);
+     if(!name||name.length>160)return;
+     const prev=foodItems.get(key);
+     if(kind!=='live'&&kind!=='reference'&&prev&&prev._status==='live')return;
+     const price=usablePrice(raw.price);
+     const oldPrice=prev?usablePrice(prev.price):null;
+     const change=raw.change_pct==null?null:Number(raw.change_pct);
+     foodItems.set(key,{
+       name:prev?prev.name:name,
+       price:price===null?oldPrice:price,
+       unit:typeof raw.unit==='string'&&raw.unit.length<24?raw.unit:(prev?prev.unit:'kg'),
+       category:typeof raw.category==='string'&&raw.category.length<100?raw.category:(prev?prev.category:''),
+       change_pct:Number.isFinite(change)?change:null,
+       _status:kind==='reference'?'reference':kind==='live'?'live':'verified',
+       _date:date||(prev?prev._date:null)
+     });
+     applied++;
+   });
+   return applied;
+ }
+ function renderFood(label){
+   const groups={};categories.forEach(function(c){groups[c[0]]=[]});
+   foodItems.forEach(function(item){groups[categoryOf(item)].push(item)});
+   const markup=categories.map(function(c){
+     const name=c[0],color=c[1];
+     const list=groups[name].slice().sort(function(a,b){return a.name.localeCompare(b.name)});
+     const rows=list.map(function(x){
+       const ch=x.change_pct==null?null:Number(x.change_pct);
+       const moved=ch!==null&&Number.isFinite(ch)&&Math.abs(ch)>=.005;
        const cls=moved?(ch>0?'up':'down'):'flat',tri=moved?(ch>0?'▲':'▼'):'';
        const pct=moved?((ch>0?'+':'')+ch.toFixed(2)+'%'):'';
-       return '<div class="food-row '+cls+'"><div class="food-row-name" style="color:'+foodNameColor(x.name)+'">'+x.name+'</div><div class="food-row-right"><span class="food-row-trend">'+tri+'</span><span class="food-row-price">₱'+Number(x.price).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2})+'/'+unitLabel(x)+'</span>'+(pct?'<span class="food-row-change">'+pct+'</span>':'')+'</div></div>';
+       const price=usablePrice(x.price);
+       const display=price===null?'—':('₱'+price.toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2})+'/'+escapeHTML(unitLabel(x)));
+       const origin=x._status==='reference'?'Reference price':x._status==='live'?'Latest reported price':'Last verified price';
+       return '<div class="food-row '+cls+'" title="'+origin+'"><div class="food-row-name" style="color:'+foodNameColor(x.name)+'">'+escapeHTML(x.name)+'</div><div class="food-row-right"><span class="food-row-trend">'+tri+'</span><span class="food-row-price">'+display+'</span>'+(pct?'<span class="food-row-change">'+pct+'</span>':'')+'</div></div>';
      }).join('');
      return '<section class="food-category"><div class="food-category-head"><div class="food-category-title"><span class="food-category-dot" style="background:'+color+';color:'+color+'"></span>'+name+'</div><div class="food-category-count">'+list.length+' items</div></div><div class="food-items-grid">'+rows+'</div></section>';
    }).join('');
+   // Do not redraw unchanged cards every minute.
+   if(markup!==lastMarkup){stack.innerHTML=markup;lastMarkup=markup}
+   lastStatus=label||lastStatus;
    if(source){
-     const text=label||"Last Verified";
-     source.textContent=text;
-     source.classList.toggle("stale",/^Last Verified/i.test(text));
-     source.classList.toggle("checking",/^Checking/i.test(text));
+     source.textContent=lastStatus+' • '+foodItems.size+' items';
+     source.classList.toggle('stale',!/^Live\b/i.test(lastStatus));
+     source.classList.remove('checking');
    }
  }
- function saveCache(j){try{localStorage.setItem('mxFoodGridCacheV2',JSON.stringify(j))}catch(e){}}
- function readCache(){try{const j=JSON.parse(localStorage.getItem('mxFoodGridCacheV2')||'null');if(j&&Array.isArray(j.items)&&j.items.length){renderFood(j.items,"Last Verified");return true}}catch(e){}return false}
- async function refresh(){
+ function saveCache(){
    try{
-     const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),7000);
-     const r=await fetch('/api/food?ts='+Date.now(),{cache:'no-store',signal:ctrl.signal});
-     clearTimeout(timer);
-     if(!r.ok)throw new Error('HTTP '+r.status);
-     const j=await r.json();
-     if(!j.ok||!Array.isArray(j.items)||!j.items.length)throw new Error('No DA data');
-     const isLive=j.live===true&&!j.fallback&&!j.stale;
-     renderFood(j.items,isLive?("Live"+(j.date?" • "+j.date:"")):"Last Verified");
-     if(isLive)saveCache(j);
+     const saved=Array.from(foodItems.values()).filter(function(x){return x._status!=='reference'});
+     if(saved.length)localStorage.setItem(FOOD_CACHE_KEY,JSON.stringify({items:saved,saved_at:new Date().toISOString()}));
    }catch(e){}
  }
- renderFood(FOOD_BOOTSTRAP,"Last Verified");
- readCache();
+ function readCache(){
+   let found=false;
+   [FOOD_OLD_CACHE_KEY,FOOD_CACHE_KEY].forEach(function(key){
+     try{
+       const snapshot=JSON.parse(localStorage.getItem(key)||'null');
+       if(snapshot&&Array.isArray(snapshot.items)&&snapshot.items.length){
+         mergeFood(snapshot.items,'cache',snapshot.updated_at||snapshot.saved_at||null);
+         found=true;
+       }
+     }catch(e){}
+   });
+   return found;
+ }
+ async function refresh(){
+   const ctrl=new AbortController();
+   const timer=setTimeout(function(){ctrl.abort()},12000);
+   try{
+     const response=await fetch('/api/food?ts='+Date.now(),{cache:'no-store',signal:ctrl.signal});
+     if(!response.ok)throw new Error('HTTP '+response.status);
+     const data=await response.json();
+     if(!data.ok||!Array.isArray(data.items)||!data.items.length)throw new Error('Missing data');
+     const live=data.live===true&&!data.fallback&&!data.stale;
+     const touched=mergeFood(data.items,live?'live':'stale',data.date||data.updated_at||null);
+     if(touched)saveCache();
+     const reported=data.items.filter(function(x){return x&&usablePrice(x.price)!==null}).length;
+     renderFood(live&&reported?('Live • '+reported+' updated'):'Last Verified');
+   }catch(e){
+     // Preserve every item and last known price when sources fail or time out.
+     const verified=Array.from(foodItems.values()).some(function(x){return x._status!=='reference'});
+     renderFood(verified?'Last Verified':'Reference prices');
+   }finally{
+     clearTimeout(timer);
+   }
+ }
+ mergeFood(FOOD_BOOTSTRAP,'reference');
+ const cached=readCache();
+ renderFood(cached?'Last Verified':'Reference prices');
  refresh();
  setInterval(refresh,60000);
 })();
