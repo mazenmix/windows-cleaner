@@ -98,6 +98,7 @@
 .mercury-more{font-size:11px;letter-spacing:.4px;min-width:150px}
 @media(max-width:700px){.mercury-card .row{min-height:51px}.mercury-details{padding:10px 12px;font-size:9px}}
 
+.electricity-source-link{color:#d9e7f2;text-decoration:none}.electricity-source-link:hover{color:#91ceff;text-decoration:underline}
 </style>
 </head>
 <body>
@@ -128,7 +129,6 @@
  <div class="card-head"><div class="icon">💊</div><div class="titlebox">
   <h3>Mercury Drug</h3>
  </div><span class="status stale">PRICE SNAPSHOT</span></div>
- <div class="mercury-details">Prices reported by Mercury Drug branches to the Philippine Department of Health, reproduced from public <a href="https://hanapmed.ph/price-index/" target="_blank" rel="noopener noreferrer">hanapmed comparisons</a>. These are <strong>reference prices, not a complete real-time inventory</strong>. Confirm current price, availability, and prescription requirements with <a href="https://www.mercurydrug.com/price-inquiry.html" target="_blank" rel="noopener noreferrer">Mercury Drug ↗</a>.</div>
  <div class="medicine-tools"><input class="medicine-search" id="mercuryDrugSearch" type="search" autocomplete="off" placeholder="Search medicine, generic, brand or strength…" aria-label="Search Mercury Drug medicines"><span class="medicine-result-count" id="mercuryDrugCount">Loading verified prices…</span></div>
  <div class="medicine-rows mercury-rows" id="mercuryDrugRows" aria-live="polite"><div class="row" style="grid-column:1/-1"><span class="row-label">Loading published Mercury Drug prices…</span></div></div>
  <div class="medicine-actions"><button class="medicine-more mercury-more" id="mercuryDrugMore" type="button" style="display:none">SHOW MORE</button></div>
@@ -205,7 +205,6 @@ const sections=[
  {id:"tolls",icon:"🛣️",title:"Toll Fees"},
  {id:"transport",icon:"🚆",title:"Public Transport Fares"},
  {id:"jeepney",icon:"🚐",title:"Jeepney Fares"},
- {id:"exchange",icon:"💱",title:"Peso Exchange Rates"},
  {id:"promos",icon:"📶",title:"Internet & Mobile Promos"},
  {id:"construction",icon:"🏗️",title:"Construction Materials"},
  {id:"vehicle",icon:"🚗",title:"Vehicle Costs"},
@@ -214,11 +213,10 @@ const sections=[
 ];
 
 const BOOT={
- electricity:{source:"Meralco",source_url:"https://company.meralco.com.ph/news-and-advisories/lower-rates-september-2026",as_of:"September 2026",items:[["Meralco overall rate","₱14.7424/kWh","September billing rate"],["vs August 2026","−₱0.0409/kWh","Lower month-on-month"],["200 kWh bill effect","≈ ₱8.18 less","Rate-change estimate"]]},
+ electricity:{source:"Published utility rate advisories",source_url:"https://erc.gov.ph/",as_of:"Sep 2026 · Davao Sep 11–Oct 10",items:[{"label":"Meralco · Metro Manila / Luzon","value":"₱14.7424/kWh","detail":"September 2026 · 200 kWh residential bracket","source_url":"https://www.pna.gov.ph/articles/1283889"},{"label":"Visayan Electric · Metro Cebu","value":"₱14.89/kWh","detail":"September 2026 · 200 kWh residential","source_url":"https://www.visayanelectric.com/post/visayan-electric-announces-rate-reduction-for-september-welcomes-rate-intervention-measures-from-th"},{"label":"Davao Light · Davao","value":"₱13.24/kWh","detail":"Sep 11–Oct 10, 2026 billing cycle","source_url":"https://www.mindanaotimes.com.ph/davao-light-residential-rate-for-sept-oct-set-at-p13-24-kwh/"},{"label":"MORE Power · Iloilo City","value":"₱14.42/kWh","detail":"September 2026 residential","source_url":"https://www.pna.gov.ph/articles/1284739"},{"label":"Negros Power · Bacolod","value":"₱14.2487/kWh","detail":"September 2026 residential","source_url":"https://www.pna.gov.ph/articles/1284798"},{"label":"BENECO · Baguio / Benguet","value":"₱11.8038/kWh","detail":"September 2026 residential","source_url":"https://www.beneco.com.ph/rates.php"},{"label":"ILECO I · Iloilo Province","value":"₱15.7752/kWh","detail":"September 2026 residential","source_url":"https://ileco1.com/rates/"},{"label":"GUIMELCO · Guimaras","value":"₱16.3328/kWh","detail":"September 2026 residential","source_url":"https://www.guimelco.com/category/rates/effective-rate-2026/"},{"label":"NOCECO · Southern Negros","value":"₱16.0080/kWh","detail":"September 2026 residential","source_url":"https://digicastnegros.com/noneco-noceco-raise-september-power-rates-while-negros-power-posts-slight-cut/"},{"label":"NONECO · Northern Negros","value":"₱17.1454/kWh","detail":"September 2026 residential","source_url":"https://digicastnegros.com/noneco-noceco-raise-september-power-rates-while-negros-power-posts-slight-cut/"}]},
  tolls:{source:"TRB-based current toll matrices",source_url:"https://expresswayph.com/",as_of:"2026 rates",items:[["NLEX Open System","₱85","Class 1"],["Balintawak → Dau","₱348","NLEX • Class 1"],["Balintawak → Subic/Tipo","₱857","NLEX/SCTEX • Class 1"],["Balintawak → Alabang","₱428","Skyway • Class 1"],["Alabang → Sto. Tomas","₱170","SLEX • Class 1"],["Greenfield → Sta. Rosa-Tagaytay","₱44","CALAX • Class 1"]]},
  transport:{source:"LRTA / DOTr",source_url:"https://www.lrta.gov.ph/tickets-and-fares/",as_of:"Effective March 23, 2026",items:[["LRT-2 / MRT-3 discount","50% off","Across-the-board fare discount"],["LRT-2 single journey","₱8–₱18","Discounted fare range"],["LRT-2 stored value","₱6.50–₱16.50","Discounted fare range"],["Beep card","₱30 + ₱14 load","Standard stored-value card"]]},
  jeepney:{source:"Philippine News Agency • LTFRB / DOTr",source_url:"https://www.pna.gov.ph/articles/1284951",as_of:"Effective September 28, 2026",items:[["Traditional jeepney minimum","₱14","First 4 km"],["Traditional succeeding km","+₱2.00/km","Every kilometer after first 4 km"],["Modern jeepney minimum","₱17","First 4 km"],["Modern succeeding km","+₱2.40/km","Every kilometer after first 4 km"],["Student / Senior / PWD discount","20%","Mandatory fare discount"]]},
- exchange:{source:"Bangko Sentral ng Pilipinas",source_url:"https://www.bsp.gov.ph/Statistics/sdds/sdds.aspx",as_of:"24 September 2026",items:[["USD","₱62.6190","PHP per US dollar"],["JPY","₱0.3958","PHP per Japanese yen"],["GBP","₱82.9451","PHP per British pound"]]},
  promos:{source:"Globe / Smart / DITO official",source_url:"https://www.globe.com.ph/prepaid/go-promos/plus",as_of:"Current offers",items:[["Globe Go+99","₱99 / 7 days","20 GB total data"],["Globe Go+109","₱109 / 7 days","22 GB total data"],["Smart Power All 59","₱59 / 3 days","5 GB + 3 GB 5G + calls/texts"],["Smart New Power All 99","₱99","Current prepaid offer"],["DITO Level-Up 99","₱99 / 30 days","7 GB + calls/texts"],["DITO Level-Up 109","₱109 / 30 days","10 GB + calls/texts"]]},
  grocery:{source:"Department of Trade and Industry • SRP Bulletin",source_url:"https://www.dti.gov.ph/konsyumer/latest-srps-basic-necessities-prime-commodities",as_of:"Checking latest DTI SRP bulletin",items:[]},
 medicine:{source:"DOH • East Avenue Medical Center",source_url:"https://eamc.doh.gov.ph/drugs-and-medicines-price-list/",as_of:"September 15, 2026",items:[["Amoxicillin 500mg • Harbimox","₱2.06","Per capsule • EAMC selling price"],["Amoxicillin 500mg • Ambimox","₱2.28","Per capsule • EAMC selling price"],["0.9% Sodium Chloride 1L","₱46.26","EAMC selling price"],["Clopidogrel 75mg","₱0.95","Per tablet • EAMC selling price"]]},
@@ -232,11 +230,11 @@ const grid=document.getElementById("costGrid"),globalStatus=document.getElementB
 const cache={};
 const medicineState={query:"",visible:10};
 const groceryState={query:"",visible:10};
-try{Object.assign(cache,JSON.parse(localStorage.getItem("mxDailyCostCacheV3")||"{}"))}catch(e){}
+try{Object.assign(cache,JSON.parse(localStorage.getItem("mxDailyCostCacheV3")||"{}"));if(!Array.isArray(cache.electricity?.items)||cache.electricity.items.length<10)delete cache.electricity}catch(e){}
 
 function normalize(sec,data){
  const b=BOOT[sec];
- if(!data)return {section:sec,source:b.source,source_url:b.source_url,as_of:b.as_of,items:b.items.map(x=>({label:x[0],value:x[1],detail:x[2]})),live:false,fallback:false,stale:false,checking:true};
+ if(!data)return {section:sec,source:b.source,source_url:b.source_url,as_of:b.as_of,items:b.items.map(x=>Array.isArray(x)?{label:x[0],value:x[1],detail:x[2]}:x),live:false,fallback:false,stale:false,checking:true};
  const items=(data.items||[]).map(x=>Array.isArray(x)?{label:x[0],value:x[1],detail:x[2]}:x);
  return {...data,section:sec,items};
 }
@@ -334,8 +332,8 @@ function renderCard(sec,data){
  if(sec==="grocery")return renderGroceryCard(data);
  if(sec==="medicine")return renderMedicineCard(data);
  const cfg=sections.find(x=>x.id===sec),d=normalize(sec,data);
- const rows=d.items.map(x=>'<div class="row"><div><span class="row-label">'+esc(x.label)+'</span>'+(x.detail?'<span class="row-detail">'+esc(x.detail)+'</span>':'')+'</div><div class="row-value">'+esc(x.value)+'</div></div>').join("");
- const note=d.note?'<div class="card-note">'+esc(d.note)+'</div>':'';
+ const rows=d.items.map(x=>'<div class="row"><div><span class="row-label">'+(sec==="electricity"&&/^https:\/\//.test(x.source_url||"")?'<a class="electricity-source-link" href="'+esc(x.source_url)+'" target="_blank" rel="noopener noreferrer">'+esc(x.label)+' ↗</a>':esc(x.label))+'</span>'+(x.detail?'<span class="row-detail">'+esc(x.detail)+'</span>':'')+'</div><div class="row-value">'+esc(x.value)+'</div></div>').join("");
+ const note=(sec==="electricity"?'<div class="card-note">Latest published residential rates per kWh • dates shown for each provider • actual billing may vary by consumption, taxes, and local utility. Tap a provider to view its source.</div>':(d.note?'<div class="card-note">'+esc(d.note)+'</div>':''));
  return '<article class="cost-card" id="card-'+sec+'"><div class="card-head"><div class="icon">'+cfg.icon+'</div><div class="titlebox"><h3>'+cfg.title+'</h3><a class="source-name" target="_blank" rel="noopener" href="'+esc(d.source_url||"#")+'">'+esc(d.source||"Source")+' ↗</a></div>'+statusHtml(d)+'</div><div class="rows">'+rows+'</div>'+note+'<div class="card-foot"><span class="asof">'+esc(d.as_of||"Latest published data")+'</span><span class="checked">'+timeLabel(d.checked_at)+'</span></div></article>';
 }
 function updateMedicineBody(){
@@ -396,7 +394,7 @@ async function refreshOne(sec,force){
  }finally{clearTimeout(timer)}
 }
 async function refreshAll(force){
- refreshBtn.classList.add("loading");globalStatus.textContent="CHECKING 12 SOURCES…";
+ refreshBtn.classList.add("loading");globalStatus.textContent="CHECKING "+sections.length+" SOURCES…";
  await Promise.allSettled(sections.map(s=>refreshOne(s.id,force)));
  refreshBtn.classList.remove("loading");
  const vals=sections.map(x=>cache[x.id]).filter(Boolean);
