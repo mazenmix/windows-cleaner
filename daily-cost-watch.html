@@ -333,7 +333,9 @@ function renderCard(sec,data){
  if(sec==="medicine")return renderMedicineCard(data);
  const cfg=sections.find(x=>x.id===sec),d=normalize(sec,data);
  const rows=d.items.map(x=>'<div class="row"><div><span class="row-label">'+(sec==="electricity"&&/^https:\/\//.test(x.source_url||"")?'<a class="electricity-source-link" href="'+esc(x.source_url)+'" target="_blank" rel="noopener noreferrer">'+esc(x.label)+' ↗</a>':esc(x.label))+'</span>'+(x.detail?'<span class="row-detail">'+esc(x.detail)+'</span>':'')+'</div><div class="row-value">'+esc(x.value)+'</div></div>').join("");
- const note=(sec==="electricity"?'<div class="card-note">Latest published residential rates per kWh • dates shown for each provider • actual billing may vary by consumption, taxes, and local utility. Tap a provider to view its source.</div>':(d.note?'<div class="card-note">'+esc(d.note)+'</div>':''));
+ const hiddenNotes=["Official page is rechecked automatically; station-to-station fare ranges come from the current fare matrix poster.","Static emergency snapshot only — live source could not be verified.","Latest published residential rates per kWh • dates shown for each provider • actual billing may vary by consumption, taxes, and local utility. Tap a provider to view its source."];
+ const noteText=sec==="electricity"?"":String(d.note||"").trim();
+ const note=noteText&&!hiddenNotes.includes(noteText)?'<div class="card-note">'+esc(noteText)+'</div>':"";
  return '<article class="cost-card" id="card-'+sec+'"><div class="card-head"><div class="icon">'+cfg.icon+'</div><div class="titlebox"><h3>'+cfg.title+'</h3><a class="source-name" target="_blank" rel="noopener" href="'+esc(d.source_url||"#")+'">'+esc(d.source||"Source")+' ↗</a></div>'+statusHtml(d)+'</div><div class="rows">'+rows+'</div>'+note+'<div class="card-foot"><span class="asof">'+esc(d.as_of||"Latest published data")+'</span><span class="checked">'+timeLabel(d.checked_at)+'</span></div></article>';
 }
 function updateMedicineBody(){
