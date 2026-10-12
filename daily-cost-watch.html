@@ -140,7 +140,7 @@
 </div>
 
 <section class="hero"><div class="hero-inner">
-<div><div class="eyebrow">PHILIPPINES EVERYDAY COST MONITOR</div><h1>Daily Cost</h1>
+<div><h1>Daily Cost</h1>
 <p>Updated every moment, never miss!</p></div>
 <div class="global-status" id="globalStatus">Checking Sources…</div>
 </div></section>
@@ -238,7 +238,6 @@ const sections=[
  {id:"transport",icon:"🚆",title:"Public Transport Fares"},
  {id:"jeepney",icon:"🚐",title:"Jeepney Fares"},
  {id:"promos",icon:"📶",title:"Internet & Mobile Promos"},
- {id:"construction",icon:"🏗️",title:"Construction Materials"},
  {id:"vehicle",icon:"🚗",title:"Vehicle Costs"},
  {id:"living",icon:"🏙️",title:"Cost of Living"},
  {id:"travel",icon:"✈️",title:"Airport / Travel Fees"}
@@ -251,7 +250,6 @@ const BOOT={
  jeepney:{source:"Philippine News Agency • LTFRB / DOTr",source_url:"https://www.pna.gov.ph/articles/1284951",as_of:"Effective September 28, 2026",items:[["Traditional jeepney minimum","₱14","First 4 km"],["Traditional succeeding km","+₱2.00/km","Every kilometer after first 4 km"],["Modern jeepney minimum","₱17","First 4 km"],["Modern succeeding km","+₱2.40/km","Every kilometer after first 4 km"],["Student / Senior / PWD discount","20%","Mandatory fare discount"]]},
  promos:{source:"Globe / Smart / DITO official",source_url:"https://www.globe.com.ph/prepaid/go-promos/plus",as_of:"Current offers",items:[["Globe Go+99","₱99 / 7 days","20 GB total data"],["Globe Go+109","₱109 / 7 days","22 GB total data"],["Smart Power All 59","₱59 / 3 days","5 GB + 3 GB 5G + calls/texts"],["Smart New Power All 99","₱99","Current prepaid offer"],["DITO Level-Up 99","₱99 / 30 days","7 GB + calls/texts"],["DITO Level-Up 109","₱109 / 30 days","10 GB + calls/texts"]]},
  grocery:{source:"Department of Trade and Industry • SRP Bulletin",source_url:"https://www.dti.gov.ph/konsyumer/latest-srps-basic-necessities-prime-commodities",as_of:"Checking latest DTI SRP bulletin",items:[]},
- construction:{source:"Philippine Statistics Authority • CMRPI",source_url:"https://psa.gov.ph/price-indices/cmrpi/index",as_of:"August 2026",items:[["NCR CMRPI growth","2.0%","Year-on-year"],["Electrical materials","2.2%","Annual growth"],["Painting materials","2.8%","Annual growth"],["Tinsmithry materials","3.6%","Annual growth"],["Masonry materials","2.3%","Annual growth"],["Carpentry materials","0.6%","Annual growth"]]},
  vehicle:{source:"Land Transportation Office",source_url:"https://www.lto.gov.ph/wp-content/uploads/2023/10/FDM-vol.-2-2nd-Edition.pdf",as_of:"Current LTO MVUC schedule",items:[["Light passenger car ≤1,600kg","₱1,600","Year 2001 onward • MVUC"],["Medium car 1,600–2,300kg","₱3,600","Year 2001 onward • MVUC"],["Heavy car ≥2,301kg","₱8,000","Year 2001 onward • MVUC"],["Motorcycle without sidecar","₱240","MVUC"]]},
  living:{source:"Philippine Statistics Authority • CPI",source_url:"https://psa.gov.ph/price-indices/cpi-ir",as_of:"August 2026",items:[["Philippines inflation","6.1%","Headline inflation"],["NCR inflation","4.1%","Headline inflation"],["Outside NCR","6.6%","Headline inflation"],["National year-to-date","5.2%","Jan–Aug 2026 average"]]},
  travel:{source:"New NAIA Infra Corp.",source_url:"https://www.newnaia.com.ph/about-us/news/naia-operator-says-fee-hikes-mandated-by-govt-ofws-exempt",as_of:"Current NAIA PSC",items:[["NAIA domestic PSC","₱390","Departing passenger"],["NAIA international PSC","₱950","Departing passenger"],["OFW international PSC","Exempt","Exemption continues"]]}
