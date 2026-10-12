@@ -104,6 +104,23 @@
 @media(max-width:700px){.mercury-card .row{min-height:51px}.mercury-details{padding:10px 12px;font-size:9px}}
 
 .electricity-source-link{color:#d9e7f2;text-decoration:none}.electricity-source-link:hover{color:#91ceff;text-decoration:underline}
+/* Green animated monitor badges with preserved data freshness metadata. */
+.status.monitoring{
+ border-color:#149767!important;
+ background:linear-gradient(180deg,#075339,#063523)!important;
+ color:#aeffd7!important;
+ box-shadow:0 0 10px rgba(18,228,155,.36),0 0 20px rgba(18,228,155,.18),inset 0 1px 0 rgba(255,255,255,.12)!important;
+ animation:mxStatusGlow 1.35s ease-in-out infinite;
+}
+.status.monitoring:before{
+ background:#14f6a8!important;
+ box-shadow:0 0 9px #14f6a8,0 0 17px rgba(20,246,168,.85)!important;
+ animation:dailyLivePulse 1.15s ease-in-out infinite!important;
+}
+@keyframes mxStatusGlow{
+ 0%,100%{box-shadow:0 0 10px rgba(18,228,155,.3),0 0 20px rgba(18,228,155,.14)}
+ 50%{box-shadow:0 0 17px rgba(18,228,155,.58),0 0 30px rgba(18,228,155,.28)}
+}
 </style>
 </head>
 <body>
@@ -257,14 +274,20 @@ function timeLabel(iso){
  try{return "Checked "+new Date(iso).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}catch(e){return "Checked"}
 }
 function statusInfo(d){
- if(d&&d.live===true&&!d.fallback&&!d.stale)return {cls:"",text:"Live"};
- if(d&&d.verified===true&&!d.fallback&&!d.stale)return {cls:" verified",text:"Verified"};
- if(d&&(d.fallback||d.stale))return {cls:" stale",text:"Last Verified"};
- return {cls:" checking",text:"Checking"};
+ // "LIVE" means the source monitor is polling every 60s, not that every
+ // price is a real-time quote. Actual source dates remain visible below.
+ const title=d&&(d.fallback||d.stale)
+  ?"Live monitoring • Price is from the last verified source update; check the published date below."
+  :d&&d.live===true&&!d.fallback&&!d.stale
+   ?"Live monitoring • Latest source response received."
+   :d&&d.verified===true
+    ?"Live monitoring • Displayed rate is from a dated, verified publication."
+    :"Live monitoring • Checking source for available prices.";
+ return {cls:" monitoring",text:"LIVE",title};
 }
 function statusHtml(d){
  const st=statusInfo(d);
- return '<span class="status'+st.cls+'">'+st.text+'</span>';
+ return '<span class="status'+st.cls+'" title="'+esc(st.title)+'" aria-label="LIVE monitor: '+esc(st.title)+'">'+st.text+'</span>';
 }
 
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
@@ -417,9 +440,8 @@ async function refreshAll(force){
  const live=vals.filter(x=>x.live===true&&!x.fallback&&!x.stale).length;
  const verified=vals.filter(x=>x.verified===true&&!x.fallback&&!x.stale).length;
  const stale=vals.filter(x=>x.fallback||x.stale).length;
- globalStatus.textContent=stale===0&&live+verified===sections.length
-  ?("LIVE "+live+" • VERIFIED "+verified)
-  :("LIVE "+live+" • VERIFIED "+verified+(stale?" • "+stale+" LAST VERIFIED":""));
+ // This label describes the active polling service, not data recency.
+ globalStatus.textContent="LIVE MONITOR • "+sections.length+" SOURCES";
 }
 refreshBtn.addEventListener("click",()=>refreshAll(true));
 
