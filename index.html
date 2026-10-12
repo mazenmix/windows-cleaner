@@ -135,7 +135,7 @@
 .pse-scroll-mask:before,.pse-scroll-mask:after{content:"";position:absolute;top:0;bottom:0;width:30px;z-index:2;pointer-events:none}
 .pse-scroll-mask:before{left:0;background:linear-gradient(90deg,#071a2d,transparent)}
 .pse-scroll-mask:after{right:0;background:linear-gradient(270deg,#071a2d,transparent)}
-.pse-scroll-track{display:inline-flex;flex-wrap:nowrap;align-items:center;width:max-content;min-width:max-content;height:48px;will-change:transform;transform:translate3d(0,0,0);-webkit-transform:translate3d(0,0,0);backface-visibility:hidden;-webkit-backface-visibility:hidden;animation:pseTickerMove 58s linear infinite;-webkit-animation:pseTickerMove 58s linear infinite;animation-play-state:running;-webkit-animation-play-state:running}
+.pse-scroll-track{display:inline-flex;flex-wrap:nowrap;align-items:center;width:max-content;min-width:max-content;height:48px;will-change:transform;transform:translate3d(0,0,0);-webkit-transform:translate3d(0,0,0);backface-visibility:hidden;-webkit-backface-visibility:hidden;animation:pseTickerMove 20s linear infinite;-webkit-animation:pseTickerMove 20s linear infinite;animation-play-state:running;-webkit-animation-play-state:running}
 
 .pse-stock-item{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 17px;border-right:1px solid rgba(56,100,137,.34);font-variant-numeric:tabular-nums}
 .pse-symbol{font-size:11px;font-weight:900;letter-spacing:.25px;color:#f2f8fd}
@@ -148,7 +148,7 @@
 .pse-stock-placeholder{height:48px;display:flex;align-items:center;padding:0 18px;color:#718fab;font-size:10px}
 @-webkit-keyframes pseTickerMove{from{-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0)}to{-webkit-transform:translate3d(-50%,0,0);transform:translate3d(-50%,0,0)}}@keyframes pseTickerMove{from{-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0)}to{-webkit-transform:translate3d(-50%,0,0);transform:translate3d(-50%,0,0)}}
 @media(max-width:700px){
- .pse-scroll-track{animation-duration:64s;-webkit-animation-duration:64s}
+ .pse-scroll-track{animation-play-state:running;-webkit-animation-play-state:running}
  .pse-stock-item{padding:0 13px;gap:6px}
  .pse-symbol,.pse-price{font-size:10px}.pse-change{font-size:9px}
 }
@@ -841,6 +841,12 @@
      return '<span class="pse-stock-item '+cls+'"><span class="pse-symbol">'+label+'</span><span class="pse-trend">'+tri+'</span><span class="pse-price">'+fmtPrice(Number(q.close))+'</span><span class="pse-change">'+pct+'</span></span>';
    }).join('');
    track.innerHTML=one+one;
+   const px=track.scrollWidth/2;
+   const duration=Math.max(8,px/100)+"s";
+   track.style.animationDuration=duration;
+   track.style.webkitAnimationDuration=duration;
+   track.style.animationPlayState="running";
+   track.style.webkitAnimationPlayState="running";
  }
  function renderPSEPayload(j){
    if(!j||!Array.isArray(j.quotes)||!j.quotes.length)return false;
