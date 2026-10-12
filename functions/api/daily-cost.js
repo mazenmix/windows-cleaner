@@ -132,7 +132,7 @@ function verifiedOut(sec,items,source,source_url,as_of,note){
  return {ok:true,section:sec,title:SNAP[sec].title,live:false,verified:true,fallback:false,stale:false,source,source_url,as_of,checked_at:new Date().toISOString(),items,note:note||""};
 }
 function fallback(sec,error){
- return {ok:true,section:sec,...SNAP[sec],live:false,fallback:true,stale:true,checked_at:new Date().toISOString(),note:"Static emergency snapshot only — live source could not be verified.",error:String(error||"source parse unavailable")};
+ return {ok:true,section:sec,...SNAP[sec],live:false,fallback:true,stale:true,checked_at:new Date().toISOString(),note:"",error:String(error||"source parse unavailable")};
 }
 function findNum(text,re){const m=String(text).match(re);return m?Number(String(m[1]).replace(/,/g,"")):null}
 
@@ -181,7 +181,7 @@ async function transport(){
   {label:"LRT-2 stored value",value:"₱6.50–₱16.50",detail:"Current discounted fare-matrix range"},
   {label:"Beep card",value:"₱"+Number(card[1]).toFixed(0)+" + ₱"+Number(card[2]).toFixed(0)+" load",detail:"Parsed from current LRTA page"}
  ];
- return verifiedOut("transport",items,"LRTA / DOTr",SOURCES.transport,"Current LRTA fare page","Official page is rechecked automatically; station-to-station fare ranges come from the current fare matrix poster.");
+ return verifiedOut("transport",items,"LRTA / DOTr",SOURCES.transport,"Current LRTA fare page","");
 }
 async function jeepney(){
  const t=clean(await readable(SOURCES.jeepney));
