@@ -132,7 +132,7 @@
  <div class="mercury-details">Prices reported by Mercury Drug branches to the Philippine Department of Health, reproduced from public <a href="https://hanapmed.ph/price-index/" target="_blank" rel="noopener noreferrer">hanapmed comparisons</a>. These are <strong>reference prices, not a complete real-time inventory</strong>. Confirm current price, availability, and prescription requirements with <a href="https://www.mercurydrug.com/price-inquiry.html" target="_blank" rel="noopener noreferrer">Mercury Drug ↗</a>.</div>
  <div class="medicine-tools"><input class="medicine-search" id="mercuryDrugSearch" type="search" autocomplete="off" placeholder="Search medicine, generic, brand or strength…" aria-label="Search Mercury Drug medicines"><span class="medicine-result-count" id="mercuryDrugCount">Loading verified prices…</span></div>
  <div class="medicine-rows mercury-rows" id="mercuryDrugRows" aria-live="polite"><div class="row" style="grid-column:1/-1"><span class="row-label">Loading published Mercury Drug prices…</span></div></div>
- <div class="medicine-actions"><button class="medicine-more mercury-more" id="mercuryDrugMore" type="button" style="display:none">VIEW MORE</button></div>
+ <div class="medicine-actions"><button class="medicine-more mercury-more" id="mercuryDrugMore" type="button" style="display:none">SHOW MORE</button></div>
  <div class="card-foot"><span class="asof">PRICE CHECK • October 12, 2026</span><span class="checked" id="mercuryDrugShown">Not live • reference prices only</span></div>
 </article>
 <div class="grid" id="costGrid"></div>
@@ -231,7 +231,7 @@ medicine:{source:"DOH • East Avenue Medical Center",source_url:"https://eamc.d
 
 const grid=document.getElementById("costGrid"),globalStatus=document.getElementById("globalStatus"),refreshBtn=document.getElementById("refreshAll");
 const cache={};
-const medicineState={query:"",visible:24};
+const medicineState={query:"",visible:10};
 const groceryState={query:"",visible:24};
 try{Object.assign(cache,JSON.parse(localStorage.getItem("mxDailyCostCacheV3")||"{}"))}catch(e){}
 
@@ -329,7 +329,7 @@ function renderMedicineCard(data){
  const resultText=medicineState.query?(filtered.length+" matches"):(total+" medicines");
  const more=filtered.length>medicineState.visible;
  const asof=d.updated||d.as_of||"Latest EAMC published list";
- return '<article class="cost-card medicine-card" id="card-medicine"><div class="card-head"><div class="icon">'+cfg.icon+'</div><div class="titlebox"><h3>'+cfg.title+'</h3></div>'+statusHtml(d)+'</div><div class="medicine-tools"><input class="medicine-search" id="medicineSearch" type="search" autocomplete="off" placeholder="Search medicine, brand, strength or category…" value="'+esc(medicineState.query)+'"><span class="medicine-result-count" id="medicineResultCount">'+esc(resultText)+'</span></div><div class="medicine-rows" id="medicineRows">'+medicineRowsHtml(d)+'</div><div class="medicine-actions"><button class="medicine-more" id="medicineMore"'+(more?"":" style=\"display:none\"")+'>Show More</button></div><div class="card-foot"><span class="asof">'+esc(asof)+'</span><span class="checked">'+timeLabel(d.checked_at)+'</span></div></article>';
+ return '<article class="cost-card medicine-card" id="card-medicine"><div class="card-head"><div class="icon">'+cfg.icon+'</div><div class="titlebox"><h3>'+cfg.title+'</h3></div>'+statusHtml(d)+'</div><div class="medicine-tools"><input class="medicine-search" id="medicineSearch" type="search" autocomplete="off" placeholder="Search medicine, brand, strength or category…" value="'+esc(medicineState.query)+'"><span class="medicine-result-count" id="medicineResultCount">'+esc(resultText)+'</span></div><div class="medicine-rows" id="medicineRows">'+medicineRowsHtml(d)+'</div><div class="medicine-actions"><button class="medicine-more" id="medicineMore"'+(more?"":" style=\"display:none\"")+'>SHOW MORE</button></div><div class="card-foot"><span class="asof">'+esc(asof)+'</span><span class="checked">'+timeLabel(d.checked_at)+'</span></div></article>';
 }
 function renderCard(sec,data){
  if(sec==="grocery")return renderGroceryCard(data);
@@ -348,8 +348,8 @@ function updateMedicineBody(){
 }
 function bindMedicineControls(){
  const input=document.getElementById("medicineSearch"),more=document.getElementById("medicineMore");
- if(input&&!input.dataset.bound){input.dataset.bound="1";input.addEventListener("input",e=>{medicineState.query=e.target.value;medicineState.visible=24;updateMedicineBody()})}
- if(more&&!more.dataset.bound){more.dataset.bound="1";more.addEventListener("click",()=>{medicineState.visible+=24;updateMedicineBody()})}
+ if(input&&!input.dataset.bound){input.dataset.bound="1";input.addEventListener("input",e=>{medicineState.query=e.target.value;medicineState.visible=10;updateMedicineBody()})}
+ if(more&&!more.dataset.bound){more.dataset.bound="1";more.addEventListener("click",()=>{medicineState.visible+=10;updateMedicineBody()})}
 }
 function renderAll(){
  grid.innerHTML=sections.map(s=>renderCard(s.id,cache[s.id]||null)).join("");
@@ -489,7 +489,7 @@ setInterval(()=>refreshAll(false),60000);
 (function(){
 "use strict";
 const search=document.getElementById("mercuryDrugSearch"),rows=document.getElementById("mercuryDrugRows"),more=document.getElementById("mercuryDrugMore"),count=document.getElementById("mercuryDrugCount"),shown=document.getElementById("mercuryDrugShown");
-let catalog=[],query="",visible=60;
+let catalog=[],query="",visible=10;
 const safe=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function render(){
  const term=query.trim().toLocaleLowerCase("en"),matched=term?catalog.filter(x=>(x.generic+" "+x.strength+" "+x.brand).toLocaleLowerCase("en").includes(term)):catalog;
@@ -502,10 +502,10 @@ function render(){
  count.textContent=term?matched.length+" matches":catalog.length+" published prices";
  shown.textContent=display.length+" of "+matched.length+" shown";
  more.style.display=matched.length>visible?"":"none";
- more.textContent="VIEW MORE (+"+Math.min(60,matched.length-visible)+")";
+ more.textContent="SHOW MORE (+"+Math.min(10,matched.length-visible)+")";
 }
-search.addEventListener("input",()=>{query=search.value;visible=60;render()});
-more.addEventListener("click",()=>{visible+=60;render()});
+search.addEventListener("input",()=>{query=search.value;visible=10;render()});
+more.addEventListener("click",()=>{visible+=10;render()});
 fetch("./mercury-drug-prices-20261012.json",{cache:"default"}).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(data=>{
  if(!data||!Array.isArray(data.items)||!data.items.length)throw new Error("Empty source");
  const uniq=new Set();catalog=data.items.filter(x=>{if(!x||!x.generic||!x.brand||!x.strength||!Number.isFinite(Number(x.price))||Number(x.price)<=0)return false;const k=[x.generic,x.brand,x.strength,x.price,x.unit].join("|");if(uniq.has(k))return false;uniq.add(k);return true});
