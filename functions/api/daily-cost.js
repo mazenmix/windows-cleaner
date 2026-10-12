@@ -17,11 +17,7 @@ const SOURCES={
 };
 
 const SNAP={
- electricity:{title:"Electricity Rates",source:"Meralco",source_url:SOURCES.electricity,as_of:"September 2026",items:[
-  {label:"Meralco overall rate",value:"₱14.7424/kWh",detail:"September billing rate"},
-  {label:"vs August 2026",value:"−₱0.0409/kWh",detail:"Lower month-on-month"},
-  {label:"200 kWh bill effect",value:"≈ ₱8.18 less",detail:"Rate-change estimate"}
- ]},
+ electricity:{title:"Electricity Rates",source:"Published utility rate advisories",source_url:"https://erc.gov.ph/",as_of:"Sep 2026 · Davao Sep 11–Oct 10",items:[{"label":"Meralco · Metro Manila / Luzon","value":"₱14.7424/kWh","detail":"September 2026 · 200 kWh residential bracket","source_url":"https://www.pna.gov.ph/articles/1283889"},{"label":"Visayan Electric · Metro Cebu","value":"₱14.89/kWh","detail":"September 2026 · 200 kWh residential","source_url":"https://www.visayanelectric.com/post/visayan-electric-announces-rate-reduction-for-september-welcomes-rate-intervention-measures-from-th"},{"label":"Davao Light · Davao","value":"₱13.24/kWh","detail":"Sep 11–Oct 10, 2026 billing cycle","source_url":"https://www.mindanaotimes.com.ph/davao-light-residential-rate-for-sept-oct-set-at-p13-24-kwh/"},{"label":"MORE Power · Iloilo City","value":"₱14.42/kWh","detail":"September 2026 residential","source_url":"https://www.pna.gov.ph/articles/1284739"},{"label":"Negros Power · Bacolod","value":"₱14.2487/kWh","detail":"September 2026 residential","source_url":"https://www.pna.gov.ph/articles/1284798"},{"label":"BENECO · Baguio / Benguet","value":"₱11.8038/kWh","detail":"September 2026 residential","source_url":"https://www.beneco.com.ph/rates.php"},{"label":"ILECO I · Iloilo Province","value":"₱15.7752/kWh","detail":"September 2026 residential","source_url":"https://ileco1.com/rates/"},{"label":"GUIMELCO · Guimaras","value":"₱16.3328/kWh","detail":"September 2026 residential","source_url":"https://www.guimelco.com/category/rates/effective-rate-2026/"},{"label":"NOCECO · Southern Negros","value":"₱16.0080/kWh","detail":"September 2026 residential","source_url":"https://digicastnegros.com/noneco-noceco-raise-september-power-rates-while-negros-power-posts-slight-cut/"},{"label":"NONECO · Northern Negros","value":"₱17.1454/kWh","detail":"September 2026 residential","source_url":"https://digicastnegros.com/noneco-noceco-raise-september-power-rates-while-negros-power-posts-slight-cut/"}]},
  tolls:{title:"Toll Fees",source:"TRB-based current toll matrices",source_url:SOURCES.tolls,as_of:"2026 rates",items:[
   {label:"NLEX Open System",value:"₱85",detail:"Class 1"},
   {label:"Balintawak → Dau",value:"₱348",detail:"NLEX • Class 1"},
@@ -141,13 +137,10 @@ function fallback(sec,error){
 function findNum(text,re){const m=String(text).match(re);return m?Number(String(m[1]).replace(/,/g,"")):null}
 
 async function electricity(){
- const t=clean(await readable(SOURCES.electricity));
- const rate=findNum(t,/(?:overall rate|overall electricity rate)[^0-9]{0,140}(?:PHP|P|₱)?\s*([0-9]+\.[0-9]{4})/i)||findNum(t,/(?:PHP|P|₱)\s*([0-9]+\.[0-9]{4})\s*\/\s*kWh/i);
- if(!rate)throw new Error("Meralco rate not parsed");
- const change=findNum(t,/(?:decrease|lower|reduction)[^0-9]{0,100}(?:PHP|P|₱)?\s*([0-9]+\.[0-9]{4})/i);
- const items=[{label:"Meralco overall rate",value:money(rate,4)+"/kWh",detail:"Latest billing rate found"}];
- if(change)items.push({label:"Month-on-month change",value:"−"+money(change,4)+"/kWh",detail:"Decrease reported by Meralco"});
- return liveOut("electricity",items,"Meralco",SOURCES.electricity,"Latest Meralco advisory");
+ // Dated published residential price references, not a real-time electricity feed.
+ // Keep providers visible when individual utility sites cannot be reached.
+ const snapshot=SNAP.electricity;
+ return verifiedOut("electricity",snapshot.items,snapshot.source,snapshot.source_url,snapshot.as_of,"Utility rates are published by billing period; see each provider source.");
 }
 
 function routeValue(t,label){
