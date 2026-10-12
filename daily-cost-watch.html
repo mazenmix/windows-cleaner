@@ -126,8 +126,7 @@
 
 <article class="cost-card medicine-card mercury-card" id="mercuryDrugCard" aria-label="Mercury Drug medicine prices">
  <div class="card-head"><div class="icon">💊</div><div class="titlebox">
-  <h3>Mercury Drug • Medicine Prices</h3>
-  <a class="source-name" href="https://hanapmed.ph/about/" target="_blank" rel="noopener noreferrer">Mercury Drug • reported to DOH, compiled by hanapmed ↗</a>
+  <h3>Mercury Drug</h3>
  </div><span class="status stale">PRICE SNAPSHOT</span></div>
  <div class="mercury-details">Prices reported by Mercury Drug branches to the Philippine Department of Health, reproduced from public <a href="https://hanapmed.ph/price-index/" target="_blank" rel="noopener noreferrer">hanapmed comparisons</a>. These are <strong>reference prices, not a complete real-time inventory</strong>. Confirm current price, availability, and prescription requirements with <a href="https://www.mercurydrug.com/price-inquiry.html" target="_blank" rel="noopener noreferrer">Mercury Drug ↗</a>.</div>
  <div class="medicine-tools"><input class="medicine-search" id="mercuryDrugSearch" type="search" autocomplete="off" placeholder="Search medicine, generic, brand or strength…" aria-label="Search Mercury Drug medicines"><span class="medicine-result-count" id="mercuryDrugCount">Loading verified prices…</span></div>
@@ -232,7 +231,7 @@ medicine:{source:"DOH • East Avenue Medical Center",source_url:"https://eamc.d
 const grid=document.getElementById("costGrid"),globalStatus=document.getElementById("globalStatus"),refreshBtn=document.getElementById("refreshAll");
 const cache={};
 const medicineState={query:"",visible:10};
-const groceryState={query:"",visible:24};
+const groceryState={query:"",visible:10};
 try{Object.assign(cache,JSON.parse(localStorage.getItem("mxDailyCostCacheV3")||"{}"))}catch(e){}
 
 function normalize(sec,data){
@@ -286,7 +285,7 @@ function renderGroceryCard(data){
  const resultText=groceryState.query?(filtered.length+" matches"):(total+" grocery items");
  const more=filtered.length>groceryState.visible;
  const asof=d.updated||d.as_of||"Latest DTI SRP bulletin";
- return '<article class="cost-card grocery-card" id="card-grocery"><div class="card-head"><div class="icon">'+cfg.icon+'</div><div class="titlebox"><h3>'+cfg.title+'</h3></div>'+statusHtml(d)+'</div><div class="grocery-tools"><input class="grocery-search" id="grocerySearch" type="search" autocomplete="off" placeholder="Search grocery item, brand, unit or category…" value="'+esc(groceryState.query)+'"><span class="grocery-result-count" id="groceryResultCount">'+esc(resultText)+'</span></div><div class="grocery-rows" id="groceryRows">'+groceryRowsHtml(d)+'</div><div class="grocery-actions"><button class="grocery-more" id="groceryMore"'+(more?"":" style=\"display:none\"")+'>Show More</button></div><div class="card-foot"><span class="asof">'+esc(asof)+'</span><span class="checked">'+timeLabel(d.checked_at)+'</span></div></article>';
+ return '<article class="cost-card grocery-card" id="card-grocery"><div class="card-head"><div class="icon">'+cfg.icon+'</div><div class="titlebox"><h3>'+cfg.title+'</h3></div>'+statusHtml(d)+'</div><div class="grocery-tools"><input class="grocery-search" id="grocerySearch" type="search" autocomplete="off" placeholder="Search grocery item, brand, unit or category…" value="'+esc(groceryState.query)+'"><span class="grocery-result-count" id="groceryResultCount">'+esc(resultText)+'</span></div><div class="grocery-rows" id="groceryRows">'+groceryRowsHtml(d)+'</div><div class="grocery-actions"><button class="grocery-more" id="groceryMore"'+(more?"":" style=\"display:none\"")+'>VIEW MORE</button></div><div class="card-foot"><span class="asof">'+esc(asof)+'</span><span class="checked">'+timeLabel(d.checked_at)+'</span></div></article>';
 }
 function updateGroceryBody(){
  const d=cache.grocery||normalize("grocery",null),filtered=groceryFiltered(d),total=groceryList(d).length;
@@ -297,8 +296,8 @@ function updateGroceryBody(){
 }
 function bindGroceryControls(){
  const input=document.getElementById("grocerySearch"),more=document.getElementById("groceryMore");
- if(input&&!input.dataset.bound){input.dataset.bound="1";input.addEventListener("input",e=>{groceryState.query=e.target.value;groceryState.visible=24;updateGroceryBody()})}
- if(more&&!more.dataset.bound){more.dataset.bound="1";more.addEventListener("click",()=>{groceryState.visible+=24;updateGroceryBody()})}
+ if(input&&!input.dataset.bound){input.dataset.bound="1";input.addEventListener("input",e=>{groceryState.query=e.target.value;groceryState.visible=10;updateGroceryBody()})}
+ if(more&&!more.dataset.bound){more.dataset.bound="1";more.addEventListener("click",()=>{groceryState.visible+=10;updateGroceryBody()})}
 }
 function medicineList(data){
  const raw=(data&&Array.isArray(data.items)&&data.items.length)?data.items:[];
