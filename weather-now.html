@@ -46,7 +46,7 @@ linear-gradient(135deg,rgba(10,44,73,.98),rgba(5,25,43,.97) 58%,rgba(8,33,54,.96
 .weather-news-label{flex:0 0 auto;min-width:118px;padding:0 14px;display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(180deg,#0b2638,#071a29);border-right:1px solid #2c6689;color:#bfeeff;font-size:9.5px;font-weight:500;letter-spacing:1.05px;z-index:2;box-shadow:10px 0 22px rgba(2,12,20,.42),inset 0 1px 0 rgba(255,255,255,.03)}
 .weather-news-label:before{content:"";width:7px;height:7px;border-radius:50%;background:#36c7ff;box-shadow:0 0 0 4px rgba(54,199,255,.08),0 0 12px rgba(54,199,255,.8)}
 .weather-news-window{min-width:0;flex:1;overflow:hidden;display:flex;align-items:center;height:100%;white-space:nowrap}
-.weather-news-track{display:inline-flex;flex-wrap:nowrap;flex:0 0 auto;width:max-content;min-width:max-content;align-items:center;height:100%;white-space:nowrap;will-change:transform;transform:translate3d(0,0,0);-webkit-transform:translate3d(0,0,0);backface-visibility:hidden;-webkit-backface-visibility:hidden;animation:weatherNewsMarquee 70s linear infinite;-webkit-animation:weatherNewsMarquee 70s linear infinite;animation-play-state:running;-webkit-animation-play-state:running}
+.weather-news-track{display:inline-flex;flex-wrap:nowrap;flex:0 0 auto;width:max-content;min-width:max-content;align-items:center;height:100%;white-space:nowrap;will-change:transform;transform:translate3d(0,0,0);-webkit-transform:translate3d(0,0,0);backface-visibility:hidden;-webkit-backface-visibility:hidden;animation:weatherNewsMarquee 14s linear infinite;-webkit-animation:weatherNewsMarquee 14s linear infinite;animation-play-state:running;-webkit-animation-play-state:running}
 
 .weather-news-item{display:inline-flex;flex:0 0 auto;align-items:center;gap:8px;padding:0 15px;font-size:11.5px;color:#dbe9f4;white-space:nowrap;line-height:1}
 .weather-news-source{font-size:9px;font-weight:500;letter-spacing:.5px;color:#64bcff}
@@ -231,11 +231,26 @@ linear-gradient(135deg,rgba(10,44,73,.98),rgba(5,25,43,.97) 58%,rgba(8,33,54,.96
   {source:"PAGASA",headline:"Two-week tropical cyclone threat outlook available from PAGASA",url:"https://www.pagasa.dost.gov.ph/tropical-cyclone/tc-threat-potential-forecast"}
  ];
  function escNews(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
+ let lastSignature="";
  function render(items){
   if(!Array.isArray(items)||!items.length)return;
-  const one=items.map(x=>'<a class="weather-news-item" href="'+escNews(x.url||"#")+'" target="_blank" rel="noopener"><span class="weather-news-source">'+escNews(x.source||"NEWS")+'</span><span class="weather-news-headline">'+escNews(x.headline||"")+'</span><span class="weather-news-sep">◆</span></a>').join("");
+  const limited=items.slice(0,14);
+  const sig=limited.map(x=>[x.source,x.headline,x.url].join("|")).join("||");
+  if(sig===lastSignature && track.childElementCount)return;
+  lastSignature=sig;
+  const one=limited.map(x=>'<a class="weather-news-item" href="'+escNews(x.url||"#")+'" target="_blank" rel="noopener"><span class="weather-news-source">'+escNews(x.source||"NEWS")+'</span><span class="weather-news-headline">'+escNews(x.headline||"")+'</span><span class="weather-news-sep">◆</span></a>').join("");
+  const viewport=track.parentElement;
+  let repeat=1;
   track.innerHTML=one+one;
-  requestAnimationFrame(()=>{const half=track.scrollWidth/2;const duration=Math.max(60,half/55)+"s";track.style.animationDuration=duration;track.style.webkitAnimationDuration=duration;track.style.animationPlayState="running";track.style.webkitAnimationPlayState="running"});
+  while(track.scrollWidth/2<(viewport.clientWidth+100)&&repeat<6){
+    repeat++;track.innerHTML=one.repeat(repeat*2);
+  }
+  const half=track.scrollWidth/2;
+  const duration=Math.max(5,half/100)+"s";
+  track.style.animationDuration=duration;
+  track.style.webkitAnimationDuration=duration;
+  track.style.animationPlayState="running";
+  track.style.webkitAnimationPlayState="running";
  }
  function cached(){try{const j=JSON.parse(localStorage.getItem(KEY)||"null");if(j&&Array.isArray(j.items)&&j.items.length){render(j.items);return true}}catch(e){}return false}
  async function refresh(){
