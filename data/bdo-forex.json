@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-10-13T07:09:36.641937+00:00",
+  "fetched_at": "2026-10-13T15:04:37.255459+00:00",
   "provider": "BDO",
   "rates": {
     "AUD": [
@@ -31,8 +31,8 @@
       49.3947
     ],
     "USD": [
-      62.55,
-      63.05
+      62.45,
+      62.95
     ]
   },
   "source_url": "https://www.bdo.com.ph/forex?wmode=full",
