@@ -485,6 +485,14 @@
 
 /* MX tiny visitor note */
 .visitor-estimated{font-size:.5px!important;opacity:.02!important;letter-spacing:-.45px!important;line-height:.5!important;transform:scale(.45)!important;transform-origin:left center!important;margin-left:0!important;max-width:10px!important;overflow:hidden!important;white-space:nowrap!important}
+
+/* MX Currency navigation shortcut */
+.navright .money-converter-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 15px;border-radius:23px;border:1px solid #34a6c3;background:linear-gradient(180deg,#0d3e56,#0b2c45);color:#e2faff;text-decoration:none;font-size:12px;font-weight:850;letter-spacing:.05px;white-space:nowrap;transition:background .15s,border-color .15s}
+.navright .money-converter-btn span{color:#8ce9ff;font-size:17px;line-height:1}
+.navright .money-converter-btn:hover,.navright .money-converter-btn:focus-visible{background:#135472;border-color:#65d7ef;color:#fff}
+@media(max-width:1220px){.navright{gap:8px}.navright .money-converter-btn{padding:0 12px}}
+@media(max-width:720px){.navright .money-converter-btn{height:42px;font-size:11px}}
+@media(max-width:520px){.navright .money-converter-btn{order:7;width:100%;justify-content:center;min-width:0;min-height:42px}}
 </style>
 
 <style id="mx-news-button-v1">
@@ -505,6 +513,7 @@
 <div class="navright">
 <a class="weather-now-btn" href="./weather-now.html">Weather Now <span>☁</span></a>
 <a class="daily-cost-btn" href="./daily-cost-watch.html">Daily Cost <span>→</span></a>
+<a class="money-converter-btn" href="https://mxmoney.pages.dev/" aria-label="Money Converter">Money Converter <span aria-hidden="true">⇄</span></a>
 <a class="news-main-btn" href="./news.html?v=newsroom-v25sroom-v24sroom-v23sroom-v21sroom-v20sroom-v19sroom-v18sroom-v17sroom-v16sroom-v15sroom-v14sroom-v13sroom-v11smooth4">NEWS <span></span></a>
 <div class="livebadge"><span class="livedot"></span><span class="livecopy"><b id="liveLabel">Live</b><span id="clockLabel">Loading current time…</span><span id="updatedLabel" style="display:none"></span></span></div>
 
