@@ -227,6 +227,17 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
  .nav .visitor-dot.purple,.nav .visitor-dot.green{animation:none}
 }
 
+
+/* Extra Money Converter option, accessible even when the desktop nav is hidden */
+.nav .links .money-converter-nav{color:#8ce7f8;font-weight:850}
+.nav .links .money-converter-nav:hover{color:#fff}
+.nav .money-converter-mobile{display:none;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 13px;border:1px solid #3f9bbd;border-radius:20px;background:#0d3147;color:#e6faff;font-size:12px;font-weight:800;text-decoration:none;white-space:nowrap}
+.nav .money-converter-mobile span{color:#9beaff;font-size:17px}
+.nav .money-converter-mobile:hover,.nav .money-converter-mobile:focus-visible{background:#14516b;border-color:#6cd5f2}
+@media(max-width:1500px) and (min-width:1181px){.nav .links a{padding-inline:6px;font-size:10.5px}.nav{gap:8px}.nav .brand{min-width:150px}}
+@media(max-width:1180px){.nav .money-converter-mobile{display:inline-flex;flex:0 0 auto}}
+@media(max-width:970px){.nav .money-converter-mobile{order:4}}
+@media(max-width:580px){.nav .money-converter-mobile{order:4;width:100%;min-width:0;min-height:40px}}
 </style>
 </head>
 <body>
@@ -241,8 +252,10 @@ linear-gradient(125deg,#112c48 0,#101927 50%,#071018 100%)}
       <a href="./#forex">FOREX</a>
       <a href="./weather-now.html">Weather</a>
       <a href="./daily-cost-watch.html">Daily Cost</a>
+      <a class="money-converter-nav" href="https://mxmoney.pages.dev/">Money Converter</a>
       <a class="active" href="./news.html">NEWS</a>
     </nav>
+    <a class="money-converter-mobile" href="https://mxmoney.pages.dev/" aria-label="Money Converter">Money Converter <span aria-hidden="true">⇄</span></a>
     <div class="search"><span>⌕</span><input id="searchInput" placeholder="Search news..." autocomplete="off"></div>
     <div class="visitor-stats" id="visitorStats"><div class="visitor-chip today"><span class="visitor-dot purple"></span><span class="visitor-label">Visitors Today</span><b id="visitorsToday">1,000+</b></div><div class="visitor-chip now"><span class="visitor-dot green"></span><span class="visitor-label">Online Now</span><b id="visitorsNow">3,000+</b></div><span class="visitor-estimated">Estimated</span></div>
     <div class="live"><span class="dot" id="liveDot"></span><span><strong id="liveText">LIVE NOW</strong><small id="clock">Loading PHT…</small></span></div>
