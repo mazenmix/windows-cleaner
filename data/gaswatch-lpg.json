@@ -2,7 +2,24 @@
   "provider": "DOE Philippines + official brand ordering",
   "source_url": "https://doe.gov.ph/data-and-prices/lpg-monitor",
   "tank_kg": 11,
-  "rendered_at": "2026-10-22T04:50:42.648686Z",
+  "rendered_at": "2026-10-22T11:55:40.442483Z",
+  "checked_at": "2026-10-22T11:55:40.442483Z",
+  "verified_at": "2026-10-22T11:55:40.442483Z",
+  "last_verified_at_by_brand": {
+    "Regasco": "2026-10-22T11:55:40.442483Z",
+    "Solane": "2026-10-22T11:55:40.442483Z",
+    "Petron Gasul": null,
+    "SL Gas": null,
+    "Phoenix LPG": null,
+    "Total Gas": null
+  },
+  "verified_brand_count": 2,
+  "carried_forward_brands": [
+    "Petron Gasul",
+    "SL Gas",
+    "Phoenix LPG",
+    "Total Gas"
+  ],
   "doe_ncr_page": "https://doe.gov.ph/data-and-prices/lpg-monitor/ncr-lpg-prices",
   "doe_document": "https://d24qbtp4vooyzi.cloudfront.net/api/media/file/NCR%20October%202026%20LPG%20Price%20Monitoring.pdf?prefix=dev%2Fmedia",
   "doe_document_label": "October 1 to 8",
@@ -15,6 +32,7 @@
     "Regasco": "Regasco official ordering",
     "Solane": "Solane official ordering"
   },
+  "price_accuracy": "Current source readings only for brands in verified; other prices are carried-forward references",
   "warnings": [],
   "lpg": [
     {
@@ -41,23 +59,5 @@
       "name": "Total Gas",
       "price": 1636
     }
-  ],
-  "checked_at": "2026-10-22T04:50:42.648686Z",
-  "verified_at": "2026-10-22T04:50:42.648686Z",
-  "last_verified_at_by_brand": {
-    "Regasco": "2026-10-22T04:50:42.648686Z",
-    "Solane": "2026-10-22T04:50:42.648686Z",
-    "Petron Gasul": null,
-    "SL Gas": null,
-    "Phoenix LPG": null,
-    "Total Gas": null
-  },
-  "verified_brand_count": 2,
-  "carried_forward_brands": [
-    "Petron Gasul",
-    "SL Gas",
-    "Phoenix LPG",
-    "Total Gas"
-  ],
-  "price_accuracy": "Current source readings only for brands in verified; other prices are carried-forward references"
+  ]
 }
