@@ -117,6 +117,16 @@ async function main() {
   const headerMin=new CleanCSS({level:1}).minify(headerCSS);
   if(headerMin.errors.length)throw Error('Typhoon header CSS minification failed: '+headerMin.errors.join(' | '));
   if(headerMin.styles.length<headerCSS.length)fs.writeFileSync(headerCSSPath,headerMin.styles+'\n');
+  // Both RSS refresh and exact badge sizing stay obfuscated after every edit.
+  for(const path of ['assets/weather-news-live.js','assets/header-alert-sizing.js']){
+    const original=fs.readFileSync(path,'utf8');
+    if(!original.startsWith('/* MX-PROTECTED */')){
+      const output=protect(original);
+      assert.ok(output.length>350,'Protected browser script unexpectedly short: '+path);
+      fs.writeFileSync(path,'/* MX-PROTECTED */\n'+output+'\n');
+      console.log(path,'protected');
+    }
+  }
   const cssPath='assets/celebrity-news.css';
   const originalCSS=fs.readFileSync(cssPath,'utf8');
   const cssMin=new CleanCSS({level:1}).minify(originalCSS);
