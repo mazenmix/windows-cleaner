@@ -13,6 +13,7 @@ on:
       - assets/typhoon-live.css
       - functions/api/pagasa-live.js
       - scripts/test-pagasa-live.mjs
+      - scripts/test-pagasa-browser.cjs
       - scripts/protect-fuel.cjs
       - .github/workflows/mx-fuel-protect.yml
   workflow_dispatch:
@@ -88,6 +89,8 @@ jobs:
             }finally{await browser.close();}
           })().catch(e=>{console.error(e);process.exitCode=1;});
           NODE
+      - name: Test PAGASA alert on phone and desktop in active, clear, and offline states
+        run: node scripts/test-pagasa-browser.cjs
       - name: Commit protected production pages
         shell: bash
         run: |
