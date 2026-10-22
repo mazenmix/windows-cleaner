@@ -46,6 +46,15 @@ const assert=require('node:assert/strict');
       await page.waitForFunction(()=>document.querySelector('#weatherNewsTrack')?.textContent?.includes('temporarily unavailable'),{timeout:10000});
       assert.ok(!await page.locator('#weatherNewsTrack').innerText().then(x=>x.includes('PAGASA updates tropical storm conditions')),
         'A failing feed must not keep displaying old headline as fresh');
+      const ticker=await page.locator('#weatherNewsTrack').evaluate(el=>({
+        animation:getComputedStyle(el).animationName,
+        duration:parseFloat(getComputedStyle(el).animationDuration),
+        children:el.children.length,
+        scrollWidth:el.scrollWidth,
+        viewportWidth:el.parentElement.clientWidth
+      }));
+      assert.equal(ticker.animation,'weatherNewsMarquee','Weather ticker must keep moving when RSS is unavailable');
+      assert.ok(ticker.duration>0&&ticker.children>=6,'Weather fallback must scroll repeated source-status messages');
     }
     console.log('PASS badge sizing',width,path,sizes);
     await page.close();
