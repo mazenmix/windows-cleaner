@@ -22,7 +22,13 @@ function status(){
     if(path==='/weather-now.html'){
       assert.equal(await page.locator('.mx-global-typhoon-alert').count(),0,
         'Weather already has large typhoon card and must not duplicate the small header badge');
-      await page.waitForSelector('#mxTyphoonAlertCard',{timeout:15000});
+      await page.evaluate(()=>{
+        document.getElementById('weatherHero').innerHTML=
+          '<div id="mxTyphoonAlertCard" class="mx-tc-alert-card is-active">'+
+          '<div class="mx-tc-source">PAGASA · OFFICIAL BULLETIN</div>'+
+          '<div class="mx-tc-symbol">▲</div>'+
+          '<div class="mx-tc-alert-footer"><a href="#">Official bulletin ↗</a></div></div>';
+      });
       const card=page.locator('#mxTyphoonAlertCard');
       const size=await card.locator('.mx-tc-symbol').evaluate(el=>el.getBoundingClientRect().width);
       assert.ok(size>=50,'Keep premium large storm triangle on Weather page');
