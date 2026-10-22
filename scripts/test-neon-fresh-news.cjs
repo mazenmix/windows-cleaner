@@ -25,8 +25,13 @@ const assert=require('node:assert/strict');
    for(const path of ['/','/weather-now.html','/news.html','/daily-cost-watch.html']){
     const page=await context.newPage();
     await page.goto('http://127.0.0.1:8765'+path,{waitUntil:'domcontentloaded',timeout:20000});
+    if(path==='/weather-now.html'){
+      assert.equal(await page.locator('.mx-global-typhoon-alert').count(),0,'Weather must omit small header alert');
+    }else{
     await page.waitForSelector('.mx-global-typhoon-alert:not([hidden])',{timeout:15000});
+    }
     await page.waitForTimeout(200);
+    if(path!=='/weather-now.html'){
     const sizes=await page.evaluate(()=>{
       const a=document.querySelector('.mx-global-typhoon-alert').getBoundingClientRect(),
       b=document.querySelector('.visitor-chip.today').getBoundingClientRect();
@@ -34,6 +39,7 @@ const assert=require('node:assert/strict');
     });
     assert.ok(sizes.b>=72,'Visitors Today baseline missing');
     assert.ok(Math.abs(sizes.a-sizes.b)<3,'Typhoon badge not the same width as Visitors Today: '+JSON.stringify(sizes));
+    }
     if(path==='/weather-now.html'){
       assert.match(await page.locator('.nav-actions a').allTextContents().then(a=>a.join(' ')),/Money Converter/);
       assert.equal(await page.locator('.nav-actions a:has-text("Money Converter")').getAttribute('href'),'https://mxmoney.pages.dev/');
