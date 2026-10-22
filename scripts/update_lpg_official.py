@@ -224,11 +224,25 @@ def main():
         raise RuntimeError("Missing LPG prices for: " + ", ".join(missing))
 
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    # Price verification is per brand. Rechecking six rows does not mean that
+    # prices carried over from earlier snapshots were newly confirmed today.
+    prior_by_brand = previous_doc.get("last_verified_at_by_brand", {})
+    if not isinstance(prior_by_brand, dict):
+        prior_by_brand = {}
+    verified_at_by_brand = {name: prior_by_brand.get(name) for name in NAMES}
+    for name in verified:
+        verified_at_by_brand[name] = now
+
     payload = {
         "provider": "DOE Philippines + official brand ordering",
         "source_url": DOE_ROOT,
         "tank_kg": 11,
         "rendered_at": now,
+        "checked_at": now,
+        "verified_at": now if verified else previous_doc.get("verified_at"),
+        "last_verified_at_by_brand": verified_at_by_brand,
+        "verified_brand_count": len(verified),
+        "carried_forward_brands": [name for name in NAMES if name not in verified],
         "doe_ncr_page": doe_page_url,
         "doe_document": doe_pdf_url,
         "doe_document_label": doe_label,
@@ -238,6 +252,7 @@ def main():
             "DOE": DOE_ROOT,
         },
         "verified": verified,
+        "price_accuracy": "Current source readings only for brands in verified; other prices are carried-forward references",
         "warnings": warnings,
         "lpg": [{"name": name, "price": int(round(prices[name]))} for name in NAMES],
     }
