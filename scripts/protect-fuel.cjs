@@ -89,6 +89,20 @@ async function main() {
     fs.writeFileSync(jsPath,'/* MX-PROTECTED */\n'+output+'\n');
     console.log(jsPath,'protected');
   }
+  // Secure the independently refreshed PAGASA widget too; Cloudflare Functions stay server-side.
+  const typhoonPath='assets/typhoon-live.js';
+  const typhoonJS=fs.readFileSync(typhoonPath,'utf8');
+  if(!typhoonJS.startsWith('/* MX-PROTECTED */')){
+    const protectedTyphoon=protect(typhoonJS);
+    assert.ok(protectedTyphoon.length>1000,'Protected typhoon bundle unexpectedly short');
+    fs.writeFileSync(typhoonPath,'/* MX-PROTECTED */\n'+protectedTyphoon+'\n');
+    console.log(typhoonPath,'protected');
+  }
+  const typhoonCSSPath='assets/typhoon-live.css';
+  const tcCSS=fs.readFileSync(typhoonCSSPath,'utf8');
+  const tcMin=new CleanCSS({level:1}).minify(tcCSS);
+  if(tcMin.errors.length)throw Error('Typhoon CSS minification failed: '+tcMin.errors.join(' | '));
+  if(tcMin.styles.length<tcCSS.length)fs.writeFileSync(typhoonCSSPath,tcMin.styles+'\n');
   const cssPath='assets/celebrity-news.css';
   const originalCSS=fs.readFileSync(cssPath,'utf8');
   const cssMin=new CleanCSS({level:1}).minify(originalCSS);
