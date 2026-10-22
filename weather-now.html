@@ -13,7 +13,7 @@ function updateCard(){
  var active=card.classList.contains('is-active')||card.classList.contains('is-stale');
  var confirmed=officialState==='clear'&&!active&&Date.now()-lastVerified<360000;
  if(!confirmed){
-  card.classList.remove('mx-tc-verified-clear');
+  if(card.classList.contains('mx-tc-verified-clear'))card.classList.remove('mx-tc-verified-clear');
   card.querySelectorAll('.mx-tc-live-pill').forEach(function(e){e.remove()});
   card.querySelectorAll('[data-mx-clear-hidden]').forEach(function(e){e.hidden=false;e.removeAttribute('data-mx-clear-hidden')});
   if(title.textContent.trim()==='No Typhoon for now'){
@@ -21,8 +21,8 @@ function updateCard(){
   }
   return;
  }
- card.classList.remove('is-unknown');
- card.classList.add('mx-tc-verified-clear');
+ if(card.classList.contains('is-unknown'))card.classList.remove('is-unknown');
+ if(!card.classList.contains('mx-tc-verified-clear'))card.classList.add('mx-tc-verified-clear');
  if(title.textContent.trim()!=='No Typhoon for now')title.textContent='No Typhoon for now';
  var summary=document.getElementById('mxTyphoonAlertSummary');
  if(summary&&/not verified|unverified|verification pending|status unavailable|could not be verified/i.test(summary.textContent||'')){
