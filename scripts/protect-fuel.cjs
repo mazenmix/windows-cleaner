@@ -118,7 +118,7 @@ async function main() {
   if(headerMin.errors.length)throw Error('Typhoon header CSS minification failed: '+headerMin.errors.join(' | '));
   if(headerMin.styles.length<headerCSS.length)fs.writeFileSync(headerCSSPath,headerMin.styles+'\n');
   // Both RSS refresh and exact badge sizing stay obfuscated after every edit.
-  for(const path of ['assets/weather-news-live.js','assets/weather-news-continuous.js','assets/home-typhoon-placement.js','assets/header-alert-sizing.js']){
+  for(const path of ['assets/weather-news-live.js','assets/weather-news-continuous.js','assets/home-typhoon-placement.js','assets/daily-typhoon-placement.js','assets/header-alert-sizing.js']){
     const original=fs.readFileSync(path,'utf8');
     if(!original.startsWith('/* MX-PROTECTED */')){
       const output=protect(original);
@@ -132,6 +132,11 @@ async function main() {
   const homeMin=new CleanCSS({level:1}).minify(homeCSS);
   if(homeMin.errors.length)throw Error('Home cyclone CSS minification failed: '+homeMin.errors.join(' | '));
   if(homeMin.styles.length<homeCSS.length)fs.writeFileSync(homeCSSPath,homeMin.styles+'\\n');
+  const dailyCSSPath='assets/daily-typhoon-placement.css';
+  const dailyCSS=fs.readFileSync(dailyCSSPath,'utf8');
+  const dailyCSSMin=new CleanCSS({level:1}).minify(dailyCSS);
+  if(dailyCSSMin.errors.length)throw Error('Daily typhoon CSS minification failed: '+dailyCSSMin.errors.join(' | '));
+  if(dailyCSSMin.styles.length<dailyCSS.length)fs.writeFileSync(dailyCSSPath,dailyCSSMin.styles+'\n');
   const cssPath='assets/celebrity-news.css';
   const originalCSS=fs.readFileSync(cssPath,'utf8');
   const cssMin=new CleanCSS({level:1}).minify(originalCSS);
