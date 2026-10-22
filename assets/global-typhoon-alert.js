@@ -36,7 +36,7 @@
   // Restrict the global ribbon to current PAGASA Typhoon / Super Typhoon alerts.
   const active=cyclone&&cyclone.state==='active'&&cyclone.active===true;
   const typhoon=active&&/\btyphoon\b/i.test(String(cyclone.category||''));
-  const label=String(cyclone.name||'').trim();
+  const label=String(cyclone?.name||'').trim();
   const valid=typhoon&&label.length>1&&label.length<55;
   if(!valid){badge.hidden=true;nameEl.textContent='';return;}
   nameEl.textContent=label.toUpperCase();
