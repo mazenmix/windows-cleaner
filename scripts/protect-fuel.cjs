@@ -1,0 +1,99 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const assert = require('node:assert/strict');
+const JavaScriptObfuscator = require('javascript-obfuscator');
+const {minify} = require('html-minifier-terser');
+const CleanCSS = require('clean-css');
+
+const PAGES = ['index.html','weather-now.html','news.html','daily-cost-watch.html'];
+const marker = 'data-mx-protected="1"';
+const sha = text => crypto.createHash('sha256').update(text).digest('hex').slice(0, 16);
+function protect(code) {
+  return JavaScriptObfuscator.obfuscate(code, {
+    compact: true,
+    controlFlowFlattening: false,
+    deadCodeInjection: false,
+    debugProtection: false,
+    disableConsoleOutput: false,
+    identifierNamesGenerator: 'hexadecimal',
+    numbersToExpressions: false,
+    renameGlobals: false,
+    selfDefending: false,
+    simplify: true,
+    splitStrings: false,
+    stringArray: true,
+    stringArrayCallsTransform: false,
+    stringArrayEncoding: ['base64'],
+    stringArrayRotate: true,
+    stringArrayShuffle: true,
+    stringArrayThreshold: 0.76,
+    transformObjectKeys: false,
+    unicodeEscapeSequence: false
+  }).getObfuscatedCode();
+}
+
+async function main() {
+  fs.mkdirSync('assets', {recursive:true});
+  let generated=0;
+  for (const file of PAGES) {
+    const original=fs.readFileSync(file,'utf8');
+    const scriptRegex=/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
+    let seenInline=0;
+    const result=original.replace(scriptRegex,(whole,attributes,body)=>{
+      if(/\bsrc\s*=/i.test(attributes)||!body.trim())return whole;
+      if(/\btype\s*=\s*["'](?:application\/(?:ld\+json|json)|importmap)["']/i.test(attributes))return whole;
+      if (!/^\s*(?:\(?function\b|\(\s*\(\s*\)|\/\/|\/\*|var\b|let\b|const\b|"use strict"|'use strict')/.test(body)) {
+        throw Error('Unknown inline script format in '+file+'; refusing unsafe transformation.');
+      }
+      const output=protect(body);
+      assert.ok(output.length > 150, 'Unexpectedly short protected JS in '+file);
+      const name='mx-'+sha(file+'\n'+body)+'.js';
+      const destination='assets/'+name;
+      fs.writeFileSync(destination,output+'\n');
+      const safeAttrs=attributes.replace(/\sdata-mx-protected\s*=\s*["'][^"']*["']/gi,'');
+      seenInline++;
+      generated++;
+      // Keep classic scripts synchronous and in exactly their original DOM positions.
+      return '<script'+safeAttrs+' '+marker+' src="/'+destination+'"></script>';
+    });
+    const processed=await minify(result,{
+      collapseWhitespace:true,
+      conservativeCollapse:true,
+      collapseBooleanAttributes:false,
+      decodeEntities:false,
+      removeComments:true,
+      removeEmptyAttributes:false,
+      removeOptionalTags:false,
+      removeAttributeQuotes:false,
+      removeRedundantAttributes:false,
+      minifyCSS:true,
+      minifyJS:false,
+      sortAttributes:false,
+      sortClassName:false,
+      caseSensitive:true,
+    });
+    assert.ok(processed.includes('<html'), 'Minified HTML missing document in '+file);
+    if (seenInline)assert.ok(processed.includes(marker),'Protected scripts missing in '+file);
+    assert.ok(!/<script\b(?![^>]*\bsrc=)[^>]*>[\s\S]*?\S[\s\S]*?<\/script>/i.test(processed),
+      'Unexpected unprotected inline scripts remain in '+file);
+    if (processed !== original)fs.writeFileSync(file,processed+'\n');
+    console.log(file, 'protected inline scripts:', seenInline, 'HTML bytes:', original.length,'->',processed.length);
+  }
+  const jsPath='assets/celebrity-news.js';
+  const originalJS=fs.readFileSync(jsPath,'utf8');
+  if (!originalJS.startsWith('/* MX-PROTECTED */')) {
+    const output=protect(originalJS);
+    assert.ok(output.length > 1000, 'Protected celebrity script unexpectedly small');
+    fs.writeFileSync(jsPath,'/* MX-PROTECTED */\n'+output+'\n');
+    console.log(jsPath,'protected');
+  }
+  const cssPath='assets/celebrity-news.css';
+  const originalCSS=fs.readFileSync(cssPath,'utf8');
+  const cssMin=new CleanCSS({level:1}).minify(originalCSS);
+  if(cssMin.errors.length)throw Error('CSS minification failed: '+cssMin.errors.join(' | '));
+  if(cssMin.styles.length < originalCSS.length)fs.writeFileSync(cssPath,cssMin.styles+'\n');
+  console.log('Completed MX Fuel protection; externalized scripts:',generated);
+}
+main().catch(e=>{console.error(e);process.exitCode=1;});
