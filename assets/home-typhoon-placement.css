@@ -1,0 +1,7 @@
+/* Home only: verified cyclone alert occupies the user's requested center location. */
+#foodPricesSection .food-prices-head{position:relative}
+#mxHomepageTyphoonSlot[hidden]{display:none!important}
+#mxHomepageTyphoonSlot{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;display:flex;align-items:center;justify-content:center;max-width:32vw}
+#mxHomepageTyphoonSlot .mx-global-typhoon-alert{flex:0 0 auto!important}
+@media(max-width:900px){#foodPricesSection .food-prices-head{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px}#mxHomepageTyphoonSlot{position:static;transform:none;grid-row:2;grid-column:1/-1;justify-self:center;max-width:100%;margin-top:2px}}
+@media(max-width:520px){#mxHomepageTyphoonSlot{grid-row:2;grid-column:1/-1;margin:2px auto 0}}
