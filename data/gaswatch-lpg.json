@@ -41,5 +41,23 @@
       "name": "Total Gas",
       "price": 1636
     }
-  ]
+  ],
+  "checked_at": "2026-10-22T04:50:42.648686Z",
+  "verified_at": "2026-10-22T04:50:42.648686Z",
+  "last_verified_at_by_brand": {
+    "Regasco": "2026-10-22T04:50:42.648686Z",
+    "Solane": "2026-10-22T04:50:42.648686Z",
+    "Petron Gasul": null,
+    "SL Gas": null,
+    "Phoenix LPG": null,
+    "Total Gas": null
+  },
+  "verified_brand_count": 2,
+  "carried_forward_brands": [
+    "Petron Gasul",
+    "SL Gas",
+    "Phoenix LPG",
+    "Total Gas"
+  ],
+  "price_accuracy": "Current source readings only for brands in verified; other prices are carried-forward references"
 }
