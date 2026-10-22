@@ -1,5 +1,5 @@
 const TTL=60;
-const LAST_GOOD_TTL=2592000;
+const LAST_GOOD_TTL=5400; // 90 minutes, never 30 days
 const FEEDS=[
  "https://news.google.com/rss/search?q=Philippines%20(PAGASA%20OR%20typhoon%20OR%20storm%20OR%20LPA)%20when%3A2d&hl=en-PH&gl=PH&ceid=PH%3Aen",
  "https://news.google.com/rss/search?q=Philippines%20(flood%20OR%20heavy%20rain%20OR%20rainfall%20OR%20weather%20warning)%20when%3A2d&hl=en-PH&gl=PH&ceid=PH%3Aen",
@@ -52,7 +52,9 @@ function parse(xml){
   if(!title||!link||!source||!trusted(source))continue;
   const headline=stripSource(title,source);
   if(headline.length<18||!weatherRelevant(headline))continue;
-  out.push({headline,source:label(source),url:decode(link),published_at:pub,ts:Date.parse(pub)||0});
+  const ts=Date.parse(pub);
+  if(!Number.isFinite(ts)||ts<=0)continue; // never present an undated RSS item as breaking news
+  out.push({headline,source:label(source),url:decode(link),published_at:new Date(ts).toISOString(),ts});
  }
  return out;
 }
@@ -78,21 +80,25 @@ function dedupe(items){
 function response(data,status=200){
  return new Response(JSON.stringify(data),{status,headers:{
   "content-type":"application/json; charset=utf-8",
-  "cache-control":"public, max-age="+TTL+", s-maxage="+TTL,
+  "cache-control":status===200?"public, max-age=0, s-maxage="+TTL:"no-store",
   "access-control-allow-origin":"*"
  }});
 }
 export async function onRequestGet(context){
  const cache=caches.default,u=new URL(context.request.url);
- const freshKey=new Request(u.origin+"/api/weather-news-cache-v2");
- const lkgKey=new Request(u.origin+"/api/weather-news-last-good-v1");
+ const freshKey=new Request(u.origin+"/api/weather-news-cache-v3");
+ const lkgKey=new Request(u.origin+"/api/weather-news-last-good-v2");
  const hit=await cache.match(freshKey);if(hit)return hit;
  try{
   const rs=await Promise.allSettled(FEEDS.map(get));let items=[];
   for(const r of rs)if(r.status==="fulfilled")items.push(...parse(r.value));
-  items=dedupe(items);
-  if(items.length<5)throw new Error("Not enough weather headlines");
-  const data={ok:true,live:true,stale:false,checked_at:new Date().toISOString(),items};
+  const now=Date.now();
+  // Google News RSS is not a live wire. Reject headlines older than 36 hours
+  // or with implausible future publication timestamps; newest published first.
+  items=dedupe(items).filter(x=>x.ts>now-36*3600000&&x.ts<=now+20*60000);
+  if(items.length<1)throw new Error("No recently published and dated weather headlines");
+  const data={ok:true,live:true,stale:false,checked_at:new Date().toISOString(),
+    latest_published_at:items[0].published_at,items};
   const out=response(data);
   const keep=new Response(JSON.stringify(data),{status:200,headers:{
    "content-type":"application/json; charset=utf-8",
@@ -106,8 +112,13 @@ export async function onRequestGet(context){
   if(last){
    try{
     const j=await last.clone().json();
-    if(j&&Array.isArray(j.items)&&j.items.length){
-     return response({...j,ok:true,live:false,stale:true,last_verified:true,checked_at:new Date().toISOString(),note:"Weather news source temporarily unavailable — last verified headlines kept.",error:String(e)},200);
+    const originalChecked=Date.parse(j?.checked_at||"");
+    const acceptable=Number.isFinite(originalChecked)&&Date.now()-originalChecked<=LAST_GOOD_TTL*1000;
+    const freshItems=(j?.items||[]).filter(x=>Number.isFinite(Date.parse(x.published_at))&&Date.now()-Date.parse(x.published_at)<=36*3600000);
+    if(acceptable&&freshItems.length){
+     return response({...j,items:freshItems,ok:true,live:false,stale:true,last_verified:true,
+       checked_at:new Date().toISOString(),last_verified_at:j.checked_at,
+       note:"RSS feed temporarily unavailable. Showing explicitly delayed recent headlines only.",error:String(e)},200);
     }
    }catch{}
   }
