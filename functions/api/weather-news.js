@@ -1,9 +1,22 @@
 const TTL=60;
-const LAST_GOOD_TTL=5400; // 90 minutes, never 30 days
+const LAST_GOOD_TTL=5400; // maximum 90-minute explicitly delayed fallback
+const news=(query)=>"https://news.google.com/rss/search?q="+encodeURIComponent(query)+"&hl=en-PH&gl=PH&ceid=PH%3Aen";
+// Multiple independent publishers, not only one PAGASA search result.
+// Direct publisher feeds serve as additional origins if Google News has problems.
 const FEEDS=[
- "https://news.google.com/rss/search?q=Philippines%20(PAGASA%20OR%20typhoon%20OR%20storm%20OR%20LPA)%20when%3A2d&hl=en-PH&gl=PH&ceid=PH%3Aen",
- "https://news.google.com/rss/search?q=Philippines%20(flood%20OR%20heavy%20rain%20OR%20rainfall%20OR%20weather%20warning)%20when%3A2d&hl=en-PH&gl=PH&ceid=PH%3Aen",
- "https://news.google.com/rss/search?q=PAGASA%20Philippines%20weather%20when%3A2d&hl=en-PH&gl=PH&ceid=PH%3Aen"
+ {url:news('Philippines (PAGASA OR typhoon OR storm OR rainfall OR flood) when:2d'),source:null},
+ {url:news('Philippines (weather OR low pressure area OR monsoon OR habagat) when:2d'),source:null},
+ {url:news('site:gmanetwork.com/news (PAGASA OR typhoon OR weather OR rainfall OR flood) when:2d'),source:null},
+ {url:news('site:philstar.com (PAGASA OR typhoon OR weather OR flood) when:2d'),source:null},
+ {url:news('site:inquirer.net (PAGASA OR typhoon OR weather OR flooding) when:2d'),source:null},
+ {url:news('site:abs-cbn.com (PAGASA OR typhoon OR weather OR rainfall) when:2d'),source:null},
+ {url:news('site:rappler.com (PAGASA OR typhoon OR storm OR flood) when:2d'),source:null},
+ {url:news('site:pna.gov.ph (PAGASA OR typhoon OR weather OR flood) when:2d'),source:null},
+ {url:news('site:mb.com.ph (PAGASA OR typhoon OR rainfall OR weather) when:2d'),source:null},
+ {url:news('site:sunstar.com.ph (PAGASA OR typhoon OR rainfall OR flood) when:2d'),source:null},
+ {url:"https://data.gmanews.tv/gma/rss/weather.xml",source:"GMA News Online"},
+ {url:"https://www.philstar.com/rss/headlines",source:"The Philippine Star"},
+ {url:"https://www.pna.gov.ph/rss",source:"Philippine News Agency"}
 ];
 const TRUSTED=[
  "GMA News Online","GMA News","INQUIRER.net","Philippine Daily Inquirer","Philstar.com","The Philippine Star",
@@ -41,29 +54,31 @@ function stripSource(title,source){
 function weatherRelevant(s){
  return /(pagasa|typhoon|tropical cyclone|tropical depression|tropical storm|storm signal|lpa|low pressure area|rain|rainfall|flood|weather|monsoon|habagat|amihan|thunderstorm|gale warning|landslide|river basin|cyclone|wind signal)/i.test(s);
 }
-function parse(xml){
+function parse(xml,defaultSource=''){
  const out=[],items=String(xml||"").match(/<item>[\s\S]*?<\/item>/gi)||[];
  for(const item of items){
   const title=(item.match(/<title>([\s\S]*?)<\/title>/i)||[])[1]||"";
   const link=(item.match(/<link>([\s\S]*?)<\/link>/i)||[])[1]||"";
   const pub=(item.match(/<pubDate>([\s\S]*?)<\/pubDate>/i)||[])[1]||"";
   const sm=item.match(/<source(?:\s+url="[^"]*")?>([\s\S]*?)<\/source>/i);
-  const source=sm?decode(sm[1]):"";
+  const source=sm?decode(sm[1]):defaultSource;
   if(!title||!link||!source||!trusted(source))continue;
   const headline=stripSource(title,source);
-  if(headline.length<18||!weatherRelevant(headline))continue;
+  if(headline.length<18||!weatherRelevant(headline)||/\b(?:RSS feed retired|feed has been retired|feed is discontinued)\b/i.test(headline))continue;
   const ts=Date.parse(pub);
   if(!Number.isFinite(ts)||ts<=0)continue; // never present an undated RSS item as breaking news
   out.push({headline,source:label(source),url:decode(link),published_at:new Date(ts).toISOString(),ts});
  }
  return out;
 }
-async function get(url){
+async function get(feed){
  const c=new AbortController(),t=setTimeout(()=>c.abort(),8500);
  try{
-  const r=await fetch(url,{headers:{"user-agent":"Mozilla/5.0 (compatible; MXWeatherNews/1.0)","accept":"application/rss+xml,application/xml,text/xml,*/*"},signal:c.signal});
+  const r=await fetch(feed.url,{headers:{"user-agent":"Mozilla/5.0 (compatible; MXWeatherNews/1.0)","accept":"application/rss+xml,application/xml,text/xml,*/*"},signal:c.signal});
   if(!r.ok)throw new Error("HTTP "+r.status);
-  return await r.text();
+  const body=await r.text();
+  if(!/<(?:rss|feed|rdf:RDF)\b/i.test(body)||!/<(?:item|entry)\b/i.test(body))throw new Error('Not an RSS/Atom feed: '+feed.url);
+  return {body,source:feed.source};
  }finally{clearTimeout(t)}
 }
 function dedupe(items){
@@ -91,14 +106,15 @@ export async function onRequestGet(context){
  const hit=await cache.match(freshKey);if(hit)return hit;
  try{
   const rs=await Promise.allSettled(FEEDS.map(get));let items=[];
-  for(const r of rs)if(r.status==="fulfilled")items.push(...parse(r.value));
+  const feedCount=rs.filter(r=>r.status==="fulfilled").length;
+  for(const r of rs)if(r.status==="fulfilled")items.push(...parse(r.value.body,r.value.source||''));
   const now=Date.now();
   // Google News RSS is not a live wire. Reject headlines older than 36 hours
   // or with implausible future publication timestamps; newest published first.
   items=dedupe(items).filter(x=>x.ts>now-36*3600000&&x.ts<=now+20*60000);
   if(items.length<1)throw new Error("No recently published and dated weather headlines");
   const data={ok:true,live:true,stale:false,checked_at:new Date().toISOString(),
-    latest_published_at:items[0].published_at,items};
+    sources_checked:FEEDS.length,feeds_responded:feedCount,latest_published_at:items[0].published_at,items};
   const out=response(data);
   const keep=new Response(JSON.stringify(data),{status:200,headers:{
    "content-type":"application/json; charset=utf-8",
