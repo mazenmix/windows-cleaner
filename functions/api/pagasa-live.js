@@ -4,7 +4,7 @@ const THREAT_URL='https://www.pagasa.dost.gov.ph/tropical-cyclone/tc-threat-pote
 const FLOOD_URL='https://www.pagasa.dost.gov.ph/flood';
 const POLL_SECONDS=35;
 const CYCLONE_DETAIL_URL=CYCLONE_URL+'/1';
-const NEWS_FALLBACK='https://news.google.com/rss/search?q='+encodeURIComponent('PAGASA Philippines typhoon tropical cyclone when:1d')+'&hl=en-PH&gl=PH&ceid=PH%3Aen';
+const NEWS_FALLBACK='https://news.google.com/rss/search?q='+encodeURIComponent('Philippines (PAGASA OR Typhoon OR "Super Typhoon" OR "Tropical Storm") when:1d')+'&hl=en-PH&gl=PH&ceid=PH%3Aen';
 const MONTHS={january:0,february:1,march:2,april:3,may:4,june:5,july:6,august:7,september:8,october:9,november:10,december:11};
 
 function decode(s){
@@ -115,7 +115,7 @@ async function freshMediaCyclone(){
   const xml=await response.text(),items=xml.match(/<item\b[\s\S]*?<\/item>/gi)||[];
   const now=Date.now();
   for(const item of items){
-   const headline=plain((item.match(/<title>([\s\S]*?)<\/title>/i)||[])[1]||'');
+   const headline=plain(((item.match(/<title>([\s\S]*?)<\/title>/i)||[])[1]||'').replace(/<!\[CDATA\[|\]\]>/g,''));
    const date=(item.match(/<pubDate>([\s\S]*?)<\/pubDate>/i)||[])[1]||'';
    const published=Date.parse(date);
    if(!Number.isFinite(published)||published>now+10*60000||now-published>6*3600000)continue;
@@ -123,7 +123,7 @@ async function freshMediaCyclone(){
    const hit=headline.match(/\b(?:super\s+)?typhoon\s+[“"']?([A-Za-z]{3,22})\b/i)
      ||headline.match(/\b([A-Z][a-z]{3,22})\s+(?:super\s+)?typhoon\b/);
    if(!hit)continue;
-   if(/\b(?:Philippines|PAGASA|Luzon|Visayas|Mindanao|Batanes|PAR)\b/i.test(headline)===false)continue;
+   // Philippine publishers already ground the geography; names may omit 'Philippines'.
    const source=plain((item.match(/<source[^>]*>([\s\S]*?)<\/source>/i)||[])[1]||'');
    if(!/(gma|philstar|inquirer|abs-cbn|rappler|manila bulletin|philippine news agency|pna)/i.test(source))continue;
    return {state:'reported',active:null,name:hit[1].toUpperCase(),category:'Typhoon',
