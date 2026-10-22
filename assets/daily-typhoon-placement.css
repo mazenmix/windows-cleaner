@@ -1,0 +1,7 @@
+#mxDailyTyphoonSlot[hidden]{display:none!important}
+#mxDailyTyphoonSlot{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;z-index:3;max-width:36vw}
+#mxDailyTyphoonSlot .mx-global-typhoon-alert{flex:0 0 auto!important}
+.hero .hero-inner{position:relative}
+@media(max-width:960px){.hero .hero-inner{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px}
+#mxDailyTyphoonSlot{position:static;transform:none;grid-column:1/-1;grid-row:2;justify-self:center;max-width:100%}}
+@media(max-width:560px){.hero .hero-inner{grid-template-columns:1fr}.hero .global-status{justify-self:start}#mxDailyTyphoonSlot{grid-row:2;grid-column:1/-1}}
