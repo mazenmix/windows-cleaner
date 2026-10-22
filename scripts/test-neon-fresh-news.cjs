@@ -38,7 +38,13 @@ const assert=require('node:assert/strict');
       return {a:a.width,b:b.width,ah:a.height,bh:b.height};
     });
     assert.ok(sizes.b>=72,'Visitors Today baseline missing');
-    assert.ok(Math.abs(sizes.a-sizes.b)<3,'Typhoon badge not the same width as Visitors Today: '+JSON.stringify(sizes));
+    if(path==='/'||path==='/daily-cost-watch.html'){
+      assert.ok(sizes.a>=200&&sizes.ah>=52,
+        'Centered premium typhoon alert must have space for readable full storm name: '+JSON.stringify(sizes));
+    }else{
+      assert.ok(Math.abs(sizes.a-sizes.b)<3,
+        'Header badge should remain compact on newsroom: '+JSON.stringify(sizes));
+    }
     }
     if(path==='/weather-now.html'){
       assert.match(await page.locator('.nav-actions a').allTextContents().then(a=>a.join(' ')),/Money Converter/);
