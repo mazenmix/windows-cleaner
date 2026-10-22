@@ -1,0 +1,30 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const mod=await import('data:text/javascript;base64,'+Buffer.from(fs.readFileSync('functions/api/weather-news.js','utf8')).toString('base64'));
+const NOW=Date.now();
+let staleOnly=false;
+function item(title,deltaMs){
+ const date=new Date(NOW-deltaMs).toUTCString();
+ return '<item><title>'+title+' - GMA News Online</title><link>https://www.gmanetwork.com/news/weather/latest/'+Math.abs(deltaMs)+'</link><pubDate>'+date+'</pubDate><source url="https://gmanetwork.com">GMA News Online</source></item>';
+}
+const fresh=item('PAGASA updates Philippine weather and flood advisories',20*60000);
+const old=item('PAGASA old weather update no longer current',72*3600000);
+const rss=()=>'<rss version="2.0"><channel>'+(staleOnly?old:fresh+old)+'</channel></rss>';
+globalThis.fetch=async ()=>new Response(rss(),{status:200,headers:{'content-type':'application/rss+xml'}});
+globalThis.caches={default:{async match(){return null},async put(){}}};
+const context={request:new Request('https://mxfuel.pages.dev/api/weather-news'),waitUntil(p){Promise.resolve(p).catch(()=>{})}};
+let response=await mod.onRequestGet(context);
+assert.equal(response.status,200);
+let result=await response.json();
+assert.equal(result.live,true);
+assert.equal(result.items.length,1,'Old RSS articles must be removed');
+assert.match(result.items[0].headline,/PAGASA updates/);
+assert.match(result.items[0].published_at,/Z$/);
+assert.equal(result.stale,false);
+staleOnly=true;
+response=await mod.onRequestGet(context);
+assert.equal(response.status,502,'An all-stale feed must fail closed rather than resurrect archived headlines');
+result=await response.json();
+assert.equal(result.ok,false);
+assert.equal(result.items.length,0);
+console.log('PASS fresh article published less than 36h; old 72h stories rejected; all-old feed fails closed.');
