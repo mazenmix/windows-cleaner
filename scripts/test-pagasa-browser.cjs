@@ -8,7 +8,7 @@ function payload(){
   center:'350 km East of Itbayat, Batanes',movement:'Moving Northwestward at 15 km/h',
   wind_kmh:165,gust_kmh:205,issued_at:'2026-10-22T09:00:00.000Z'
  }:version==='clear'?{state:'clear',active:false}:{state:'unavailable',active:null};
- return {ok:true,cyclone,checked_at:'2026-10-22T10:00:00.000Z',
+ return {ok:true,cyclone,checked_at:new Date().toISOString(),
   threat:{state:'available',period:'October 15, 2026 - October 28, 2026'},
   flood:{state:'unverified',active_count:null,summary:'Confirm official river-basin guidance.'}};
 }
@@ -36,12 +36,18 @@ function payload(){
    assert.equal(await page.locator('#alertGrid .mx-tc-red').count(),3,'All PAGASA cards must receive red cyclone styling');
    assert.match(await page.locator('#mxTyphoonAlertSummary').innerText(),/165 km\/h/);
    version='clear';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
-   await page.waitForFunction(()=>document.querySelector('#mxTyphoonAlertTitle')?.textContent==='No active typhoon',{timeout:15000});
+   await page.waitForFunction(()=>document.querySelector('#mxTyphoonAlertTitle')?.textContent==='No Typhoon for now',{timeout:15000});
+   assert.equal(await page.locator('#weatherHero .mx-tc-verified-clear').count(),1,'Confirmed PAGASA clear should show the soft green card');
+   assert.equal(await page.locator('#weatherHero .mx-tc-live-pill').count(),1,'Confirmed PAGASA clear should have a Live badge and pulse');
+   assert.equal(await page.locator('#weatherHero .mx-tc-live-dot').count(),1,'Live badge must have a green dot');
+   assert.equal(await page.locator('#weatherHero .mx-tc-alert-meta').getByText('Verification pending').count(),0,'No pending-verification copy on verified-clear card');
    assert.equal(await page.locator('#alertGrid .mx-tc-red').count(),0,'Red should clear when the official bulletin confirms clear');
    version='unavailable';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
    await page.waitForFunction(()=>document.querySelector('#mxTyphoonAlertTitle')?.textContent?.includes('unavailable'),{timeout:15000});
    assert.equal(await page.locator('#alertGrid .mx-tc-red').count(),0,'Unknown must not fabricate an active cyclone');
    assert.match(await page.locator('#mxTyphoonAlertSummary').innerText(),/could not be verified/i,'Unknown must not be painted green');
+   assert.equal(await page.locator('#weatherHero .mx-tc-verified-clear').count(),0,'Unverified source must never look clear');
+   assert.equal(await page.locator('#weatherHero .mx-tc-live-pill').count(),0,'Unverified source must never claim Live');
    assert.deepEqual(error,[],'Client JavaScript errors: '+error.join(' | '));
    console.log('PASS responsive PAGASA alert',width,'active / clear / unavailable.');
    version='active';
