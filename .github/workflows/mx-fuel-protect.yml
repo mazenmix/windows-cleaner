@@ -13,10 +13,15 @@ on:
       - assets/typhoon-live.css
       - assets/global-typhoon-alert.js
       - assets/global-typhoon-alert.css
+      - assets/weather-news-live.js
+      - assets/header-alert-sizing.js
+      - functions/api/weather-news.js
       - functions/api/pagasa-live.js
       - scripts/test-pagasa-live.mjs
       - scripts/test-pagasa-browser.cjs
       - scripts/test-sitewide-typhoon.cjs
+      - scripts/test-weather-news-fresh.mjs
+      - scripts/test-neon-fresh-news.cjs
       - scripts/protect-fuel.cjs
       - .github/workflows/mx-fuel-protect.yml
   workflow_dispatch:
@@ -43,6 +48,8 @@ jobs:
         run: node scripts/protect-fuel.cjs
       - name: Unit test verified PAGASA parser
         run: node scripts/test-pagasa-live.mjs
+      - name: Verify fresh-only PAGASA weather news RSS
+        run: node scripts/test-weather-news-fresh.mjs
       - name: Validate protected assets
         shell: bash
         run: |
@@ -52,7 +59,9 @@ jobs:
           done
           grep -q 'MX-PROTECTED' assets/typhoon-live.js
           grep -q 'MX-PROTECTED' assets/global-typhoon-alert.js
-          for p in assets/mx-*.js assets/celebrity-news.js assets/typhoon-live.js assets/global-typhoon-alert.js; do
+          grep -q 'MX-PROTECTED' assets/weather-news-live.js
+          grep -q 'MX-PROTECTED' assets/header-alert-sizing.js
+          for p in assets/mx-*.js assets/celebrity-news.js assets/typhoon-live.js assets/global-typhoon-alert.js assets/weather-news-live.js assets/header-alert-sizing.js; do
             node --check "$p"
           done
           if grep -R -n 'sourceMappingURL=' index.html weather-now.html news.html daily-cost-watch.html assets/mx-*.js; then
@@ -97,12 +106,14 @@ jobs:
         run: node scripts/test-pagasa-browser.cjs
       - name: Test live typhoon logo alert on every page and device
         run: node scripts/test-sitewide-typhoon.cjs
+      - name: Check neon typhoon badge sizing, MX Money link and headline freshness
+        run: node scripts/test-neon-fresh-news.cjs
       - name: Commit protected production pages
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html weather-now.html news.html daily-cost-watch.html assets/celebrity-news.js assets/celebrity-news.css assets/typhoon-live.js assets/typhoon-live.css assets/global-typhoon-alert.js assets/global-typhoon-alert.css assets/mx-*.js
+          git add index.html weather-now.html news.html daily-cost-watch.html assets/celebrity-news.js assets/celebrity-news.css assets/typhoon-live.js assets/typhoon-live.css assets/global-typhoon-alert.js assets/global-typhoon-alert.css assets/weather-news-live.js assets/header-alert-sizing.js assets/mx-*.js
           if git diff --cached --quiet; then
             echo "No unprotected code changed."
           else
