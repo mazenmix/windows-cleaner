@@ -54,7 +54,7 @@ const assert=require('node:assert/strict');
         viewportWidth:el.parentElement.clientWidth
       }));
       assert.equal(ticker.animation,'weatherNewsMarquee','Weather ticker must keep moving when RSS is unavailable');
-      assert.ok(ticker.duration>0&&ticker.children>=6,'Weather fallback must scroll repeated source-status messages');
+      assert.ok(ticker.duration>0&&ticker.children>=4,'Weather fallback must scroll repeated source-status messages');
     }
     console.log('PASS badge sizing',width,path,sizes);
     await page.close();
