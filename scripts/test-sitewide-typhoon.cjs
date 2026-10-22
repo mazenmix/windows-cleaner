@@ -19,6 +19,19 @@ function status(){
     current='active';
     const page=await context.newPage();
     await page.goto('http://127.0.0.1:8765'+path,{waitUntil:'domcontentloaded',timeout:25000});
+    if(path==='/weather-now.html'){
+      assert.equal(await page.locator('.mx-global-typhoon-alert').count(),0,
+        'Weather already has large typhoon card and must not duplicate the small header badge');
+      await page.waitForSelector('#mxTyphoonAlertCard',{timeout:15000});
+      const card=page.locator('#mxTyphoonAlertCard');
+      const size=await card.locator('.mx-tc-symbol').evaluate(el=>el.getBoundingClientRect().width);
+      assert.ok(size>=50,'Keep premium large storm triangle on Weather page');
+      assert.equal(await card.locator('.mx-tc-source').evaluateAll(nodes=>nodes.filter(n=>getComputedStyle(n).display!=='none').length),0,
+        'Source label must not be visible');
+      console.log('PASS',width,path,'no duplicate header badge and prominent typhoon card');
+      await page.close();
+      continue;
+    }
     await page.waitForSelector('.mx-global-typhoon-alert:not([hidden])',{timeout:15000});
     const badge=page.locator('.mx-global-typhoon-alert');
     assert.match(await badge.innerText(),/ROSAL/i,'Missing verified cyclone name '+path);
@@ -54,17 +67,7 @@ function status(){
       return {width:b.width,height:b.height,right:b.right,display:css.display};
     });
     assert.ok(visible.width>75&&visible.height>25,'Badge too small / invisible: '+JSON.stringify(visible));
-    if(path==='/weather-now.html'){
-     await page.evaluate(()=>{
-      document.querySelector('#weatherHero').innerHTML='<div id="mxTyphoonAlertCard" class="is-active"><div class="mx-tc-source">PAGASA · OFFICIAL BULLETIN</div><div class="mx-tc-symbol">▲</div><div class="mx-tc-alert-footer"><a href="#">Official bulletin ↗</a></div></div>';
-     });
-     await page.waitForFunction(()=>{
-      const c=document.querySelector('#mxTyphoonAlertCard');
-      return c&&!c.querySelector('.mx-tc-source')&&!c.querySelector('.mx-tc-alert-footer a');
-     },{timeout:7000});
-     const measure=await page.locator('#mxTyphoonAlertCard .mx-tc-symbol').evaluate(el=>({width:el.getBoundingClientRect().width,after:getComputedStyle(el,'::after').content}));
-     assert.ok(measure.width>=50,'The large hurricane triangle is not applied '+JSON.stringify(measure));
-    }
+
     current='clear';
     await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
     await page.waitForFunction(()=>document.querySelector('.mx-global-typhoon-alert')?.hidden===true,{timeout:10000});
