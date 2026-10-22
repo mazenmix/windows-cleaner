@@ -35,7 +35,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: mx-fuel-source-protection
+  group: mx-fuel-source-protection-20261022-fresh
   cancel-in-progress: false
 jobs:
   protect:
