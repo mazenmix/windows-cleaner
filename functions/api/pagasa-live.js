@@ -68,7 +68,7 @@ function parseThreat(html){
 }
 function parseFlood(html){
  const t=plain(html);
- if(!/flood/i.test(t)||t.length<80)return {state:'unavailable',active_count:null,source:FLOOD_URL};
+ if(!/flood/i.test(t)||t.length<25)return {state:'unavailable',active_count:null,source:FLOOD_URL};
  const statuses=[],seen=new Set();
  const re=/(Pampanga|Agno|Bicol|Cagayan|Pasig[ -]Marikina|Abra|Ilog-Hilabangan|Jalaur|Panay|Tagum-Libuganon|Apayao-Abulug|Agusan|Agus|Buayan-Malungon|Davao|Tagoloan|Angat)\s+(Non-Flood Watch|Flood Outlook|Flood Advisory|Flood Warning|Critical Flood Warning)/gi;
  let m;while((m=re.exec(t))!==null){const id=(m[1]+'|'+m[2]).toLowerCase();if(!seen.has(id)){seen.add(id);statuses.push({basin:m[1],status:m[2]})}}
