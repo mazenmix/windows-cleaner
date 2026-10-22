@@ -34,6 +34,17 @@ function status(){
         return {delta:Math.abs(a.left+a.width/2-(b.left+b.width/2)),width:b.width};
       });
       assert.ok(center.delta<12,'Homepage badge not horizontally centered: '+JSON.stringify(center));
+    }else if(path==='/daily-cost-watch.html'){
+      assert.equal(await page.locator('.hero .hero-inner > #mxDailyTyphoonSlot > .mx-global-typhoon-alert').count(),1,
+        'Daily Cost alert not positioned at the center of its hero header');
+      assert.equal(await page.locator('.header .navbar > .brand .mx-global-typhoon-alert').count(),0,
+        'Daily Cost alert must not remain near the logo');
+      const center=await page.evaluate(()=>{
+        const a=document.getElementById('mxDailyTyphoonSlot').getBoundingClientRect();
+        const b=document.querySelector('.hero .hero-inner').getBoundingClientRect();
+        return {delta:Math.abs(a.left+a.width/2-b.left-b.width/2),width:b.width};
+      });
+      assert.ok(center.delta<12,'Daily Cost alert must be centered: '+JSON.stringify(center));
     }else{
       assert.equal(await page.locator('.header .navbar > .brand .mx-global-typhoon-alert, .topbar .nav > .mx-global-typhoon-alert').count(),1,
         'Badge not beside brand '+path);
