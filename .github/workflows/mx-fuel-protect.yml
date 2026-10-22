@@ -17,6 +17,9 @@ on:
       - assets/weather-news-continuous.js
       - assets/home-typhoon-placement.js
       - assets/home-typhoon-placement.css
+      - assets/daily-typhoon-placement.js
+      - assets/daily-typhoon-placement.css
+      - assets/weather-news-multisource.js
       - assets/header-alert-sizing.js
       - functions/api/weather-news.js
       - functions/api/pagasa-live.js
@@ -24,6 +27,7 @@ on:
       - scripts/test-pagasa-browser.cjs
       - scripts/test-sitewide-typhoon.cjs
       - scripts/test-weather-news-fresh.mjs
+      - scripts/test-weather-news-fanout.mjs
       - scripts/test-neon-fresh-news.cjs
       - scripts/protect-fuel.cjs
       - .github/workflows/mx-fuel-protect.yml
@@ -53,6 +57,8 @@ jobs:
         run: node scripts/test-pagasa-live.mjs
       - name: Verify fresh-only PAGASA weather news RSS
         run: node scripts/test-weather-news-fresh.mjs
+      - name: Verify multiple independent weather news publishers
+        run: node scripts/test-weather-news-fanout.mjs
       - name: Validate protected assets
         shell: bash
         run: |
@@ -65,8 +71,10 @@ jobs:
           grep -q 'MX-PROTECTED' assets/weather-news-live.js
           grep -q 'MX-PROTECTED' assets/weather-news-continuous.js
           grep -q 'MX-PROTECTED' assets/home-typhoon-placement.js
+          grep -q 'MX-PROTECTED' assets/daily-typhoon-placement.js
+          grep -q 'MX-PROTECTED' assets/weather-news-multisource.js
           grep -q 'MX-PROTECTED' assets/header-alert-sizing.js
-          for p in assets/mx-*.js assets/celebrity-news.js assets/typhoon-live.js assets/global-typhoon-alert.js assets/weather-news-live.js assets/weather-news-continuous.js assets/home-typhoon-placement.js assets/header-alert-sizing.js; do
+          for p in assets/mx-*.js assets/celebrity-news.js assets/typhoon-live.js assets/global-typhoon-alert.js assets/weather-news-live.js assets/weather-news-continuous.js assets/weather-news-multisource.js assets/home-typhoon-placement.js assets/daily-typhoon-placement.js assets/header-alert-sizing.js; do
             node --check "$p"
           done
           if grep -R -n 'sourceMappingURL=' index.html weather-now.html news.html daily-cost-watch.html assets/mx-*.js; then
@@ -118,7 +126,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html weather-now.html news.html daily-cost-watch.html assets/celebrity-news.js assets/celebrity-news.css assets/typhoon-live.js assets/typhoon-live.css assets/global-typhoon-alert.js assets/global-typhoon-alert.css assets/weather-news-live.js assets/weather-news-continuous.js assets/home-typhoon-placement.js assets/home-typhoon-placement.css assets/header-alert-sizing.js assets/mx-*.js
+          git add index.html weather-now.html news.html daily-cost-watch.html assets/celebrity-news.js assets/celebrity-news.css assets/typhoon-live.js assets/typhoon-live.css assets/global-typhoon-alert.js assets/global-typhoon-alert.css assets/weather-news-live.js assets/weather-news-continuous.js assets/weather-news-multisource.js assets/home-typhoon-placement.js assets/home-typhoon-placement.css assets/daily-typhoon-placement.js assets/daily-typhoon-placement.css assets/header-alert-sizing.js assets/mx-*.js
           if git diff --cached --quiet; then
             echo "No unprotected code changed."
           else
