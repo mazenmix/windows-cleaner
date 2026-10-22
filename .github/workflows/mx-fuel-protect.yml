@@ -1,0 +1,95 @@
+name: Protect MX Fuel website source
+on:
+  push:
+    branches: [mx-fuel-watch-web]
+    paths:
+      - index.html
+      - weather-now.html
+      - news.html
+      - daily-cost-watch.html
+      - assets/celebrity-news.js
+      - assets/celebrity-news.css
+      - scripts/protect-fuel.cjs
+      - .github/workflows/mx-fuel-protect.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: mx-fuel-source-protection
+  cancel-in-progress: false
+jobs:
+  protect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: mx-fuel-watch-web
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install source protection and browser test tools
+        run: npm install --no-save --no-package-lock --no-audit --no-fund javascript-obfuscator@4.1.1 html-minifier-terser@7.2.0 clean-css@5.3.3 playwright@1.58.2
+      - name: Protect all pages and the additional news bundle
+        run: node scripts/protect-fuel.cjs
+      - name: Validate protected assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          for p in index.html weather-now.html news.html daily-cost-watch.html; do
+            grep -q 'data-mx-protected="1"' "$p"
+          done
+          for p in assets/mx-*.js assets/celebrity-news.js; do
+            node --check "$p"
+          done
+          if grep -R -n 'sourceMappingURL=' index.html weather-now.html news.html daily-cost-watch.html assets/mx-*.js; then
+            echo "Unexpected public source map reference"; exit 1
+          fi
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Smoke test home, Weather, News and Daily Cost on desktop and phone
+        shell: bash
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/mxfuel-server.log 2>&1 &
+          node - <<'NODE'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              for(const width of [390,1280]){
+                const context=await browser.newContext({viewport:{width,height:840}});
+                for(const path of ['/','/weather-now.html','/news.html','/daily-cost-watch.html']){
+                  const page=await context.newPage();
+                  const errors=[];
+                  page.on('pageerror',e=>errors.push(e.message));
+                  const failures=[];
+                  page.on('response',r=>{if(r.url().includes('/assets/mx-')&&r.status()>=400)failures.push(r.url()+' HTTP '+r.status());});
+                  await page.goto('http://127.0.0.1:8765'+path,{waitUntil:'domcontentloaded',timeout:25000});
+                  await page.waitForTimeout(1000);
+                  const title=await page.title();
+                  const text=(await page.locator('body').innerText()).trim();
+                  const protectedCount=await page.locator('script[data-mx-protected="1"]').count();
+                  if(!title||text.length<100||!protectedCount)throw Error('Incomplete '+path+' at '+width+': title='+title+', characters='+text.length+', protected='+protectedCount);
+                  if(errors.length)throw Error('JS page errors '+path+' at '+width+': '+errors.join(' | '));
+                  if(failures.length)throw Error('Missing bundles '+path+': '+failures.join(' | '));
+                  console.log('PASS',width,path,title,protectedCount,'protected scripts');
+                  await page.close();
+                }
+                await context.close();
+              }
+            }finally{await browser.close();}
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
+      - name: Commit protected production pages
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html weather-now.html news.html daily-cost-watch.html assets/celebrity-news.js assets/celebrity-news.css assets/mx-*.js
+          if git diff --cached --quiet; then
+            echo "No unprotected code changed."
+          else
+            git commit -m "Publish obfuscated MX Fuel site across all sections"
+            git push origin HEAD:mx-fuel-watch-web
+          fi
