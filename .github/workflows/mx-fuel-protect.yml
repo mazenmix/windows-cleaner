@@ -11,9 +11,12 @@ on:
       - assets/celebrity-news.css
       - assets/typhoon-live.js
       - assets/typhoon-live.css
+      - assets/global-typhoon-alert.js
+      - assets/global-typhoon-alert.css
       - functions/api/pagasa-live.js
       - scripts/test-pagasa-live.mjs
       - scripts/test-pagasa-browser.cjs
+      - scripts/test-sitewide-typhoon.cjs
       - scripts/protect-fuel.cjs
       - .github/workflows/mx-fuel-protect.yml
   workflow_dispatch:
@@ -48,7 +51,8 @@ jobs:
             grep -q 'data-mx-protected="1"' "$p"
           done
           grep -q 'MX-PROTECTED' assets/typhoon-live.js
-          for p in assets/mx-*.js assets/celebrity-news.js assets/typhoon-live.js; do
+          grep -q 'MX-PROTECTED' assets/global-typhoon-alert.js
+          for p in assets/mx-*.js assets/celebrity-news.js assets/typhoon-live.js assets/global-typhoon-alert.js; do
             node --check "$p"
           done
           if grep -R -n 'sourceMappingURL=' index.html weather-now.html news.html daily-cost-watch.html assets/mx-*.js; then
@@ -91,12 +95,14 @@ jobs:
           NODE
       - name: Test PAGASA alert on phone and desktop in active, clear, and offline states
         run: node scripts/test-pagasa-browser.cjs
+      - name: Test live typhoon logo alert on every page and device
+        run: node scripts/test-sitewide-typhoon.cjs
       - name: Commit protected production pages
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html weather-now.html news.html daily-cost-watch.html assets/celebrity-news.js assets/celebrity-news.css assets/typhoon-live.js assets/typhoon-live.css assets/mx-*.js
+          git add index.html weather-now.html news.html daily-cost-watch.html assets/celebrity-news.js assets/celebrity-news.css assets/typhoon-live.js assets/typhoon-live.css assets/global-typhoon-alert.js assets/global-typhoon-alert.css assets/mx-*.js
           if git diff --cached --quiet; then
             echo "No unprotected code changed."
           else
