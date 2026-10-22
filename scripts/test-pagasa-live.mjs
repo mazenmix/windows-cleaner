@@ -39,3 +39,41 @@ assert.equal(flood.state,'active');
 const unknownFlood=parseFlood('<nav>Flood Information</nav><p>Welcome to PAGASA flood service. Check the local bulletins here.</p>');
 assert.equal(unknownFlood.state,'unverified');
 console.log('PASS PAGASA live: active Rosal, cleared, unavailable, outdated, flood and outlook.');
+
+
+const at=new Date();
+const ph=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Manila',day:'numeric',month:'long',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true}).formatToParts(at);
+const part=(k)=>ph.find(x=>x.type===k)?.value;
+const issued='Issued at '+part('hour')+':'+part('minute')+' '+part('dayPeriod').toLowerCase()+', '+part('day')+' '+part('month')+' '+part('year');
+const activeHTML='<main><h2>Tropical Cyclone Bulletin #12</h2><h3>Typhoon "Rosal"</h3><h4>'+issued+'</h4><p>ROSAL IS ACTIVE OVER THE SEA EAST OF BATANES. Maximum sustained winds of 155 km/h near the center.</p></main>'.padEnd(360,' ');
+const navOnly='<html><body><nav>Latest PAGASA services and advisories</nav><p>Official bulletin page moved.</p></body></html>'.padEnd(360,' ');
+const recentMedia='<rss version="2.0"><channel><item><title>Typhoon Rosal prompts PAGASA warning for Batanes in the Philippines</title><pubDate>'+at.toUTCString()+'</pubDate><source>Philstar.com</source></item></channel></rss>';
+globalThis.caches={default:{async match(){return null},async put(){}}};
+const ctx={request:new Request('https://mxfuel.pages.dev/api/pagasa-live'),waitUntil(p){Promise.resolve(p).catch(()=>{})}};
+let detailAccess=0;
+globalThis.fetch=async url=>{
+ const target=String(url);
+ if(target.includes('severe-weather-bulletin/1')){detailAccess++;return new Response(activeHTML,{status:200})}
+ if(target.includes('severe-weather-bulletin'))return new Response(navOnly,{status:200});
+ if(target.includes('news.google.com'))return new Response(recentMedia,{status:200});
+ return new Response('<html>Flood Information TC-Threat Potential Forecast Latest weather bulletins</html>'.padEnd(350,' '),{status:200});
+};
+let endpoint=await api.onRequestGet(ctx);
+let check=await endpoint.json();
+assert.equal(endpoint.status,200);
+assert.ok(detailAccess>0,'The official /1 bulletin must be checked when main page contains only navigation');
+assert.equal(check.cyclone.state,'active',JSON.stringify(check.cyclone));
+assert.equal(check.cyclone.name,'ROSAL');
+detailAccess=0;
+globalThis.fetch=async url=>{
+ const target=String(url);
+ if(target.includes('severe-weather-bulletin'))return new Response(navOnly,{status:200});
+ if(target.includes('news.google.com'))return new Response(recentMedia,{status:200});
+ return new Response('<html>Flood Information TC-Threat Potential Forecast Latest weather bulletins</html>'.padEnd(350,' '),{status:200});
+};
+endpoint=await api.onRequestGet(ctx);
+check=await endpoint.json();
+assert.equal(check.cyclone.state,'reported','Recent media must be visible when PAGASA is unreachable');
+assert.equal(check.cyclone.active,null,'Recent media must never masquerade as PAGASA confirmation');
+assert.equal(check.cyclone.name,'ROSAL');
+console.log('PASS live alternate official bulletin and clearly labeled media fallback.');
