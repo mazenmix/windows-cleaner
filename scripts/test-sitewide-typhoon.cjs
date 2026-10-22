@@ -23,7 +23,21 @@ function status(){
     const badge=page.locator('.mx-global-typhoon-alert');
     assert.match(await badge.innerText(),/ROSAL/i,'Missing verified cyclone name '+path);
     assert.equal(await page.locator('.mx-global-storm-icon').count(),1,'Missing cyclone icon '+path);
-    assert.equal(await page.locator('.header .navbar > .brand .mx-global-typhoon-alert, .topbar .nav > .mx-global-typhoon-alert').count(),1,'Badge not beside brand '+path);
+    if(path==='/'){
+      assert.equal(await page.locator('#foodPricesSection .food-prices-head > #mxHomepageTyphoonSlot > .mx-global-typhoon-alert').count(),1,
+        'Homepage badge must be centered over Food Prices Today');
+      assert.equal(await page.locator('.header .navbar > .brand .mx-global-typhoon-alert').count(),0,
+        'Homepage badge must not remain beside logo');
+      const center=await page.evaluate(()=>{
+        const a=document.querySelector('#mxHomepageTyphoonSlot').getBoundingClientRect();
+        const b=document.querySelector('#foodPricesSection .food-prices-head').getBoundingClientRect();
+        return {delta:Math.abs(a.left+a.width/2-(b.left+b.width/2)),width:b.width};
+      });
+      assert.ok(center.delta<12,'Homepage badge not horizontally centered: '+JSON.stringify(center));
+    }else{
+      assert.equal(await page.locator('.header .navbar > .brand .mx-global-typhoon-alert, .topbar .nav > .mx-global-typhoon-alert').count(),1,
+        'Badge not beside brand '+path);
+    }
     const visible=await badge.evaluate(el=>{
       const b=el.getBoundingClientRect(),css=getComputedStyle(el);
       return {width:b.width,height:b.height,right:b.right,display:css.display};
