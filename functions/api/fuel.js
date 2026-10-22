@@ -302,14 +302,28 @@ async function buildLiveData(previousLpg, previousUpdated, origin) {
     }
   }
 
+  const lpgVerified = lpgRendered && renderedLpg.verified && typeof renderedLpg.verified === "object"
+    ? Object.keys(renderedLpg.verified).filter(name => FALLBACK_LPG.some(row => row.name === name)) : [];
+  const lpgCheckedAt = lpgRendered ? (renderedLpg.checked_at || renderedLpg.rendered_at || null) : null;
+  const lpgCheckMs = Date.parse(lpgCheckedAt || "");
+  const lpgRecent = Number.isFinite(lpgCheckMs) && Date.now() - lpgCheckMs >= 0
+    && Date.now() - lpgCheckMs <= 48 * 60 * 60 * 1000;
+  const lpgAllVerified = lpgRecent && lpgVerified.length === FALLBACK_LPG.length;
+
   return {
+    lpg_checked_at: lpgCheckedAt,
+    lpg_verified_names: lpgVerified,
+    lpg_verified_brand_count: lpgVerified.length,
+    lpg_carried_forward_brands: lpgRendered && Array.isArray(renderedLpg.carried_forward_brands)
+      ? renderedLpg.carried_forward_brands : FALLBACK_LPG.map(row => row.name).filter(name => !lpgVerified.includes(name)),
+    lpg_quality: lpgAllVerified ? "fully-verified" : lpgVerified.length ? "partially-verified" : "reference-only",
     fuel: useRendered ? rendered.fuel : newest.fuel,
     rendered_live: useRendered,
     rendered_at: useRendered ? (rendered.rendered_at || "") : "",
     snapshot_available: newest ? newest.snapshot.length >= 8 : false,
     snapshot_count: newest ? newest.snapshot.length : 0,
     lpg: mergeLpg(liveLpg, previousLpg),
-    lpg_live: lpgRendered ? true : liveLpg.length >= 4,
+    lpg_live: !!lpgAllVerified,
     lpg_live_count: liveLpg.length,
     lpg_rendered: lpgRendered,
     lpg_rendered_at: lpgRenderedAt,
@@ -359,6 +373,11 @@ export async function onRequestGet(context) {
       lpg_live_count: live.lpg_live_count || 0,
       lpg_rendered: !!live.lpg_rendered,
       lpg_rendered_at: live.lpg_rendered_at,
+      lpg_checked_at: live.lpg_checked_at,
+      lpg_verified_names: live.lpg_verified_names,
+      lpg_verified_brand_count: live.lpg_verified_brand_count,
+      lpg_carried_forward_brands: live.lpg_carried_forward_brands,
+      lpg_quality: live.lpg_quality,
       source: "GasWatch PH",
       source_url: SOURCE,
       transport: live.source_url,
@@ -368,8 +387,8 @@ export async function onRequestGet(context) {
       fuel: live.fuel,
       lpg: live.lpg,
       note: live.rendered_live
-        ? "Browser-rendered GasWatch fuel table loaded. LPG uses the daily browser-rendered snapshot when available."
-        : "Direct GasWatch fuel table used as fallback. LPG uses the daily browser-rendered snapshot when available."
+        ? "Browser-rendered GasWatch fuel table loaded. LPG figures retain per-brand source-verification status; older prices are references, not live quotes."
+        : "Direct GasWatch fuel table used as fallback. LPG figures retain per-brand source-verification status; older prices are references, not live quotes."
     };
     const fresh = response(data, 200, FRESH_TTL);
     const keep = response(data, 200, LAST_GOOD_TTL);
