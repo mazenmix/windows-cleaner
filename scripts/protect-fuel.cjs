@@ -103,6 +103,20 @@ async function main() {
   const tcMin=new CleanCSS({level:1}).minify(tcCSS);
   if(tcMin.errors.length)throw Error('Typhoon CSS minification failed: '+tcMin.errors.join(' | '));
   if(tcMin.styles.length<tcCSS.length)fs.writeFileSync(typhoonCSSPath,tcMin.styles+'\n');
+  // The shared header storm badge runs on all four pages.
+  const headerJSPath='assets/global-typhoon-alert.js';
+  const headerSource=fs.readFileSync(headerJSPath,'utf8');
+  if(!headerSource.startsWith('/* MX-PROTECTED */')){
+    const protectedHeader=protect(headerSource);
+    assert.ok(protectedHeader.length>1000,'Protected header badge script unexpectedly short');
+    fs.writeFileSync(headerJSPath,'/* MX-PROTECTED */\n'+protectedHeader+'\n');
+    console.log(headerJSPath,'protected');
+  }
+  const headerCSSPath='assets/global-typhoon-alert.css';
+  const headerCSS=fs.readFileSync(headerCSSPath,'utf8');
+  const headerMin=new CleanCSS({level:1}).minify(headerCSS);
+  if(headerMin.errors.length)throw Error('Typhoon header CSS minification failed: '+headerMin.errors.join(' | '));
+  if(headerMin.styles.length<headerCSS.length)fs.writeFileSync(headerCSSPath,headerMin.styles+'\n');
   const cssPath='assets/celebrity-news.css';
   const originalCSS=fs.readFileSync(cssPath,'utf8');
   const cssMin=new CleanCSS({level:1}).minify(originalCSS);
