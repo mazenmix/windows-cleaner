@@ -1,19 +1,2 @@
-/* Match active typhoon header badge size to the actual Visitors Today chip. */
-(function(){
- 'use strict';
- const badge=document.querySelector('.mx-global-typhoon-alert');
- const today=document.querySelector('.visitor-chip.today');
- if(!badge||!today)return;
- function sync(){
-  const box=today.getBoundingClientRect();
-  if(box.width>=72&&box.height>=24){
-   badge.style.setProperty('--mx-visitor-width',Math.round(box.width)+'px');
-   badge.style.setProperty('--mx-visitor-height',Math.round(box.height)+'px');
-  }
- }
- sync();
- window.addEventListener('resize',sync,{passive:true});
- if('ResizeObserver' in window)new ResizeObserver(sync).observe(today);
- if('MutationObserver' in window)new MutationObserver(sync).observe(badge,{attributes:true,attributeFilter:['hidden']});
- window.addEventListener('pageshow',sync);
-})();
+/* MX-PROTECTED */
+(function(_0x4c347f,_0x4529ac){const _0x256400=_0x2a13,_0x3cf677=_0x4c347f();while(!![]){try{const _0x4543ac=-parseInt(_0x256400(0x1b4))/0x1+-parseInt(_0x256400(0x1ae))/0x2+-parseInt(_0x256400(0x1b0))/0x3*(-parseInt(_0x256400(0x1b9))/0x4)+-parseInt(_0x256400(0x1bb))/0x5+parseInt(_0x256400(0x1b1))/0x6+parseInt(_0x256400(0x1af))/0x7*(-parseInt(_0x256400(0x1be))/0x8)+parseInt(_0x256400(0x1bf))/0x9;if(_0x4543ac===_0x4529ac)break;else _0x3cf677['push'](_0x3cf677['shift']());}catch(_0x4e23bc){_0x3cf677['push'](_0x3cf677['shift']());}}}(_0x5c66,0xa5415),(function(){'use strict';const _0x5e647b=_0x2a13;const _0x29b3ba=document[_0x5e647b(0x1b7)]('.mx-global-typhoon-alert'),_0x39b793=document[_0x5e647b(0x1b7)](_0x5e647b(0x1c2));if(!_0x29b3ba||!_0x39b793)return;function _0x387a71(){const _0x2622c5=_0x5e647b,_0xdbc67e=_0x39b793[_0x2622c5(0x1bc)]();_0xdbc67e['width']>=0x48&&_0xdbc67e[_0x2622c5(0x1c0)]>=0x18&&(_0x29b3ba['style'][_0x2622c5(0x1b5)]('--mx-visitor-width',Math[_0x2622c5(0x1c3)](_0xdbc67e[_0x2622c5(0x1ac)])+'px'),_0x29b3ba['style'][_0x2622c5(0x1b5)](_0x2622c5(0x1b3),Math[_0x2622c5(0x1c3)](_0xdbc67e[_0x2622c5(0x1c0)])+'px'));}_0x387a71(),window[_0x5e647b(0x1b8)](_0x5e647b(0x1b2),_0x387a71,{'passive':!![]});if(_0x5e647b(0x1ad)in window)new ResizeObserver(_0x387a71)[_0x5e647b(0x1bd)](_0x39b793);if(_0x5e647b(0x1b6)in window)new MutationObserver(_0x387a71)[_0x5e647b(0x1bd)](_0x29b3ba,{'attributes':!![],'attributeFilter':[_0x5e647b(0x1ba)]});window[_0x5e647b(0x1b8)](_0x5e647b(0x1c1),_0x387a71);}()));function _0x2a13(_0x5dc81c,_0x2e4257){const _0x5c66c4=_0x5c66();return _0x2a13=function(_0x2a1312,_0x271b92){_0x2a1312=_0x2a1312-0x1ac;let _0x66ee64=_0x5c66c4[_0x2a1312];if(_0x2a13['ppiOWs']===undefined){var _0x54d368=function(_0x29b3ba){const _0x39b793='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0x387a71='',_0xdbc67e='';for(let _0x3d21e2=0x0,_0x166de3,_0x1b7bec,_0x465137=0x0;_0x1b7bec=_0x29b3ba['charAt'](_0x465137++);~_0x1b7bec&&(_0x166de3=_0x3d21e2%0x4?_0x166de3*0x40+_0x1b7bec:_0x1b7bec,_0x3d21e2++%0x4)?_0x387a71+=String['fromCharCode'](0xff&_0x166de3>>(-0x2*_0x3d21e2&0x6)):0x0){_0x1b7bec=_0x39b793['indexOf'](_0x1b7bec);}for(let _0x29cfb4=0x0,_0x4978eb=_0x387a71['length'];_0x29cfb4<_0x4978eb;_0x29cfb4++){_0xdbc67e+='%'+('00'+_0x387a71['charCodeAt'](_0x29cfb4)['toString'](0x10))['slice'](-0x2);}return decodeURIComponent(_0xdbc67e);};_0x2a13['xaoDEA']=_0x54d368,_0x5dc81c=arguments,_0x2a13['ppiOWs']=!![];}const _0x447b0c=_0x5c66c4[0x0],_0x254cf4=_0x2a1312+_0x447b0c,_0x195b03=_0x5dc81c[_0x254cf4];return!_0x195b03?(_0x66ee64=_0x2a13['xaoDEA'](_0x66ee64),_0x5dc81c[_0x254cf4]=_0x66ee64):_0x66ee64=_0x195b03,_0x66ee64;},_0x2a13(_0x5dc81c,_0x2e4257);}function _0x5c66(){const _0x207550=['nZe3mtK3Duvnq0Ts','C2v0uhjVCgvYDhK','txv0yxrPB25pyNnLCNzLCG','CxvLCNLtzwXLy3rVCG','ywrKrxzLBNrmAxn0zw5LCG','mJu3mdaZnKzTwMvcrG','AgLKzgvU','odm0mZyWvgfkDM9O','z2v0qM91BMrPBMDdBgLLBNrszwn0','B2jZzxj2zq','mtC2AfPqAM9c','mtq5oti0nZLYB3fcDLi','AgvPz2H0','CgfNzxnOB3C','lNzPC2L0B3iTy2HPCc50B2rHEq','CM91BMq','D2LKDgG','uMvZAxPLt2jZzxj2zxi','mte0nZm0nLDAzgTVAa','mJG4mJeXrMTtvgPj','m0rHCMn5sa','ndm5mJu1oe94qKnksq','CMvZAxPL','ls1TEc12AxnPDg9YlwHLAwDODa'];_0x5c66=function(){return _0x207550;};return _0x5c66();}
