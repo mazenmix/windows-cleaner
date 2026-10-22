@@ -1,4 +1,4 @@
-const TTL=60;
+const TTL=35;
 const LAST_GOOD_TTL=5400; // maximum 90-minute explicitly delayed fallback
 const news=(query)=>"https://news.google.com/rss/search?q="+encodeURIComponent(query)+"&hl=en-PH&gl=PH&ceid=PH%3Aen";
 // Multiple independent publishers, not only one PAGASA search result.
@@ -72,7 +72,7 @@ function parse(xml,defaultSource=''){
  return out;
 }
 async function get(feed){
- const c=new AbortController(),t=setTimeout(()=>c.abort(),8500);
+ const c=new AbortController(),t=setTimeout(()=>c.abort(),4500);
  try{
   const r=await fetch(feed.url,{headers:{"user-agent":"Mozilla/5.0 (compatible; MXWeatherNews/1.0)","accept":"application/rss+xml,application/xml,text/xml,*/*"},signal:c.signal});
   if(!r.ok)throw new Error("HTTP "+r.status);

@@ -2,7 +2,9 @@
 const CYCLONE_URL='https://www.pagasa.dost.gov.ph/tropical-cyclone/severe-weather-bulletin';
 const THREAT_URL='https://www.pagasa.dost.gov.ph/tropical-cyclone/tc-threat-potential-forecast';
 const FLOOD_URL='https://www.pagasa.dost.gov.ph/flood';
-const POLL_SECONDS=90;
+const POLL_SECONDS=35;
+const CYCLONE_DETAIL_URL=CYCLONE_URL+'/1';
+const NEWS_FALLBACK='https://news.google.com/rss/search?q='+encodeURIComponent('Philippines (PAGASA OR Typhoon OR "Super Typhoon" OR "Tropical Storm") when:1d')+'&hl=en-PH&gl=PH&ceid=PH%3Aen';
 const MONTHS={january:0,february:1,march:2,april:3,may:4,june:5,july:6,august:7,september:8,october:9,november:10,december:11};
 
 function decode(s){
@@ -81,13 +83,56 @@ function parseFlood(html){
     source:FLOOD_URL};
 }
 async function official(url){
- const c=new AbortController(),id=setTimeout(()=>c.abort(),11000);
+ const c=new AbortController(),id=setTimeout(()=>c.abort(),4500);
  try{
   const r=await fetch(url,{signal:c.signal,redirect:'follow',headers:{'Accept':'text/html,application/xhtml+xml','User-Agent':'MXFuel-PAGASA-Live/1.0'},cf:{cacheTtl:0}});
   if(!r.ok)throw new Error('PAGASA HTTP '+r.status);
   const h=await r.text();if(h.length<300)throw new Error('Empty PAGASA page');
   return h;
  }finally{clearTimeout(id)}
+}
+
+/** The summary URL sometimes loads navigation while PAGASA publishes the actual
+ * bulletin on /1. Race both official pages and accept only parsed, dated
+ * official bulletins (or an explicit official no-cyclone statement). */
+async function verifiedCyclone(){
+ const attempts=[CYCLONE_URL,CYCLONE_DETAIL_URL].map(async url=>{
+  const cyclone=parseCyclone(await official(url));
+  if(!['active','stale','clear'].includes(cyclone.state))throw Error('No current PAGASA bulletin at '+url);
+  return cyclone;
+ });
+ try{return await Promise.any(attempts)}
+ catch{return {state:'unavailable',active:null,status:'PAGASA cyclone bulletin could not be verified',source:CYCLONE_URL}}
+}
+/** Independent media fallback is explicitly UNVERIFIED by PAGASA: it is never
+ * represented as an official alert or an all-clear. Strict freshness and a
+ * named cyclone prevent generalized news headlines becoming alerts. */
+async function freshMediaCyclone(){
+ const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),4200);
+ try{
+  const response=await fetch(NEWS_FALLBACK,{signal:controller.signal,headers:{Accept:'application/rss+xml,application/xml'}});
+  if(!response.ok)throw Error('RSS unavailable');
+  const xml=await response.text(),items=xml.match(/<item\b[\s\S]*?<\/item>/gi)||[];
+  const now=Date.now();
+  for(const item of items){
+   const headline=plain(((item.match(/<title>([\s\S]*?)<\/title>/i)||[])[1]||'').replace(/<!\[CDATA\[|\]\]>/g,''));
+   const date=(item.match(/<pubDate>([\s\S]*?)<\/pubDate>/i)||[])[1]||'';
+   const published=Date.parse(date);
+   if(!Number.isFinite(published)||published>now+10*60000||now-published>6*3600000)continue;
+   if(/\b(?:may become|could become|potential|forecast to develop)\b/i.test(headline))continue;
+   const hit=headline.match(/\b(?:super\s+)?typhoon\s+[“"']?([A-Za-z]{3,22})\b/i)
+     ||headline.match(/\b([A-Z][a-z]{3,22})\s+(?:super\s+)?typhoon\b/);
+   if(!hit)continue;
+   // Philippine publishers already ground the geography; names may omit 'Philippines'.
+   const source=plain((item.match(/<source[^>]*>([\s\S]*?)<\/source>/i)||[])[1]||'');
+   if(!/(gma|philstar|inquirer|abs-cbn|rappler|manila bulletin|philippine news agency|pna)/i.test(source))continue;
+   return {state:'reported',active:null,name:hit[1].toUpperCase(),category:'Typhoon',
+    status:'Recent media report — PAGASA bulletin unverified',published_at:new Date(published).toISOString(),
+    reporting_source:source,headline:short(headline,160),source:CYCLONE_URL};
+  }
+ }catch{}
+ finally{clearTimeout(timeout)}
+ return null;
 }
 function response(data,status=200,age=POLL_SECONDS){
  return new Response(JSON.stringify(data),{status,headers:{
@@ -100,16 +145,21 @@ function response(data,status=200,age=POLL_SECONDS){
 export async function onRequestGet(context){
  const now=new Date().toISOString(),origin=new URL(context.request.url).origin;
  const cache=typeof caches!=='undefined'?caches.default:null;
- const key=new Request(origin+'/api/pagasa-live:cache');
+ const key=new Request(origin+'/api/pagasa-live:cache-v2');
  if(cache){const cached=await cache.match(key);if(cached)return cached;}
- const fetched=await Promise.allSettled([official(CYCLONE_URL),official(THREAT_URL),official(FLOOD_URL)]);
- const cyclone=fetched[0].status==='fulfilled'?parseCyclone(fetched[0].value):{state:'unavailable',active:null,status:'PAGASA cyclone bulletin unavailable',source:CYCLONE_URL};
- const threat=fetched[1].status==='fulfilled'?parseThreat(fetched[1].value):{state:'unavailable',period:null,source:THREAT_URL};
- const flood=fetched[2].status==='fulfilled'?parseFlood(fetched[2].value):{state:'unavailable',active_count:null,source:FLOOD_URL};
- const good=fetched.some(x=>x.status==='fulfilled');
- const body={ok:good,checked_at:now,cyclone,threat,flood,refresh_seconds:60};
- const out=response(body,good?200:503,good?POLL_SECONDS:0);
- if(good&&cache)context.waitUntil(cache.put(key,out.clone()));
+ const results=await Promise.allSettled([verifiedCyclone(),official(THREAT_URL),official(FLOOD_URL),freshMediaCyclone()]);
+ let cyclone=results[0].status==='fulfilled'?results[0].value:{state:'unavailable',active:null,status:'PAGASA verification unavailable',source:CYCLONE_URL};
+ const threat=results[1].status==='fulfilled'?parseThreat(results[1].value):{state:'unavailable',period:null,source:THREAT_URL};
+ const flood=results[2].status==='fulfilled'?parseFlood(results[2].value):{state:'unavailable',active_count:null,source:FLOOD_URL};
+ if(cyclone.state==='unavailable'&&results[3].status==='fulfilled'&&results[3].value){
+  cyclone=results[3].value;
+ }
+ const verified=['active','stale','clear'].includes(cyclone.state);
+ const hasData=verified||cyclone.state==='reported'||results.slice(1,3).some(x=>x.status==='fulfilled');
+ const body={ok:hasData,checked_at:now,cyclone,threat,flood,refresh_seconds:POLL_SECONDS};
+ // Never cache a bad PAR result, even when unrelated flood/threat fetches worked.
+ const out=response(body,hasData?200:503,verified?POLL_SECONDS:0);
+ if(verified&&cache)context.waitUntil(cache.put(key,out.clone()));
  return out;
 }
 // Export parsers for reproducible tests without calling live services.

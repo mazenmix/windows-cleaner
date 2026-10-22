@@ -1,2 +1,137 @@
-/* MX-PROTECTED */
-function _0x3746(_0x272861,_0x406694){const _0x7138b3=_0x7138();return _0x3746=function(_0x374674,_0x1a5372){_0x374674=_0x374674-0xe0;let _0x3f5971=_0x7138b3[_0x374674];if(_0x3746['UBUBbQ']===undefined){var _0x58faba=function(_0x1a7412){const _0x3020ab='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0x52efab='',_0x57f940='';for(let _0x641189=0x0,_0x1dc6df,_0x33028b,_0x55014b=0x0;_0x33028b=_0x1a7412['charAt'](_0x55014b++);~_0x33028b&&(_0x1dc6df=_0x641189%0x4?_0x1dc6df*0x40+_0x33028b:_0x33028b,_0x641189++%0x4)?_0x52efab+=String['fromCharCode'](0xff&_0x1dc6df>>(-0x2*_0x641189&0x6)):0x0){_0x33028b=_0x3020ab['indexOf'](_0x33028b);}for(let _0x4f8e71=0x0,_0x6b372c=_0x52efab['length'];_0x4f8e71<_0x6b372c;_0x4f8e71++){_0x57f940+='%'+('00'+_0x52efab['charCodeAt'](_0x4f8e71)['toString'](0x10))['slice'](-0x2);}return decodeURIComponent(_0x57f940);};_0x3746['ggohuh']=_0x58faba,_0x272861=arguments,_0x3746['UBUBbQ']=!![];}const _0xba7083=_0x7138b3[0x0],_0x204a89=_0x374674+_0xba7083,_0x3397dc=_0x272861[_0x204a89];return!_0x3397dc?(_0x3f5971=_0x3746['ggohuh'](_0x3f5971),_0x272861[_0x204a89]=_0x3f5971):_0x3f5971=_0x3397dc,_0x3f5971;},_0x3746(_0x272861,_0x406694);}(function(_0x5cf772,_0x5ce8b4){const _0x5a0273=_0x3746,_0xd37d61=_0x5cf772();while(!![]){try{const _0x2a90a2=-parseInt(_0x5a0273(0xe2))/0x1*(parseInt(_0x5a0273(0xed))/0x2)+-parseInt(_0x5a0273(0x127))/0x3+parseInt(_0x5a0273(0x106))/0x4+-parseInt(_0x5a0273(0x104))/0x5+parseInt(_0x5a0273(0x134))/0x6*(-parseInt(_0x5a0273(0x14f))/0x7)+-parseInt(_0x5a0273(0x13d))/0x8*(-parseInt(_0x5a0273(0x107))/0x9)+-parseInt(_0x5a0273(0x128))/0xa*(-parseInt(_0x5a0273(0x142))/0xb);if(_0x2a90a2===_0x5ce8b4)break;else _0xd37d61['push'](_0xd37d61['shift']());}catch(_0x4d1fa1){_0xd37d61['push'](_0xd37d61['shift']());}}}(_0x7138,0x458ae),(function(){'use strict';const _0x46be97=_0x3746;const _0x1a7412=document[_0x46be97(0xfc)]('weatherNewsTrack'),_0x3020ab=document[_0x46be97(0xfc)](_0x46be97(0x14a));if(!_0x1a7412||!_0x3020ab)return;const _0x52efab=_0x3020ab[_0x46be97(0xe5)](_0x46be97(0x12c)),_0x57f940=_0x46be97(0x12b),_0x641189=0x24*0x3c*0x3c*0x3e8;let _0x1dc6df=![],_0x33028b=0x0,_0x55014b='',_0x4f8e71=[];const _0x6b372c=_0x2b6dac=>String(_0x2b6dac||'')[_0x46be97(0x141)](/[&<>"']/g,_0x3c00a5=>({'&':_0x46be97(0x121),'<':_0x46be97(0x13c),'>':_0x46be97(0x149),'\x22':_0x46be97(0xfd),'\x27':'&#39;'}[_0x3c00a5])),_0x165f31=_0xc9094d=>{const _0x14e63d=_0x46be97;try{const _0xd06f29=new URL(_0xc9094d,location['href']);return _0xd06f29[_0x14e63d(0x125)]===_0x14e63d(0x10b)||_0xd06f29[_0x14e63d(0x125)]===_0x14e63d(0x10c)?_0xd06f29[_0x14e63d(0x120)]:'#';}catch{return'#';}},_0x307e85=_0x433599=>{const _0x255ec3=_0x46be97,_0x2bd76f=Date[_0x255ec3(0x10d)](_0x433599||'');if(!Number['isFinite'](_0x2bd76f))return _0x255ec3(0x115);return new Intl['DateTimeFormat'](_0x255ec3(0xea),{'timeZone':_0x255ec3(0xfe),'month':'short','day':'numeric','hour':_0x255ec3(0x13e),'minute':'2-digit','hour12':!![]})[_0x255ec3(0x130)](new Date(_0x2bd76f))+_0x255ec3(0x100);};function _0x13d1ea(_0x459442,_0x515fcf){const _0x561e24=_0x46be97;_0x52efab&&(_0x52efab[_0x561e24(0xfa)]=_0x459442,_0x52efab[_0x561e24(0x102)]['live']=_0x515fcf?'1':'0',_0x52efab[_0x561e24(0x136)]=_0x515fcf?_0x561e24(0xfb):_0x561e24(0x13b));}async function _0x513859(){const _0x40ec59=_0x46be97;try{const _0x405cdf=await fetch(_0x40ec59(0x111)+Date['now'](),{'cache':_0x40ec59(0x135),'signal':AbortSignal[_0x40ec59(0xe1)](0x2328)});if(!_0x405cdf['ok'])throw Error('PAGASA\x20status\x20not\x20verified');const _0x537409=await _0x405cdf[_0x40ec59(0xf7)](),_0x238daf=_0x537409?.[_0x40ec59(0xf0)],_0x56f93f=_0x537409?.['checked_at'],_0x41d5d0=[];if(_0x238daf?.[_0x40ec59(0x117)]==='active'&&_0x238daf?.[_0x40ec59(0xeb)]===!![]&&_0x238daf['name']&&_0x238daf[_0x40ec59(0xf3)])_0x41d5d0[_0x40ec59(0xec)]({'source':_0x40ec59(0xef),'message':(_0x238daf[_0x40ec59(0x146)]||_0x40ec59(0x110))+'\x20'+_0x238daf['name'][_0x40ec59(0x11c)]()+_0x40ec59(0x11a)+(_0x238daf[_0x40ec59(0x11d)]||'—')+'\x20·\x20Issued\x20'+_0x307e85(_0x238daf['issued_at'])});else _0x238daf?.['state']===_0x40ec59(0xe8)&&_0x238daf[_0x40ec59(0xeb)]===![]&&_0x41d5d0[_0x40ec59(0xec)]({'source':'PAGASA\x20OFFICIAL','message':_0x40ec59(0x138)+_0x307e85(_0x56f93f)});_0x537409?.[_0x40ec59(0xf2)]?.[_0x40ec59(0x117)]===_0x40ec59(0xeb)&&_0x41d5d0[_0x40ec59(0xec)]({'source':_0x40ec59(0x129),'message':String(_0x537409[_0x40ec59(0xf2)]['summary']||'Active\x20river\x20basin\x20flood\x20bulletin')['slice'](0x0,0xb9)});if(_0x41d5d0['length']&&_0x56f93f)_0x41d5d0[_0x40ec59(0xec)]({'source':_0x40ec59(0xe9),'message':_0x40ec59(0x12f)+_0x307e85(_0x56f93f)+_0x40ec59(0x112)});return _0x41d5d0;}catch{return[];}}function _0x1509ff(_0x285460=[]){const _0x2d5c1b=_0x46be97;_0x4f8e71=[],_0x13d1ea('WEATHER\x20NEWS',![]);const _0x1b4f32=[{'source':_0x2d5c1b(0x13f),'message':'Fresh\x20Philippine\x20weather\x20headlines\x20temporarily\x20unavailable.\x20Checking\x20multiple\x20news\x20publishers\x20every\x2060\x20seconds.'},..._0x285460,{'source':_0x2d5c1b(0x13f),'message':'Monitoring\x20typhoons,\x20floods,\x20rain,\x20PAGASA\x20advisories,\x20monsoon\x20and\x20weather\x20warnings.\x20Source\x20checks\x20continue.'}],_0x18d3e3=JSON[_0x2d5c1b(0x119)](_0x1b4f32);if(_0x55014b===_0x18d3e3&&_0x1a7412[_0x2d5c1b(0xf8)])return;_0x55014b=_0x18d3e3,_0x1a7412[_0x2d5c1b(0x102)][_0x2d5c1b(0xf9)]=_0x2d5c1b(0x105);const _0x5d103d=_0x1b4f32[_0x2d5c1b(0x12a)](({source:_0x1ac58a,message:_0x24e180})=>_0x2d5c1b(0xee)+_0x2d5c1b(0x11e)+_0x6b372c(_0x1ac58a)+_0x2d5c1b(0x113)+_0x2d5c1b(0x140)+_0x6b372c(_0x24e180)+_0x2d5c1b(0x113)+'<span\x20class=\x22weather-news-sep\x22\x20aria-hidden=\x22true\x22>◆</span></span>')[_0x2d5c1b(0x116)]('');_0x1a7412[_0x2d5c1b(0x147)][_0x2d5c1b(0x137)]=_0x2d5c1b(0x139),_0x1a7412['style']['webkitAnimation']=_0x2d5c1b(0x139),_0x1a7412[_0x2d5c1b(0x148)]=_0x5d103d+_0x5d103d;const _0x455432=_0x1a7412[_0x2d5c1b(0xe0)];let _0x47b308=0x1;while(_0x1a7412['scrollWidth']/0x2<_0x455432[_0x2d5c1b(0x14c)]+0x50&&_0x47b308<0x8){_0x47b308++,_0x1a7412[_0x2d5c1b(0x148)]=_0x5d103d[_0x2d5c1b(0x124)](_0x47b308*0x2);}const _0x10d681=Math[_0x2d5c1b(0x10e)](0x18,_0x1a7412[_0x2d5c1b(0x11f)]/0x2/0x5f);void _0x1a7412[_0x2d5c1b(0x13a)],_0x1a7412[_0x2d5c1b(0x147)][_0x2d5c1b(0x137)]='weatherNewsMarquee\x20'+_0x10d681+_0x2d5c1b(0x133),_0x1a7412['style'][_0x2d5c1b(0x132)]='weatherNewsMarquee\x20'+_0x10d681+'s\x20linear\x20infinite';}function _0x206779(_0x1a4fc4,_0x467866=![]){const _0x5d7655=_0x46be97,_0x1b3b44=Date[_0x5d7655(0x123)](),_0x1e161c=(Array[_0x5d7655(0x143)](_0x1a4fc4)?_0x1a4fc4:[])[_0x5d7655(0xe7)](_0x570528=>{const _0x25a3a3=_0x5d7655,_0x4bbbf4=Date[_0x25a3a3(0x10d)](_0x570528[_0x25a3a3(0x101)]||'');return Number[_0x25a3a3(0x10a)](_0x4bbbf4)&&_0x4bbbf4>=_0x1b3b44-_0x641189&&_0x4bbbf4<=_0x1b3b44+0x14*0xea60&&_0x570528['headline']&&_0x570528[_0x25a3a3(0x126)];})[_0x5d7655(0x122)]((_0x20870f,_0x9d08c7)=>Date['parse'](_0x9d08c7[_0x5d7655(0x101)])-Date[_0x5d7655(0x10d)](_0x20870f['published_at']))[_0x5d7655(0x114)](0x0,0x10);if(!_0x1e161c[_0x5d7655(0xf4)]){_0x1509ff();return;}const _0x3861e5=String(_0x467866)+_0x1e161c[_0x5d7655(0x12a)](_0xd4738f=>[_0xd4738f[_0x5d7655(0x118)],_0xd4738f[_0x5d7655(0xe4)],_0xd4738f[_0x5d7655(0x101)]]['join']('|'))[_0x5d7655(0x116)]('||');_0x13d1ea(_0x467866?_0x5d7655(0x14d):_0x5d7655(0x13f),!_0x467866);if(_0x55014b===_0x3861e5&&_0x1a7412['childElementCount'])return;_0x55014b=_0x3861e5,_0x4f8e71=_0x1e161c,_0x1a7412[_0x5d7655(0x102)][_0x5d7655(0xf9)]='news';const _0x3b0f9e=_0x1e161c[_0x5d7655(0x12a)](_0x2a2480=>_0x5d7655(0x109)+_0x6b372c(_0x165f31(_0x2a2480['url']))+_0x5d7655(0xf5)+_0x5d7655(0x11e)+_0x6b372c(_0x2a2480[_0x5d7655(0x118)]||'NEWS')+_0x5d7655(0x113)+_0x5d7655(0x140)+_0x6b372c(_0x2a2480[_0x5d7655(0xe4)])+_0x5d7655(0x113)+_0x5d7655(0xe3)+_0x6b372c(_0x2a2480[_0x5d7655(0x101)])+'\x22>'+_0x6b372c(_0x307e85(_0x2a2480[_0x5d7655(0x101)]))+'</time>'+_0x5d7655(0xff))[_0x5d7655(0x116)]('');_0x1a7412['style'][_0x5d7655(0x137)]=_0x5d7655(0x139),_0x1a7412[_0x5d7655(0x147)][_0x5d7655(0x132)]=_0x5d7655(0x139),_0x1a7412[_0x5d7655(0x148)]=_0x3b0f9e+_0x3b0f9e;const _0xe2b8a2=_0x1a7412[_0x5d7655(0xe0)];let _0x356ccd=0x1;while(_0x1a7412[_0x5d7655(0x11f)]/0x2<_0xe2b8a2[_0x5d7655(0x14c)]+0x50&&_0x356ccd<0x8){_0x356ccd++,_0x1a7412[_0x5d7655(0x148)]=_0x3b0f9e[_0x5d7655(0x124)](_0x356ccd*0x2);}const _0x1ba83a=_0x1a7412[_0x5d7655(0x11f)]/0x2,_0x420297=Math['max'](0x11,_0x1ba83a/0x62)+'s';_0x1a7412[_0x5d7655(0x147)][_0x5d7655(0x137)]='',_0x1a7412['style'][_0x5d7655(0x132)]='',_0x1a7412['style'][_0x5d7655(0x131)]=_0x420297,_0x1a7412['style'][_0x5d7655(0x145)]=_0x420297;}async function _0xa9e744(_0x2efda7=![]){const _0x35c02c=_0x46be97;if(_0x1dc6df||!_0x2efda7&&Date[_0x35c02c(0x123)]()-_0x33028b<0xafc8)return;_0x1dc6df=!![];const _0x590000=new AbortController(),_0xcfe6df=setTimeout(()=>_0x590000['abort'](),0x2af8);try{const _0x11a1f2=await fetch(_0x57f940+_0x35c02c(0x108)+Date[_0x35c02c(0x123)](),{'signal':_0x590000['signal'],'cache':_0x35c02c(0x135),'headers':{'accept':_0x35c02c(0x12d)}});if(!_0x11a1f2['ok'])throw Error(_0x35c02c(0xf6)+_0x11a1f2['status']);const _0x4606ef=await _0x11a1f2[_0x35c02c(0xf7)]();if(!_0x4606ef?.['ok']||!Array['isArray'](_0x4606ef[_0x35c02c(0x14e)])||!_0x4606ef['items'][_0x35c02c(0xf4)])throw Error(_0x35c02c(0x103));_0x206779(_0x4606ef[_0x35c02c(0x14e)],_0x4606ef[_0x35c02c(0xf1)]!==!![]),_0x3020ab[_0x35c02c(0x102)][_0x35c02c(0x144)]=String(_0x4606ef[_0x35c02c(0x10f)]||'');}catch{_0x1509ff(await _0x513859());}finally{clearTimeout(_0xcfe6df),_0x1dc6df=![],_0x33028b=Date[_0x35c02c(0x123)]();}}_0x13d1ea(_0x46be97(0xe6),''),_0xa9e744(!![]),setInterval(()=>_0xa9e744(),0xea60),document['addEventListener'](_0x46be97(0x11b),()=>{const _0x196b01=_0x46be97;if(!document[_0x196b01(0x12e)])_0xa9e744(!![]);}),window[_0x46be97(0x14b)]('focus',()=>_0xa9e744(!![])),window[_0x46be97(0x14b)]('online',()=>_0xa9e744(!![]));}()));function _0x7138(){const _0x354069=['mJaYnde5n3PjtMP0rW','CgfYzw50rwXLBwvUDa','DgLTzw91Da','mu1tAefACW','phrPBwuGy2XHC3m9iNDLyxrOzxiTBMv3CY1Hz2uIigrHDgv0Aw1Lpsi','AgvHzgXPBMu','CxvLCNLtzwXLy3rVCG','tKvxuYbdsevdsW','zMLSDgvY','y2XLyxi','u09vuKnfienirunl','zw4TueG','ywn0AxzL','ChvZAa','mta2mZi5mKnnru9nwa','phnWyw4Gy2XHC3m9iNDLyxrOzxiTBMv3CY1PDgvTiJ4','uefhqvnbie9grKLdsufm','y3LJBg9Uzq','BgL2zq','zMXVB2q','AxnZDwvKx2f0','BgvUz3rO','iIb0yxjNzxq9iL9IBgfUAYiGCMvSpsjUB29Wzw5LCIbUB3jLzMvYCMvYiJ4','sfruuca','ANnVBG','y2HPBgrfBgvTzw50q291BNq','Bw9Kzq','Dgv4DenVBNrLBNq','uhvIBgLZAgvKifjtuYbOzwfKBgLUzxmG4OcuignOzwnRzwqGzxzLCNKGnJaGC2vJB25KCW','z2v0rwXLBwvUDej5swq','jNf1B3q7','qxnPys9nyw5PBge','phnWyw4Gy2XHC3m9iNDLyxrOzxiTBMv3CY1ZzxaIigfYAweTAgLKzgvUpsj0CNvLiJ7IL4y8l3nWyw4+pc9HpG','ifbiva','ChvIBgLZAgvKx2f0','zgf0yxnLDa','tM8GDMvYAwzPzwqGBMv3CW','ndm1ntuWuhzewKHN','D2fPDgLUzW','mtqXodC1mMfOrgL3vq','mtHfEM5xte4','p3q9','pgeGy2XHC3m9iNDLyxrOzxiTBMv3CY1PDgvTiIbOCMvMpsi','AxngAw5PDgu','Ahr0Chm6','Ahr0CdO','CgfYC2u','Bwf4','y2HLy2TLzf9HDa','vhjVCgLJywWGy3LJBg9Uzq','l2fWAs9WywDHC2eTBgL2zt90pq','imk3ie5LDYbTzwrPysbOzwfKBgLUzxmGyxjLigjLAw5NigzLDgnOzwq','pc9ZCgfUpG','C2XPy2u','vw52zxjPzMLLzcbKyxrL','AM9PBG','C3rHDgu','C291CMnL','C3rYAw5NAwz5','imk3ien5y2XVBMuGqNvSBgv0Aw4GiW','DMLZAwjPBgL0EwnOyw5Nzq','Dg9vChbLCKnHC2u','yNvSBgv0Aw5FBM8','phnWyw4Gy2XHC3m9iNDLyxrOzxiTBMv3CY1ZB3vYy2uIpG','C2nYB2XSv2LKDgG','AhjLzG','jMfTCdS','C29YDa','BM93','CMvWzwf0','ChjVDg9JB2W','DxjS','mJuXnZuXDuvxBhDd','mZa3mhrcAhH0yG','uefhqvnbiezmt09e','BwfW','l2fWAs93zwf0AgvYlw5LD3m','lNDLyxrOzxiTBMv3CY1SywjLBa','yxbWBgLJyxrPB24VANnVBG','AgLKzgvU','uefhqvnbigfKDMLZB3j5ihn0yxr1CYbJAgvJA2vKia','zM9YBwf0','yw5PBwf0Aw9UrhvYyxrPB24','D2vIA2L0qw5PBwf0Aw9U','CYbSAw5LyxiGAw5MAw5PDgu','nMv0t0j4Aq','BM8TC3rVCMu','DgL0Bgu','yw5PBwf0Aw9U','tM8Gywn0AxzLihrYB3bPy2fSign5y2XVBMuGy3vYCMvUDgX5ignVBMzPCM1LzcbPBNnPzguGDgHLifbOAwXPChbPBMuGqxjLysbVzIbszxnWB25ZAwjPBgL0EsdcTYbdAgvJA2vKia','BM9Uzq','B2zMC2v0v2LKDgG','tMv3CYbWDwjSAwnHDgLVBIbKyxrHignVDwXKig5VDcbIzsb2zxjPzMLLzcbPBIbYzwfSihrPBwu','jMX0oW','mtiXndGXnMH3uxb0ua','BNvTzxjPyW','v0vbveHfuIborvDt','phnWyw4Gy2XHC3m9iNDLyxrOzxiTBMv3CY1OzwfKBgLUzsi+','CMvWBgfJzq','mJiXntrKDwPorKW','AxnbCNjHEq','BgfZDenOzwnRzwq','D2vIA2L0qw5PBwf0Aw9UrhvYyxrPB24','y2f0zwDVCNK','C3r5Bgu','Aw5Uzxjive1m','jMD0oW','D2vHDgHLCK5LD3m','ywrKrxzLBNrmAxn0zw5LCG','y2XPzw50v2LKDgG','tKvxuYberuXbwuve','AxrLBxm'];_0x7138=function(){return _0x354069;};return _0x7138();}
+/* Fresh-only Weather News. No old localStorage headlines or undated bootstrap. */
+(function(){
+ 'use strict';
+ const track=document.getElementById('weatherNewsTrack');
+ const strip=document.getElementById('weatherNews');
+ if(!track||!strip)return;
+ const label=strip.querySelector('.weather-news-label');
+ const ENDPOINT='/api/weather-news';
+ const MAX_AGE=36*60*60*1000;
+ const CACHE_KEY='mx.fuel.verifiedHeadlines.v1';
+ const CACHE_MAX_AGE=12*60*1000;
+ let busy=false,lastRequest=0,lastSignature='',lastArticles=[];
+ const escape=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const url=s=>{try{const u=new URL(s,location.href);return u.protocol==='https:'||u.protocol==='http:'?u.href:'#'}catch{return '#'}};
+ const stamp=v=>{
+  const n=Date.parse(v||'');if(!Number.isFinite(n))return 'Unverified date';
+  return new Intl.DateTimeFormat('en-PH',{timeZone:'Asia/Manila',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(n))+' PHT';
+ };
+ function status(text,live){
+  if(label){label.textContent=text;label.dataset.live=live?'1':'0';label.title=live?'Published RSS headlines — checked every 60 seconds':'News publication data could not be verified in real time';}
+ }
+ async function officialMessages(){
+  try{
+   const r=await fetch('/api/pagasa-live?t='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(9000)});
+   if(!r.ok)throw Error('PAGASA status not verified');
+   const data=await r.json();
+   const cyclone=data?.cyclone,checked=data?.checked_at;
+   const out=[];
+   if(cyclone?.state==='active'&&cyclone?.active===true&&cyclone.name&&cyclone.issued_at){
+    out.push({source:'PAGASA OFFICIAL',message:
+      (cyclone.category||'Tropical cyclone')+' '+cyclone.name.toUpperCase()+
+      ' · Cyclone Bulletin #'+(cyclone.bulletin_no||'—')+' · Issued '+stamp(cyclone.issued_at)});
+   }else if(cyclone?.state==='clear'&&cyclone.active===false){
+    out.push({source:'PAGASA OFFICIAL',message:
+      'No active tropical cyclone currently confirmed inside the Philippine Area of Responsibility · Checked '+stamp(checked)});
+   }
+   if(data?.flood?.state==='active'){
+    out.push({source:'PAGASA FLOOD',message:String(data.flood.summary||'Active river basin flood bulletin').slice(0,185)});
+   }
+   if(out.length&&checked)out.push({source:'SOURCE CHECK',message:'PAGASA advisory status checked '+stamp(checked)+' · New media headlines are being fetched'});
+   return out;
+  }catch{return []}
+ }
+ function offline(official=[],loading=false){
+  lastArticles=[];
+  status('WEATHER NEWS',false);
+  // Keep the ticker visibly moving while making the source outage explicit.
+  // Do not recycle old headlines or imply that a check produced new news.
+  const notices=[
+   {source:'WEATHER NEWS',message:loading?'Fetching the latest Philippine typhoon, storm and PAGASA news headlines…':'Fresh Philippine weather headlines temporarily unavailable. Checking multiple news publishers.'},
+   ...official,
+   {source:'WEATHER NEWS',message:loading?'Live source checks in progress. News ticker is already moving.':'Monitoring typhoons, floods, rain, PAGASA advisories, monsoon and weather warnings. Source checks continue.'}
+  ];
+  const signature=JSON.stringify(notices);
+  if(lastSignature===signature&&track.childElementCount)return;
+  lastSignature=signature;
+  track.dataset.mode='waiting';
+  const markup=notices.map(({source,message})=>'<span class="weather-news-item">'+
+   '<span class="weather-news-source">'+escape(source)+'</span>'+
+   '<span class="weather-news-headline">'+escape(message)+'</span>'+
+   '<span class="weather-news-sep" aria-hidden="true">◆</span></span>').join('');
+  track.style.animation='none';track.style.webkitAnimation='none';
+  track.innerHTML=markup+markup;
+  const viewport=track.parentElement;
+  let copies=1;
+  while(track.scrollWidth/2<viewport.clientWidth+80&&copies<8){
+   copies++;track.innerHTML=markup.repeat(copies*2);
+  }
+  const seconds=Math.max(24,(track.scrollWidth/2)/95);
+  void track.offsetWidth;
+  track.style.animation='weatherNewsMarquee '+seconds+'s linear infinite';
+  track.style.webkitAnimation='weatherNewsMarquee '+seconds+'s linear infinite';
+ }
+
+ function render(items,stale=false){
+  const now=Date.now();
+  const recent=(Array.isArray(items)?items:[]).filter(x=>{
+   const t=Date.parse(x.published_at||'');
+   return Number.isFinite(t)&&t>=now-MAX_AGE&&t<=now+20*60000&&x.headline&&x.url;
+  }).sort((a,b)=>Date.parse(b.published_at)-Date.parse(a.published_at)).slice(0,16);
+  if(!recent.length){offline();return;}
+  const signature=String(stale)+recent.map(x=>[x.source,x.headline,x.published_at].join('|')).join('||');
+  status(stale?'NEWS DELAYED':'WEATHER NEWS',!stale);
+  if(lastSignature===signature&&track.childElementCount)return;
+  lastSignature=signature;lastArticles=recent;
+  track.dataset.mode='news';
+  const markup=recent.map(x=>'<a class="weather-news-item" href="'+escape(url(x.url))+'" target="_blank" rel="noopener noreferrer">'+
+   '<span class="weather-news-source">'+escape(x.source||'NEWS')+'</span>'+
+   '<span class="weather-news-headline">'+escape(x.headline)+'</span>'+
+   '<time class="weather-news-age" datetime="'+escape(x.published_at)+'">'+escape(stamp(x.published_at))+'</time>'+
+   '<span class="weather-news-sep" aria-hidden="true">◆</span></a>').join('');
+  track.style.animation='none';track.style.webkitAnimation='none';
+  track.innerHTML=markup+markup;
+  // Repeat matching halves until they cover the available viewport seamlessly.
+  const viewport=track.parentElement;let copies=1;
+  while(track.scrollWidth/2<(viewport.clientWidth+80)&&copies<8){
+   copies++;track.innerHTML=markup.repeat(copies*2);
+  }
+  const distance=track.scrollWidth/2;
+  const duration=Math.max(17,distance/98)+'s';
+  track.style.animation='';track.style.webkitAnimation='';
+  track.style.animationDuration=duration;track.style.webkitAnimationDuration=duration;
+ }
+ async function refresh(force=false){
+  if(busy||(!force&&Date.now()-lastRequest<30000))return;
+  busy=true;
+  const c=new AbortController(),timer=setTimeout(()=>c.abort(),7000);
+  try{
+   const r=await fetch(ENDPOINT+'?t='+Date.now(),{signal:c.signal,cache:'no-store',headers:{accept:'application/json'}});
+   if(!r.ok)throw Error('HTTP '+r.status);
+   const data=await r.json();
+   if(!data?.ok||!Array.isArray(data.items)||!data.items.length)throw Error('No verified news');
+   render(data.items,data.live!==true);
+   strip.dataset.lastChecked=String(data.checked_at||'');
+   if(data.live===true)try{sessionStorage.setItem(CACHE_KEY,JSON.stringify({saved:Date.now(),items:data.items.slice(0,16)}))}catch{}
+  }catch{offline(await officialMessages());}
+  finally{clearTimeout(timer);busy=false;lastRequest=Date.now();}
+ }
+ // First frame never waits on network: show moving source-status text instantly.
+ // A brief recent, originally verified, same-tab cache is explicitly labeled
+ // UPDATING NEWS and replaced once a current RSS check finishes.
+ let restored=false;
+ try{
+  const saved=JSON.parse(sessionStorage.getItem(CACHE_KEY)||'null');
+  if(saved&&Date.now()-saved.saved<=CACHE_MAX_AGE&&Array.isArray(saved.items)){
+   render(saved.items,true);
+   status('UPDATING NEWS',false);
+   restored=!!track.childElementCount;
+  }
+ }catch{}
+ if(!restored)offline([],true);
+ refresh(true);
+ setInterval(()=>refresh(),35000);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh(true)});
+ window.addEventListener('focus',()=>refresh(true));
+ window.addEventListener('online',()=>refresh(true));
+})();
