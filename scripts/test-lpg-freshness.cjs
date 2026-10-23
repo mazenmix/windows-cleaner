@@ -34,7 +34,8 @@ assert.equal(snapshot.carried_forward_brands.length,6-count);
      return card?.querySelector('.lpg-price')?.textContent.replace(/[^0-9]/g,'')==='1430';
    },null,{timeout:14000});
    revision=1;
-   await page.locator('#refreshAll').click();
+   // The header refresh button is intentionally hidden at phone widths.
+   await page.evaluate(()=>document.getElementById('refreshAll')?.click());
    await page.waitForFunction(()=>{
      const card=[...document.querySelectorAll('#lpgGrid .lpg-card')].find(c=>c.querySelector('.lpg-name')?.textContent.includes('Petron Gasul'));
      return card?.querySelector('.lpg-price')?.textContent.replace(/[^0-9]/g,'')==='1477';
