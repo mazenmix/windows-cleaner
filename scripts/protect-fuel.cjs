@@ -118,7 +118,7 @@ async function main() {
   if(headerMin.errors.length)throw Error('Typhoon header CSS minification failed: '+headerMin.errors.join(' | '));
   if(headerMin.styles.length<headerCSS.length)fs.writeFileSync(headerCSSPath,headerMin.styles+'\n');
   // Both RSS refresh and exact badge sizing stay obfuscated after every edit.
-  for(const path of ['assets/weather-news-live.js','assets/weather-news-continuous.js','assets/weather-news-multisource.js','assets/home-typhoon-placement.js','assets/daily-typhoon-placement.js','assets/live-refresh-watchdog.js','assets/lpg-source-status.js','assets/header-alert-sizing.js']){
+  for(const path of ['assets/weather-news-live.js','assets/weather-news-continuous.js','assets/weather-news-multisource.js','assets/home-typhoon-placement.js','assets/daily-typhoon-placement.js','assets/live-refresh-watchdog.js','assets/lpg-source-status.js','assets/lpg-live-sync.js','assets/header-alert-sizing.js']){
     const original=fs.readFileSync(path,'utf8');
     if(!original.startsWith('/* MX-PROTECTED */')){
       const output=protect(original);

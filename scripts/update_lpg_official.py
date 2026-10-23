@@ -128,10 +128,15 @@ def clean_cell(v):
 
 def collect_prices(cell):
     vals = []
-    for m in re.findall(r"(?<!\d)([0-9]{3,4}(?:\.[0-9]{1,2})?)(?!\d)", clean_cell(cell)):
-        v = float(m)
-        if 500 <= v <= 3000:
-            vals.append(v)
+    # DOE rows use 1,430.00. Preserve the digit before the thousands comma.
+    matches = re.findall(
+        r"(?<![\d,])((?:[1-9]\d?,\d{3}|\d{3,4})(?:\.\d{1,2})?)(?![\d,])",
+        clean_cell(cell),
+    )
+    for token in matches:
+        value = float(token.replace(",", ""))
+        if 500 <= value <= 3000:
+            vals.append(value)
     return vals
 
 
@@ -156,6 +161,12 @@ def parse_doe_brand_medians(pdf_bytes):
                     cells = [clean_cell(x).upper() for x in row]
                     local = {}
                     for brand, names in aliases.items():
+                        # Gasul Elite differs from the standard Gasul column.
+                        if brand == "Petron Gasul":
+                            ordinary = next((j for j, c in enumerate(cells) if c == "GASUL"), None)
+                            if ordinary is not None:
+                                local[brand] = ordinary
+                                continue
                         for j, cell in enumerate(cells):
                             if any(name in cell for name in names):
                                 local[brand] = j
@@ -200,6 +211,8 @@ def main():
         doe_pdf_url, doe_page_url, doe_label = latest_doe_ncr_pdf()
         doe_pdf = fetch(doe_pdf_url, binary=True)
         doe_prices = parse_doe_brand_medians(doe_pdf)
+        if not doe_prices:
+            raise RuntimeError("DOE LPG PDF contains no extractable brand prices")
         for brand, value in doe_prices.items():
             if brand in prices and value:
                 prices[brand] = value
