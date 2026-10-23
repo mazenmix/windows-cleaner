@@ -146,7 +146,7 @@ def parse_doe_brand_medians(pdf_bytes):
         "Solane": ["SOLANE"],
         "Regasco": ["REGASCO"],
         "Phoenix LPG": ["PHOENIX", "PHOENIX SUPER LPG"],
-        "Total Gas": ["TOTAL", "SUPERKALAN/TOTAL", "SUPERKALAN"],
+        "Total Gas": ["TOTAL GAS", "TOTALGAZ", "TOTAL"],
         "SL Gas": ["SL GAS"],
     }
     found = {k: [] for k in aliases}

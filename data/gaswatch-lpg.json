@@ -11,12 +11,13 @@
     "Petron Gasul": "2026-10-23T17:00:16.418634Z",
     "SL Gas": null,
     "Phoenix LPG": null,
-    "Total Gas": "2026-10-23T17:00:16.418634Z"
+    "Total Gas": null
   },
-  "verified_brand_count": 4,
+  "verified_brand_count": 3,
   "carried_forward_brands": [
     "SL Gas",
-    "Phoenix LPG"
+    "Phoenix LPG",
+    "Total Gas"
   ],
   "doe_ncr_page": "https://doe.gov.ph/data-and-prices/lpg-monitor/ncr-lpg-prices",
   "doe_document": "https://d24qbtp4vooyzi.cloudfront.net/api/media/file/NCR%20October%202026%20LPG%20Price%20Monitoring.pdf?prefix=dev%2Fmedia",
@@ -29,11 +30,12 @@
   "verified": {
     "Petron Gasul": "DOE NCR monitored median",
     "Solane": "Solane official ordering",
-    "Regasco": "Regasco official ordering",
-    "Total Gas": "DOE NCR monitored median"
+    "Regasco": "Regasco official ordering"
   },
   "price_accuracy": "Current source readings only for brands in verified; other prices are carried-forward references",
-  "warnings": [],
+  "warnings": [
+    "Total Gas not reported by DOE; SUPERKALAN is a different brand. Total Gas price retained as reference."
+  ],
   "lpg": [
     {
       "name": "Regasco",
@@ -57,7 +59,7 @@
     },
     {
       "name": "Total Gas",
-      "price": 1356
+      "price": 1636
     }
   ]
 }
