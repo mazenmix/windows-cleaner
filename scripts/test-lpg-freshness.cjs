@@ -1,60 +1,56 @@
 'use strict';
 const fs=require('node:fs');
-const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
-const snapshot=JSON.parse(fs.readFileSync('data/gaswatch-lpg.json','utf8'));
-const count=Object.keys(snapshot.verified||{}).length;
-assert.equal(snapshot.lpg.length,6);
-const productionHtml=fs.readFileSync('index.html','utf8');
-assert.ok(productionHtml.includes('lpg-live-sync.js'));
-assert.ok(!productionHtml.includes('src="/assets/lpg-source-status.js'), 'Legacy LPG source status must not compete with price renderer');
-assert.equal(snapshot.verified_brand_count,count);
-assert.equal(snapshot.carried_forward_brands.length,6-count);
+const {chromium}=require('playwright');
+const mirror=JSON.parse(fs.readFileSync('data/gaswatch-mirror-lpg.json','utf8'));
+const brands=['Regasco','Solane','Petron Gasul','SL Gas','Phoenix LPG','Total Gas'];
+const html=fs.readFileSync('index.html','utf8');
+assert.ok(html.includes('/assets/lpg-gaswatch-sync.js'),'GasWatch updater must update LPG cards');
+assert.ok(!html.includes('src="/assets/lpg-live-sync.js'),'Old updater must not compete');
+assert.ok(!html.includes('src="/assets/lpg-source-status.js'),'Source badge updater must not compete');
+assert.deepEqual(mirror.brands.map(x=>x.name),brands);
+assert.deepEqual(mirror.brands.map(x=>x.price),[1229,1266,1291,1319,1334,1636]);
 (async()=>{
  const browser=await chromium.launch({headless:true});
  try{
   for(const width of [390,1280]){
-   const context=await browser.newContext({viewport:{width,height:850}});
-   await context.route('**/data/gaswatch-lpg.json*',route=>route.fulfill({
-     status:200,contentType:'application/json',body:JSON.stringify(snapshot)
-   }));
+   const ctx=await browser.newContext({viewport:{width,height:850}});
    let revision=0;
-   await context.route('**/api/lpg-live?*',route=>{
-     const altered=structuredClone(snapshot.lpg);
-     const petron=altered.find(x=>x.name==='Petron Gasul');
-     petron.price=revision===0?1430:1477;
-     return route.fulfill({status:200,contentType:'application/json',
-       body:JSON.stringify({ok:true,tank_kg:11,checked_at:new Date().toISOString(),
-         brands:altered.map(x=>({...x,quality:'official-snapshot'}))})});
+   await ctx.route('**/api/lpg-live?*',route=>{
+    const rows=structuredClone(mirror.brands);
+    if(revision){rows[0].price=1600;rows[2].price=1477}
+    return route.fulfill({status:200,contentType:'application/json',
+     body:JSON.stringify({ok:true,tank_kg:11,brands:rows})});
    });
-   const page=await context.newPage();
-   await page.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
-   await page.waitForFunction(()=>document.getElementById('mxLpgStatus')?.textContent?.includes('/6 source-verified'),null,{timeout:14000});
-   const box=page.locator('#lpgGrid .lpg-card').filter({has:page.locator('.lpg-name',{hasText:'Petron Gasul'})});
-   await box.first().locator('.lpg-price').waitFor();
+   const page=await ctx.newPage();
+   await page.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded',timeout:25000});
    await page.waitForFunction(()=>{
-     const card=[...document.querySelectorAll('#lpgGrid .lpg-card')].find(c=>c.querySelector('.lpg-name')?.textContent.includes('Petron Gasul'));
-     return card?.querySelector('.lpg-price')?.textContent.replace(/[^0-9]/g,'')==='1430';
-   },null,{timeout:14000});
+    const cards=[...document.querySelectorAll('#lpgGrid .lpg-card')];
+    const row=cards.find(x=>x.querySelector('.lpg-name')?.textContent?.includes('Regasco'));
+    return row?.querySelector('.lpg-price')?.textContent.replace(/[^0-9]/g,'')==='1229';
+   },null,{timeout:15000});
+   const prices=await page.locator('#lpgGrid .lpg-card').evaluateAll(cards=>cards.map(c=>({
+     name:c.querySelector('.lpg-name')?.textContent?.trim(),
+     price:Number(c.querySelector('.lpg-price')?.textContent?.replace(/[^0-9]/g,'')),
+     cheapest:c.classList.contains('cheapest')})));
+   for(const row of mirror.brands){
+    assert.equal(prices.find(p=>p.name===row.name)?.price,row.price,'Initial GasWatch card '+row.name);
+   }
+   assert.equal(prices.find(p=>p.name==='Regasco').cheapest,true,'Regasco cheapest initially');
+   assert.equal(await page.locator('#mxLpgStatus').count(),0,'No checked/source badge');
+   assert.equal(await page.locator('#lpgGrid .mx-lpg-freshness').count(),0,'No reference/official badges');
    revision=1;
-   // The header refresh button is intentionally hidden at phone widths.
    await page.evaluate(()=>document.getElementById('refreshAll')?.click());
    await page.waitForFunction(()=>{
-     const card=[...document.querySelectorAll('#lpgGrid .lpg-card')].find(c=>c.querySelector('.lpg-name')?.textContent.includes('Petron Gasul'));
-     return card?.querySelector('.lpg-price')?.textContent.replace(/[^0-9]/g,'')==='1477';
+    const cards=[...document.querySelectorAll('#lpgGrid .lpg-card')];
+    const val=name=>Number(cards.find(c=>c.querySelector('.lpg-name')?.textContent?.trim()===name)
+       ?.querySelector('.lpg-price')?.textContent?.replace(/[^0-9]/g,''));
+    return val('Regasco')===1600&&val('Petron Gasul')===1477;
    },null,{timeout:14000});
-   const badge=await page.locator('#mxLpgStatus').innerText();
-   assert.ok(badge.includes(count+'/6 source-verified'),badge);
-   const html=await page.locator('body').innerText();
-   for(const phrase of [
-    'Official DA food and agricultural commodity prices, grouped so everything is visible at a glance.',
-    'PHP rates per 1 unit of foreign currency',
-    'Latest fuel prices from major brands nationwide.',
-    'Compare cooking gas prices across major brands.',
-    'PHILIPPINES FOOD PRICE MONITOR'
-   ])assert.ok(!html.includes(phrase),'Old UI copy remains: '+phrase);
-   console.log('PASS',width,'LPG source freshness badge',badge,'all requested descriptions removed');
-   await context.close();
+   const cheap=await page.locator('#lpgGrid .lpg-card.cheapest .lpg-name').allInnerTexts();
+   assert.deepEqual(cheap,['Solane'],'Lowest-price highlight must change with updated cards');
+   console.log('PASS',width,'all six GasWatch price cards; refresh updates actual numbers; no badges');
+   await ctx.close();
   }
- }finally{await browser.close();}
-})().catch(error=>{console.error(error);process.exitCode=1});
+ }finally{await browser.close()}
+})().catch(e=>{console.error(e);process.exitCode=1});
