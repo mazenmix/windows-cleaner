@@ -1,0 +1,53 @@
+name: Mirror GasWatch LPG Cards
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/mx-gaswatch-lpg-sync.yml
+permissions:
+  contents: write
+concurrency:
+  group: mx-gaswatch-lpg-source-mirror
+  cancel-in-progress: false
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: mx-fuel-watch-web
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Browser support
+        shell: bash
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.58.2
+          if command -v google-chrome >/dev/null 2>&1; then
+            echo "GASWATCH_CHROME=$(command -v google-chrome)" >> "$GITHUB_ENV"
+          elif command -v chromium >/dev/null 2>&1; then
+            echo "GASWATCH_CHROME=$(command -v chromium)" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - name: Read GasWatch six displayed 11kg prices
+        run: node scripts/sync_gaswatch_lpg.cjs
+      - name: Publish only when source numbers actually change
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/gaswatch-mirror-lpg.json
+          if git diff --cached --quiet; then
+            echo "GasWatch numbers unchanged; no deployment needed."
+          else
+            git commit -m "Mirror current GasWatch PH 11kg LPG card prices"
+            git pull --rebase origin mx-fuel-watch-web
+            git push origin HEAD:mx-fuel-watch-web
+          fi
