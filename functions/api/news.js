@@ -1,6 +1,8 @@
 const FRESH_TTL = 15;
 const LAST_GOOD_TTL = 21600;
 const FRESH_WINDOW_MS = 3 * 60 * 60 * 1000;
+const AL_JAZEERA_ENGLISH_RSS = "https://www.aljazeera.com/xml/rss/all.xml";
+const AL_JAZEERA_ENGLISH_BACKUP = "https://news.google.com/rss/search?q=site%3Aaljazeera.com%20when%3A3h&hl=en-US&gl=US&ceid=US%3Aen";
 
 const GOOGLE_FEEDS = [
   "https://news.google.com/rss?hl=en-PH&gl=PH&ceid=PH:en",
@@ -73,6 +75,7 @@ const CATEGORY_GOOGLE_FEEDS = [
 ]
 
 const RSS_SOURCES = [
+  {name:"AL JAZEERA ENGLISH",url:AL_JAZEERA_ENGLISH_RSS,global:true},
   {name:"GMA NEWS",url:"https://data.gmanews.tv/gno/rss/news/feed.xml"},
   {name:"INQUIRER",url:"https://www.inquirer.net/fullfeed"},
   {name:"RAPPLER",url:"https://www.rappler.com/feed/"},
@@ -212,6 +215,7 @@ function sourceLabel(s){
   if(/department of health|doh philippines/i.test(x))return"DOH PHILIPPINES";
   if(/world health organization|who philippines/i.test(x))return"WHO PHILIPPINES";
   if(/food and drug administration.*philippines|fda philippines/i.test(x))return"FDA PHILIPPINES";
+  if(/al[ -]?jazeera/i.test(x))return"AL JAZEERA ENGLISH";
   if(/gma/i.test(x))return"GMA NEWS";
   if(/inquirer/i.test(x))return"INQUIRER";
   if(/philstar|philippine star/i.test(x))return"PHILSTAR";
@@ -386,12 +390,12 @@ function parseGoogleRss(xml,forcedCategory){
     const sourceUrl=sm?plain(sm[1]):"";
     let sourceDomain="";
     try{sourceDomain=sourceUrl?new URL(sourceUrl).hostname:""}catch(_){}
-    const categorySourceOk=/GMA|Philstar|Philippine Star|Inquirer|ABS-CBN|Philippine News Agency|PNA|Manila Bulletin|Rappler|BusinessWorld|BusinessMirror|Manila Times|Manila Standard|SunStar|MindaNews|News5|One News|Daily Tribune|Interaksyon|Philippine Information Agency|PIA|SPIN\.ph|One Sports|Reuters|Associated Press|AP News|ANC|DZBB|PTV/i.test(source);
+    const categorySourceOk=/GMA|Philstar|Philippine Star|Inquirer|ABS-CBN|Philippine News Agency|PNA|Manila Bulletin|Rappler|BusinessWorld|BusinessMirror|Manila Times|Manila Standard|SunStar|MindaNews|News5|One News|Daily Tribune|Interaksyon|Al Jazeera|Philippine Information Agency|PIA|SPIN\.ph|One Sports|Reuters|Associated Press|AP News|ANC|DZBB|PTV/i.test(source);
     if(!title||!link||!source||(!trusted(source)&&!trustedDomain(sourceDomain)&&!(forcedCategory&&categorySourceOk)))continue;
     const h=stripSource(title,source);
     const obj=makeItem(h,sourceLabel(source),plain(link),Date.parse(plain(pub))||0,desc);
     if(obj){
-      if(forcedCategory&&!categoryMatchesTitle(obj.headline,forcedCategory,source,sourceDomain))continue;
+      if(forcedCategory&&forcedCategory!=="World"&&!categoryMatchesTitle(obj.headline,forcedCategory,source,sourceDomain))continue;
       if(forcedCategory)obj.category=forcedCategory;
       out.push(obj);
     }
@@ -413,7 +417,7 @@ function rssImage(block,description){
   }
   return"";
 }
-function parseGenericRss(xml,sourceHint,forcedCategory){
+function parseGenericRss(xml,sourceHint,forcedCategory,allowGlobal=false){
   const out=[];
   const src=String(xml||"");
   const blocks=[
@@ -442,8 +446,8 @@ function parseGenericRss(xml,sourceHint,forcedCategory){
     const url=normalizeUrl(plain(link));
     const ts=Date.parse(plain(pub))||0;
     if(!h||!url||!ts)continue;
-    const obj=makeItem(h,sourceHint,url,ts,desc,rssImage(block,desc),forcedCategory);
-    if(obj&&(forcedCategory||philippinesRelevant(obj.headline))){
+    const obj=makeItem(h,sourceHint,url,ts,desc,rssImage(block,desc),allowGlobal?"World":forcedCategory);
+    if(obj&&(allowGlobal||forcedCategory||philippinesRelevant(obj.headline))){
       if(forcedCategory&&/^(Health|Technology|Travel|Transport)$/.test(forcedCategory)&&!categoryMatchesTitle(obj.headline,forcedCategory,sourceHint,itemDomain(obj)))continue;
       if(forcedCategory)obj.category=forcedCategory;
       out.push(obj);
@@ -668,6 +672,7 @@ function importanceScore(item){
   const source=String(item&&item.source||"");
   if(/DOH PHILIPPINES|WHO PHILIPPINES|FDA PHILIPPINES/.test(source))score+=30;
   else if(/REUTERS|AP/.test(source))score+=22;
+  else if(/AL JAZEERA ENGLISH/.test(source))score+=20;
   else if(/GMA NEWS|INQUIRER|ABS-CBN|PNA|PHILSTAR|RAPPLER|MANILA BULLETIN/.test(source))score+=16;
   else if(/BUSINESSWORLD|NEWS5|ONE NEWS|BUSINESSMIRROR|SUNSTAR|MINDANEWS|MANILA TIMES/.test(source))score+=11;
   if(/president|senate|congress|supreme court|impeach|earthquake|typhoon|storm surge|evacuat|emergency|explosion|shooting|killed|inflation|interest rate|bsp|west philippine sea|china|alert|suspend/.test(title))score+=24;
@@ -711,7 +716,7 @@ function selectTopCategoryToday(items,limit=18){
   return out;
 }
 function buildTopByCategory(items){
-  const cats=["Nation","Weather","Earthquake","Crime","Business","Transport","Politics","Travel","Sports","Technology","Health","Celebrity"];
+  const cats=["World","Nation","Weather","Earthquake","Crime","Business","Transport","Politics","Travel","Sports","Technology","Health","Celebrity"];
   const out={};
   for(const cat of cats)out[cat]=selectTopCategoryToday((items||[]).filter(x=>x.category===cat),18);
   out.Breaking=selectTopCategoryToday((items||[]).filter(x=>x.breaking),12);
@@ -777,7 +782,8 @@ async function collect(){
   const primary=PAGE_SOURCES.filter(s=>s.kind==="gmahtml"||s.kind==="philstarhtml");
   const firstWave=[
     ...primary.map(s=>({...s,timeout:3200})),
-    ...RSS_SOURCES.map(s=>({kind:"rssdirect",name:s.name,url:s.url,timeout:2400})),
+    ...RSS_SOURCES.map(s=>({kind:"rssdirect",name:s.name,url:s.url,timeout:s.global?3300:2400,global:!!s.global})),
+    {kind:"aljazeeragoogle",name:"AL JAZEERA ENGLISH BACKUP",url:AL_JAZEERA_ENGLISH_BACKUP,timeout:2900},
     ...CATEGORY_DIRECT_SOURCES.map(s=>({...s,timeout:2600})),
     ...CATEGORY_GOOGLE_FEEDS.map(s=>({kind:"catrss",name:s.name,url:s.url,category:s.category,timeout:2300})),
     ...CATEGORY_GOOGLE_EXTENDED.map(s=>({kind:"catrss",name:s.name,url:s.url,category:s.category,timeout:2300})),
@@ -795,7 +801,8 @@ async function collect(){
     try{
       if(job.kind==="gmahtml")parsed=parseDirectHtml(r.value,job.source||"GMA NEWS","gmanetwork.com",job.category).filter(x=>(job.category||philippinesRelevant(x.headline))&&(!job.validate||categoryMatchesTitle(x.headline,job.category)));
       else if(job.kind==="philstarhtml")parsed=parsePhilstarDirectHtml(r.value,job.category).filter(x=>!job.validate||categoryMatchesTitle(x.headline,job.category));
-      else if(job.kind==="rssdirect")parsed=parseGenericRss(r.value,job.name);
+      else if(job.kind==="rssdirect")parsed=parseGenericRss(r.value,job.name,"",!!job.global);
+      else if(job.kind==="aljazeeragoogle")parsed=parseGoogleRss(r.value,"World").filter(x=>x.source==="AL JAZEERA ENGLISH");
       else if(job.kind==="rsscat")parsed=parseGenericRss(r.value,job.source||job.name,job.category).filter(x=>!job.validate||categoryMatchesTitle(x.headline,job.category));
       else if(job.kind==="catrss")parsed=parseGoogleRss(r.value,job.category);
       else if(job.kind==="gdelt")parsed=parseGdeltJson(r.value);
@@ -866,8 +873,8 @@ async function collect(){
 export async function onRequestGet(context){
   const cache=caches.default;
   const origin=new URL(context.request.url).origin;
-  const freshKey=new Request(origin+"/api/news-cache-v24-celebrity-merged");
-  const lastGoodKey=new Request(origin+"/api/news-last-good-v23-celebrity-merged");
+  const freshKey=new Request(origin+"/api/news-cache-v25-aljazeera-en");
+  const lastGoodKey=new Request(origin+"/api/news-last-good-v25-aljazeera-en");
 
   const cached=await cache.match(freshKey);
   if(cached)return cached;
@@ -879,7 +886,7 @@ export async function onRequestGet(context){
 
     const topToday=selectTopToday(result.items,10);
     const breakingGlobal=selectGlobalBreaking(result.items,topToday,12);
-    const allCats=["Nation","Weather","Earthquake","Crime","Business","Transport","Politics","Travel","Sports","Technology","Health","Celebrity"];
+    const allCats=["World","Nation","Weather","Earthquake","Crime","Business","Transport","Politics","Travel","Sports","Technology","Health","Celebrity"];
     const categoryItems={},topTodayByCategory={},recentByCategory={};
     for(const cat of allCats){
       const desk=(result.deskBuckets&&result.deskBuckets[cat])||[];
@@ -902,7 +909,7 @@ export async function onRequestGet(context){
       live:true,
       stale:false,
       source:"MX Rapid Feed",
-      method:"Curated multi-source Philippine newsroom",
+      method:"Curated Philippine and international newsroom",
       checked_at:new Date().toISOString(),
       feed_count:result.feedCount||2,
       feeds_ok:result.diagnostics.filter(x=>x.ok).length,
