@@ -1,0 +1,43 @@
+/* MX Fuel · 2026-10-23 · focused LPG spacing + resilient header layout */
+#lpg{margin-top:26px;margin-bottom:14px}
+#lpg .mx-lpg-status{display:none!important}
+@media (max-width:700px){
+  #lpg{margin-top:22px;margin-bottom:12px}
+}
+@media (max-width:1350px){
+  .header{height:auto}
+  .header .navbar{
+    height:auto;min-height:64px;display:flex;flex-wrap:wrap;
+    align-items:center;justify-content:space-between;
+    padding-top:11px;padding-bottom:11px;
+    gap:11px 16px;
+  }
+  .header .navbar>.brand{
+    order:1;min-width:0;flex:0 0 auto;
+    margin-right:0;max-width:100%;position:relative;z-index:1;
+  }
+  .header .navbar>.visitor-stats{
+    order:2;min-width:0;width:auto;flex:0 1 auto;
+    margin-left:auto;justify-content:flex-end;
+    position:relative;z-index:1;
+  }
+  .header .navbar>.navright{
+    order:3;flex:1 1 100%;width:100%;
+    margin-left:0;display:flex;align-items:center;
+    justify-content:flex-start;flex-wrap:wrap;gap:10px;
+  }
+  .header .navbar>.navright .livebadge{margin-left:auto}
+}
+@media (max-width:650px){
+  .header .navbar{align-items:flex-start;row-gap:10px}
+  .header .navbar>.brand{flex-basis:100%;width:100%}
+  .header .navbar>.visitor-stats{
+    flex-basis:100%;width:100%;margin-left:0;
+    justify-content:flex-start;display:flex;flex-wrap:wrap;gap:8px;
+  }
+  .header .navbar>.visitor-stats .visitor-chip{
+    flex:1 1 135px;justify-content:center;min-width:0;
+  }
+  .header .navbar>.navright{flex-basis:100%}
+  .header .navbar>.navright .livebadge{margin-left:0}
+}
