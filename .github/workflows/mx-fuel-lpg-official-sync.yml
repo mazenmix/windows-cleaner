@@ -3,7 +3,7 @@ name: MX Fuel LPG Official Sync
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 */3 * * *"
+    - cron: "17 * * * *"
   push:
     branches: [ "main" ]
     paths:
