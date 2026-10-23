@@ -40,6 +40,11 @@ jobs:
           fi
       - name: Verify GasWatch gasul-card prices against all six brands
         run: node scripts/sync_gaswatch_lpg.cjs
+      - name: Verify each displayed LPG card updates on desktop and mobile
+        shell: bash
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/mxfuel-lpg-http.log 2>&1 &
+          node scripts/test-lpg-freshness.cjs
       - name: Publish only when source numbers actually change
         shell: bash
         run: |
