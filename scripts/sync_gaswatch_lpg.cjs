@@ -49,6 +49,15 @@ async function scrape(page){
   if(rows.length===6)return rows;
   await page.waitForTimeout(900);
  }
+ const debug=await page.evaluate(()=>{
+  const heading=[...document.querySelectorAll('h1,h2,h3,h4')].find(e=>/Gasul\s*\/\s*LPG/i.test(e.textContent||''));
+  const section=heading?.closest('section')||document.querySelector('#lpg');
+  return {title:document.title,url:location.href,
+    candidateCards:document.querySelectorAll('.lpg-card,[class*="lpg-card"]').length,
+    around:(document.body.innerText||'').slice(Math.max(0,(document.body.innerText||'').indexOf('Gasul / LPG')-200), (document.body.innerText||'').indexOf('Gasul / LPG')+1500),
+    sectionHTML:section?.outerHTML?.slice(0,9500)};
+ });
+ console.log('GASWATCH_DIAGNOSTIC',JSON.stringify(debug));
  throw Error('GasWatch six 11kg price cards not found; keeping previous mirror unchanged');
 }
 async function main(){
