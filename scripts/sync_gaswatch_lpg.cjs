@@ -56,7 +56,7 @@ async function main(){
  assert.deepEqual(parsePrices(names.map((name,i)=>({name,price:[1229,1266,1291,1319,1334,1636][i]})))[0],
   {name:'Regasco',price:1229});
  assert.throws(()=>parsePrices([{name:'Regasco',price:1229}]),/incomplete/);
- const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ const browser=await chromium.launch({headless:true,...(process.env.GASWATCH_CHROME?{executablePath:process.env.GASWATCH_CHROME}:{}),args:['--no-sandbox']});
  let rows;
  try{
   const page=await browser.newPage({viewport:{width:1280,height:960}});
