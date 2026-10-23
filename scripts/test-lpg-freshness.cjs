@@ -15,9 +15,30 @@ assert.equal(snapshot.carried_forward_brands.length,6-count);
    await context.route('**/data/gaswatch-lpg.json*',route=>route.fulfill({
      status:200,contentType:'application/json',body:JSON.stringify(snapshot)
    }));
+   let revision=0;
+   await context.route('**/api/lpg-live?*',route=>{
+     const altered=structuredClone(snapshot.lpg);
+     const petron=altered.find(x=>x.name==='Petron Gasul');
+     petron.price=revision===0?1430:1477;
+     return route.fulfill({status:200,contentType:'application/json',
+       body:JSON.stringify({ok:true,tank_kg:11,checked_at:new Date().toISOString(),
+         brands:altered.map(x=>({...x,quality:'official-snapshot'}))})});
+   });
    const page=await context.newPage();
    await page.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
    await page.waitForFunction(()=>document.getElementById('mxLpgStatus')?.textContent?.includes('/6 source-verified'),null,{timeout:14000});
+   const box=page.locator('#lpgGrid .lpg-card').filter({has:page.locator('.lpg-name',{hasText:'Petron Gasul'})});
+   await box.first().locator('.lpg-price').waitFor();
+   await page.waitForFunction(()=>{
+     const card=[...document.querySelectorAll('#lpgGrid .lpg-card')].find(c=>c.querySelector('.lpg-name')?.textContent.includes('Petron Gasul'));
+     return card?.querySelector('.lpg-price')?.textContent.replace(/[^0-9]/g,'')==='1430';
+   },null,{timeout:14000});
+   revision=1;
+   await page.locator('#refreshAll').click();
+   await page.waitForFunction(()=>{
+     const card=[...document.querySelectorAll('#lpgGrid .lpg-card')].find(c=>c.querySelector('.lpg-name')?.textContent.includes('Petron Gasul'));
+     return card?.querySelector('.lpg-price')?.textContent.replace(/[^0-9]/g,'')==='1477';
+   },null,{timeout:14000});
    const badge=await page.locator('#mxLpgStatus').innerText();
    assert.ok(badge.includes(count+'/6 source-verified'),badge);
    const html=await page.locator('body').innerText();
