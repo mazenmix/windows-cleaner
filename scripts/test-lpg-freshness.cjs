@@ -11,7 +11,7 @@ assert.ok(!html.includes('src="/assets/lpg-source-status.js'),'Source badge upda
 assert.deepEqual(mirror.brands.map(x=>x.name),brands);
 assert.deepEqual(mirror.brands.map(x=>x.price),[1229,1266,1291,1319,1334,1636]);
 (async()=>{
- const browser=await chromium.launch({headless:true});
+ const browser=await chromium.launch({headless:true,...(process.env.GASWATCH_CHROME?{executablePath:process.env.GASWATCH_CHROME}:{})});
  try{
   for(const width of [390,1280]){
    const ctx=await browser.newContext({viewport:{width,height:850}});
