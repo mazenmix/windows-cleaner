@@ -25,6 +25,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Validate six brand mirror
+        run: node -e "const d=require('./data/gaswatch-mirror-lpg.json'); if(d.brands.length!==6)process.exit(1)"
       - name: Browser support
         shell: bash
         run: |
