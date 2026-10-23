@@ -29,16 +29,16 @@ async function scrape(page){
  const attempt=async()=>page.evaluate((brandNames)=>{
   const root=[...document.querySelectorAll('section')].find(x=>/Gasul\s*\/\s*LPG Prices/i.test(x.querySelector('h1,h2,h3')?.textContent||''))
    ||document.querySelector('#lpg')||document.body;
-  const cells=[...root.querySelectorAll('.lpg-card,[class*="lpg-card"]')];
+  const cells=[...root.querySelectorAll('.gasul-card,.lpg-card,[class*="lpg-card"]')];
   // The site presents LPG prices as separate cards; never guess from other page text.
   const clean=x=>String(x||'').replace(/\s+/g,' ').trim();
-  const candidates=cells.length>=6?cells:[...root.querySelectorAll('.lpg-grid > *,[class*="lpg-grid"] > *')];
+  const candidates=cells.length>=6?cells:[...root.querySelectorAll('.gasul-grid > *,.lpg-grid > *,[class*="lpg-grid"] > *')];
   const output=[];
   for(const card of candidates){
-   const heading=clean(card.querySelector('.lpg-name,[class*="lpg-name"]')?.textContent||card.querySelector('h3,h4,strong')?.textContent);
+   const heading=clean(card.querySelector('.gasul-brand,.lpg-name,[class*="lpg-name"]')?.textContent||card.querySelector('h3,h4,strong')?.textContent);
    const name=brandNames.find(n=>heading.toLowerCase()===n.toLowerCase()||heading.toLowerCase().startsWith(n.toLowerCase()+' '));
    if(!name||output.some(x=>x.name===name))continue;
-   const priceText=clean(card.querySelector('.lpg-price,[class*="lpg-price"]')?.textContent||card.textContent);
+   const priceText=clean(card.querySelector('.gasul-price,.lpg-price,[class*="lpg-price"]')?.textContent||card.textContent);
    const match=priceText.match(/(?:PHP\s*|₱\s*)(\d{1,2}(?:,\d{3})?|\d{3,4})(?:\.\d{2})?/i);
    if(match)output.push({name,price:match[1].replace(/,/g,'')});
   }
@@ -49,15 +49,6 @@ async function scrape(page){
   if(rows.length===6)return rows;
   await page.waitForTimeout(900);
  }
- const debug=await page.evaluate(()=>{
-  const heading=[...document.querySelectorAll('h1,h2,h3,h4')].find(e=>/Gasul\s*\/\s*LPG/i.test(e.textContent||''));
-  const section=heading?.closest('section')||document.querySelector('#lpg');
-  return {title:document.title,url:location.href,
-    candidateCards:document.querySelectorAll('.lpg-card,[class*="lpg-card"]').length,
-    around:(document.body.innerText||'').slice(Math.max(0,(document.body.innerText||'').indexOf('Gasul / LPG')-200), (document.body.innerText||'').indexOf('Gasul / LPG')+1500),
-    sectionHTML:section?.outerHTML?.slice(0,9500)};
- });
- console.log('GASWATCH_DIAGNOSTIC',JSON.stringify(debug));
  throw Error('GasWatch six 11kg price cards not found; keeping previous mirror unchanged');
 }
 async function main(){
