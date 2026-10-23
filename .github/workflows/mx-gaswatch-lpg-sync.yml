@@ -38,7 +38,7 @@ jobs:
           else
             npx playwright install --with-deps chromium
           fi
-      - name: Read GasWatch six displayed 11kg prices
+      - name: Read GasWatch six displayed 11kg prices and inspect source DOM
         run: node scripts/sync_gaswatch_lpg.cjs
       - name: Publish only when source numbers actually change
         shell: bash
