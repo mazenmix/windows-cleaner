@@ -2,13 +2,13 @@
   "provider": "DOE Philippines + official brand ordering",
   "source_url": "https://doe.gov.ph/data-and-prices/lpg-monitor",
   "tank_kg": 11,
-  "rendered_at": "2026-10-23T17:00:16.418634Z",
-  "checked_at": "2026-10-23T17:00:16.418634Z",
-  "verified_at": "2026-10-23T17:00:16.418634Z",
+  "rendered_at": "2026-10-23T20:27:33.172985Z",
+  "checked_at": "2026-10-23T20:27:33.172985Z",
+  "verified_at": "2026-10-23T20:27:33.172985Z",
   "last_verified_at_by_brand": {
-    "Regasco": "2026-10-23T17:00:16.418634Z",
-    "Solane": "2026-10-23T17:00:16.418634Z",
-    "Petron Gasul": "2026-10-23T17:00:16.418634Z",
+    "Regasco": "2026-10-23T20:27:33.172985Z",
+    "Solane": "2026-10-23T20:27:33.172985Z",
+    "Petron Gasul": "2026-10-23T20:27:33.172985Z",
     "SL Gas": null,
     "Phoenix LPG": null,
     "Total Gas": null
@@ -33,9 +33,7 @@
     "Regasco": "Regasco official ordering"
   },
   "price_accuracy": "Current source readings only for brands in verified; other prices are carried-forward references",
-  "warnings": [
-    "Total Gas not reported by DOE; SUPERKALAN is a different brand. Total Gas price retained as reference."
-  ],
+  "warnings": [],
   "lpg": [
     {
       "name": "Regasco",
