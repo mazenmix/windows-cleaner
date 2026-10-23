@@ -5,6 +5,9 @@ const assert=require('node:assert/strict');
 const snapshot=JSON.parse(fs.readFileSync('data/gaswatch-lpg.json','utf8'));
 const count=Object.keys(snapshot.verified||{}).length;
 assert.equal(snapshot.lpg.length,6);
+const productionHtml=fs.readFileSync('index.html','utf8');
+assert.ok(productionHtml.includes('lpg-live-sync.js'));
+assert.ok(!productionHtml.includes('src="/assets/lpg-source-status.js'), 'Legacy LPG source status must not compete with price renderer');
 assert.equal(snapshot.verified_brand_count,count);
 assert.equal(snapshot.carried_forward_brands.length,6-count);
 (async()=>{
