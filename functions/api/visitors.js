@@ -68,6 +68,7 @@ export async function onRequestGet(){
     configured:true,
     today,
     now,
+    counter_mode:"cumulative",
     active_window_minutes:5,
     timezone:"Asia/Manila",
     checked_at:new Date().toISOString(),
