@@ -27,21 +27,27 @@ function phNow(ts=Date.now()){
 }
 
 export async function onRequestGet(){
-  const t=phNow();
+  const nowMs=Date.now();
+  const t=phNow(nowMs);
   const seed=hash(t.day);
   const seconds=t.h*3600+t.m*60+t.s+t.ms/1000;
-  const progress=Math.max(0,Math.min(1,seconds/86400));
 
-  // Visitors Today is a SIMULATED counter, not measured traffic.
-  // The seed changes at 00:00 Asia/Manila, with a +10,000 baseline
-  // each new calendar month starting October 2026.
-  const [year,month]=t.day.split("-").map(Number);
-  const monthsSinceStart=Math.max(0,(year-2026)*12+(month-10));
-  const monthlyLift=monthsSinceStart*10000;
-  const dayBase=70000+(seed%20001)+monthlyLift;
-  const dailyGain=12000+((seed>>>7)%7001);
-  const curve=Math.pow(progress,0.92);
-  const today=Math.floor(dayBase+(dailyGain*curve));
+  // Simulated visitor total (NOT real analytics): never reset at midnight.
+  // Match the original 2026-10-26 Manila daily counter exactly until its
+  // first midnight, then keep adding at a stable 15,000-per-day pace.
+  // A fixed UTC anchor also keeps totals consistent across devices and requests.
+  const anchorMs=Date.UTC(2026,9,25,16,0,0); // 2026-10-26 00:00 Asia/Manila
+  const anchorSeed=hash("2026-10-26");
+  const anchorBase=70000+(anchorSeed%20001);
+  const firstDayGain=12000+((anchorSeed>>>7)%7001);
+  const elapsedSec=Math.max(0,(nowMs-anchorMs)/1000);
+  const firstDaySec=Math.min(elapsedSec,86400);
+  const afterFirstDaySec=Math.max(0,elapsedSec-86400);
+  const today=Math.floor(
+    anchorBase
+    +firstDayGain*Math.pow(firstDaySec/86400,0.92)
+    +afterFirstDaySec*(15000/86400)
+  );
 
   // SIMULATED concurrent visitors: a 3,000–8,000 range alongside
   // Visitors Today, not a measurement of real connected users.
