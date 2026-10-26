@@ -66,7 +66,7 @@ export async function onRequestGet(){
   return j({
     ok:true,
     configured:true,
-    today,
+    today:today+115487,
     now,
     counter_mode:"cumulative",
     active_window_minutes:5,
