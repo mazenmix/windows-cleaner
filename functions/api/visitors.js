@@ -49,7 +49,7 @@ export async function onRequestGet(){
     +afterFirstDaySec*(15000/86400)
   );
 
-  // SIMULATED concurrent visitors: a 3,000–8,000 range alongside
+  // SIMULATED concurrent visitors: a 13,000–27,000 range alongside
   // Visitors Today, not a measurement of real connected users.
   // Activity is usually higher in the Manila afternoon/evening and
   // changes smoothly instead of jumping several times a second.
@@ -59,8 +59,8 @@ export async function onRequestGet(){
   const visitorLift=Math.min(650,Math.max(0,(today-70000)*0.01));
   const wave1=Math.sin((seconds/410)+(seed%17))*110;
   const wave2=Math.sin((seconds/137)+((seed>>>8)%29))*55;
-  const now=Math.max(3000,Math.min(8000,
-    Math.round(3650+3100*ManilaPeak+dayVariation+visitorLift+wave1+wave2)
+  const now=Math.max(13000,Math.min(27000,
+    Math.round(13500+13000*ManilaPeak+dayVariation+visitorLift+wave1+wave2)
   ));
 
   return j({
