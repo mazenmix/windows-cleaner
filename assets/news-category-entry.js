@@ -1,12 +1,15 @@
-/* MX Fuel News: navigation buttons always enter All News first.
-   Remember manual category selections within News, but a new NEWS click with
-   ?category=All overrides the previous Celebrity selection before app init. */
-(function(){
+/* Canonical MX Fuel NEWS entry: a short URL and All News on every new visit.
+   Clicking category tabs only changes in-page state, not the address bar. */
+(function () {
   'use strict';
   try {
-    const category = new URLSearchParams(window.location.search).get('category');
-    if (category === 'All') {
-      window.localStorage.setItem('mxNewsSelectedCategoryV2', 'All');
+    window.localStorage.removeItem('mxNewsSelectedCategoryV2');
+  } catch (_) { /* localStorage may be unavailable in private contexts */ }
+  try {
+    if (location.pathname === '/news' || location.pathname === '/news.html') {
+      if (location.pathname !== '/news' || location.search || location.hash) {
+        history.replaceState(history.state, '', '/news');
+      }
     }
-  } catch (_) { /* A blocked storage API must not stop news loading. */ }
+  } catch (_) { /* changing the address never blocks the news feed */ }
 })();
