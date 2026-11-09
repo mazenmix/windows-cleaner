@@ -2,7 +2,7 @@
   "provider": "GasWatch PH",
   "source_url": "https://gaswatchph.com/",
   "updated": "November 4, 2026",
-  "rendered_at": "2026-11-08T16:12:12.422Z",
+  "rendered_at": "2026-11-09T03:04:22.720Z",
   "fuel": [
     {
       "name": "Shell",
@@ -37,8 +37,8 @@
       "name": "Petron",
       "stations": 240,
       "diesel": [
-        94.55,
-        -0.96
+        94.54,
+        -0.97
       ],
       "premDiesel": [
         97.83,
