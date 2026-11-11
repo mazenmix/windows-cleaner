@@ -2,7 +2,7 @@
   "provider": "GasWatch PH",
   "source_url": "https://gaswatchph.com/",
   "updated": "November 10, 2026",
-  "rendered_at": "2026-11-10T23:47:24.539Z",
+  "rendered_at": "2026-11-11T03:07:40.647Z",
   "fuel": [
     {
       "name": "Shell",
@@ -21,8 +21,8 @@
       ],
       "eGas": null,
       "prem95": [
-        86.87,
-        -12.35
+        86.85,
+        -12.37
       ],
       "prem97": [
         89.58,
@@ -45,8 +45,8 @@
         -4.1
       ],
       "unleaded91": [
-        74.77,
-        -16.76
+        74.73,
+        -16.8
       ],
       "eGas": null,
       "prem95": [
@@ -100,8 +100,8 @@
       ],
       "premDiesel": null,
       "unleaded91": [
-        74.44,
-        -16.69
+        74.36,
+        -16.77
       ],
       "eGas": [
         90.64,
@@ -166,8 +166,8 @@
         -16.8
       ],
       "prem95": [
-        77.25,
-        -16.83
+        77.18,
+        -16.9
       ],
       "prem97": [
         78.93,
