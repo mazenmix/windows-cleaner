@@ -2,14 +2,14 @@
   "provider": "GasWatch PH",
   "source_url": "https://gaswatchph.com/",
   "updated": "November 10, 2026",
-  "rendered_at": "2026-11-12T07:38:27.194Z",
+  "rendered_at": "2026-11-12T16:13:18.386Z",
   "fuel": [
     {
       "name": "Shell",
       "stations": 204,
       "diesel": [
-        91.1,
-        -4.16
+        91.13,
+        -4.13
       ],
       "premDiesel": [
         96.66,
@@ -50,8 +50,8 @@
       ],
       "eGas": null,
       "prem95": [
-        75.61,
-        -16.92
+        75.57,
+        -16.96
       ],
       "prem97": [
         83.92,
@@ -66,21 +66,21 @@
       "name": "Caltex",
       "stations": 131,
       "diesel": [
-        91.92,
-        -4.09
+        91.94,
+        -4.07
       ],
       "premDiesel": [
         96.74,
         -4.07
       ],
       "unleaded91": [
-        76.11,
-        -16.8
+        76.19,
+        -16.72
       ],
       "eGas": null,
       "prem95": [
-        81.98,
-        -16.76
+        82.03,
+        -16.71
       ],
       "prem97": [
         84.91,
@@ -158,8 +158,8 @@
       ],
       "premDiesel": null,
       "unleaded91": [
-        74.63,
-        -16.65
+        74.58,
+        -16.7
       ],
       "eGas": [
         99.48,
