@@ -2,13 +2,13 @@
   "provider": "DOE Philippines + official brand ordering",
   "source_url": "https://doe.gov.ph/data-and-prices/lpg-monitor",
   "tank_kg": 11,
-  "rendered_at": "2026-11-20T03:17:18.015683Z",
-  "checked_at": "2026-11-20T03:17:18.015683Z",
-  "verified_at": "2026-11-20T03:17:18.015683Z",
+  "rendered_at": "2026-11-20T12:54:30.533296Z",
+  "checked_at": "2026-11-20T12:54:30.533296Z",
+  "verified_at": "2026-11-20T12:54:30.533296Z",
   "last_verified_at_by_brand": {
-    "Regasco": "2026-11-20T03:17:18.015683Z",
-    "Solane": "2026-11-20T03:17:18.015683Z",
-    "Petron Gasul": "2026-11-20T03:17:18.015683Z",
+    "Regasco": "2026-11-20T12:54:30.533296Z",
+    "Solane": "2026-11-20T12:54:30.533296Z",
+    "Petron Gasul": "2026-11-20T12:54:30.533296Z",
     "SL Gas": null,
     "Phoenix LPG": null,
     "Total Gas": null
@@ -20,8 +20,8 @@
     "Total Gas"
   ],
   "doe_ncr_page": "https://doe.gov.ph/data-and-prices/lpg-monitor/ncr-lpg-prices",
-  "doe_document": "https://d24qbtp4vooyzi.cloudfront.net/api/media/file/NCR%20October%202026%20LPG%20Price%20Monitoring.pdf?prefix=dev%2Fmedia",
-  "doe_document_label": "October 1 to 8",
+  "doe_document": "https://d24qbtp4vooyzi.cloudfront.net/api/media/file/NCR%203-10%20November%202026%20LPG%20Price%20Monitoring.pdf?prefix=dev%2Fmedia",
+  "doe_document_label": "November 3 to 10",
   "official_sources": {
     "Regasco": "https://www.regascoexpress.com/Product/GetProductsBySubCategory?categoryName=11+Kg+Regasco",
     "Solane": "https://order.solane.com.ph/landing",
@@ -45,7 +45,7 @@
     },
     {
       "name": "Petron Gasul",
-      "price": 1430
+      "price": 1427
     },
     {
       "name": "SL Gas",
